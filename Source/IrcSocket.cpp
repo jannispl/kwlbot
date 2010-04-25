@@ -145,7 +145,7 @@ void CIrcSocket::HandleData(const char *szData)
 	while (i < 4)
 	{
 		vecParts.push_back(std::string());
-		return;
+		++i;
 	}
 
 	m_pParentBot->HandleData(vecParts);
