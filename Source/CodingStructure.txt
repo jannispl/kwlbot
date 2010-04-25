@@ -1,0 +1,22 @@
+kwlbot IRC bot
+
+
+Coding structure
+--
+
+> Classes
+
+General
+  CCore					(Core container which manages all bot instances)
+  CBot					(Class which represents an IRC bot)
+  CIrcSocket			(Class which manages a connection to an IRC server)
+  CIrcSettings			(Class which manages IRC-related settings)
+
+IRC
+  CIrcChannel			(Class which represents a remote IRC channel)
+  CIrcUser				(Class which represents a remote IRC user)
+  
+Utility
+  CConfig				(Config parser)
+  CPool					(Template class which represents a pool for elements)
+  CTcpSocket			(Utility class which handles sockets)
