@@ -13,6 +13,8 @@ class CIrcChannel;
 #define _IRCCHANNEL_H
 
 #include "IrcUser.h"
+#include "Pool.h"
+#include "Script.h"
 
 class CIrcChannel
 {
@@ -22,6 +24,8 @@ public:
 
 	void SetName(const char *szName);
 	const char *GetName();
+
+	v8::Handle<v8::Value> GetScriptThis();
 
 	CPool<CIrcUser *> m_plIrcUsers;
 

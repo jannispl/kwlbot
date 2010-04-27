@@ -10,8 +10,10 @@ Purpose:	Class which represents an IRC bot
 #include "StdInc.h"
 #include "Bot.h"
 
-CBot::CBot()
+CBot::CBot(CCore *pParentCore)
 {
+	m_pParentCore = pParentCore;
+
 	m_pIrcSocket = new CIrcSocket(this);
 	m_pIrcChannelQueue = new CPool<CIrcChannel *>();
 
@@ -179,6 +181,17 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			m_pIrcChannelQueue = NULL;
 
 			m_bGotMotd = true;
+
+			v8::HandleScope handleScope;
+			for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+			{
+				(*i)->EnterContext();
+
+				v8::Handle<v8::Value> argValues[1] = { GetScriptThis() };
+				(*i)->CallEvent("onBotConnected", 1, argValues);
+
+				(*i)->ExitContext();
+			}
 			return;
 		}
 	}
@@ -257,7 +270,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 							CIrcUser *pUser = FindUser(strName.c_str());
 							if (pUser == NULL)
 							{
-								printf("We don't know %s yet, adding him.\n", strName.c_str());
+								printf("We don't know %s yet, adding him (1).\n", strName.c_str());
 								pUser = new CIrcUser(strName.c_str());
 								m_plGlobalUsers.push_back(pUser);
 							}
@@ -292,11 +305,14 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 		{
 			strNickname = strNickname.substr(0, iSeparator);
 			CIrcChannel *pChannel = NULL;
+			bool bSelf = false;
 			if (strNickname == GetSettings()->GetNickname())
 			{
 				pChannel = new CIrcChannel(strChannel.c_str());
 				m_plIrcChannels.push_back(pChannel);
 				printf("WE JOINED '%s'\n", pChannel->GetName());
+
+				bSelf = true;
 			}
 			else
 			{
@@ -311,7 +327,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				CIrcUser *pUser = FindUser(strNickname.c_str());
 				if (pUser == NULL)
 				{
-					printf("We don't know %s yet, adding him.\n", strNickname.c_str());
+					printf("We don't know %s yet, adding him (2).\n", strNickname.c_str());
 					pUser = new CIrcUser(strNickname.c_str());
 					m_plGlobalUsers.push_back(pUser);
 				}
@@ -321,6 +337,33 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				}
 				pUser->m_plIrcChannels.push_back(pChannel);
 				pChannel->m_plIrcUsers.push_back(pUser);
+
+				if (bSelf)
+				{
+					v8::HandleScope handleScope;
+					for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+					{
+						(*i)->EnterContext();
+
+						v8::Handle<v8::Value> argValues[2] = { GetScriptThis(), pChannel->GetScriptThis() };
+						(*i)->CallEvent("onBotJoinedChannel", 2, argValues);
+
+						(*i)->ExitContext();
+					}
+				}
+				else
+				{
+					v8::HandleScope handleScope;
+					for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+					{
+						(*i)->EnterContext();
+
+						v8::Handle<v8::Value> argValues[3] = { GetScriptThis(), pUser->GetScriptThis(), pChannel->GetScriptThis() };
+						(*i)->CallEvent("onUserJoinedChannel", 3, argValues);
+
+						(*i)->ExitContext();
+					}
+				}
 			}
 		}
 		return;
@@ -346,6 +389,17 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				CIrcUser *pUser = FindUser(strNickname.c_str());
 				if (pUser != NULL)
 				{
+					v8::HandleScope handleScope;
+					for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+					{
+						(*i)->EnterContext();
+
+						v8::Handle<v8::Value> argValues[3] = { GetScriptThis(), pUser->GetScriptThis(), pChannel->GetScriptThis() };
+						(*i)->CallEvent("onUserLeftChannel", 3, argValues);
+
+						(*i)->ExitContext();
+					}
+
 					printf("Removing %s from %s.\n", pUser->GetName(), pChannel->GetName());
 					pUser->m_plIrcChannels.remove(pChannel);
 					pChannel->m_plIrcUsers.remove(pUser);
@@ -386,17 +440,32 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
 			if (pChannel != NULL)
 			{
-				CIrcUser *pUser = FindUser(strVictim.c_str());
-				if (pUser != NULL)
+				CIrcUser *pVictim = FindUser(strVictim.c_str());
+				if (pVictim != NULL)
 				{
-					printf("Removing %s from %s.\n", pUser->GetName(), pChannel->GetName());
-					pUser->m_plIrcChannels.remove(pChannel);
-					pChannel->m_plIrcUsers.remove(pUser);
-					if (pUser->m_plIrcChannels.size() == 0)
+					CIrcUser *pUser = FindUser(strNickname.c_str());
+					if (pUser != NULL)
 					{
-						printf("We don't know %s anymore.\n", pUser->GetName());
-						m_plGlobalUsers.remove(pUser);
-						delete pUser;
+						v8::HandleScope handleScope;
+						for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+						{
+							(*i)->EnterContext();
+
+							v8::Handle<v8::Value> argValues[4] = { GetScriptThis(), pUser->GetScriptThis(), pVictim->GetScriptThis(), pChannel->GetScriptThis() };
+							(*i)->CallEvent("onUserKickedUser", 4, argValues);
+
+							(*i)->ExitContext();
+						}
+					}
+
+					printf("Removing %s from %s.\n", pVictim->GetName(), pChannel->GetName());
+					pUser->m_plIrcChannels.remove(pChannel);
+					pChannel->m_plIrcUsers.remove(pVictim);
+					if (pVictim->m_plIrcChannels.size() == 0)
+					{
+						printf("We don't know %s anymore.\n", pVictim->GetName());
+						m_plGlobalUsers.remove(pVictim);
+						delete pVictim;
 					}
 				}
 				else
@@ -420,6 +489,17 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			CIrcUser *pUser = FindUser(strNickname.c_str());
 			if (pUser != NULL)
 			{
+				v8::HandleScope handleScope;
+				for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+				{
+					(*i)->EnterContext();
+
+					v8::Handle<v8::Value> argValues[2] = { GetScriptThis(), pUser->GetScriptThis() };
+					(*i)->CallEvent("onUserQuit", 2, argValues);
+
+					(*i)->ExitContext();
+				}
+
 				for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
 				{
 					(*i)->m_plIrcUsers.remove(pUser);
@@ -456,6 +536,17 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			{
 				printf("Renaming %s to %s.\n", pUser->GetName(), strNewNick.c_str());
 				pUser->SetName(strNewNick.c_str());
+
+				v8::HandleScope handleScope;
+				for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+				{
+					(*i)->EnterContext();
+
+					v8::Handle<v8::Value> argValues[3] = { GetScriptThis(), pUser->GetScriptThis(), v8::String::New(strNickname.c_str()) };
+					(*i)->CallEvent("onUserQuit", 3, argValues);
+
+					(*i)->ExitContext();
+				}
 			}
 		}
 		return;
@@ -487,6 +578,39 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				if (pChannel != NULL)
 				{
 					printf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
+
+					CIrcUser *pUser = FindUser(strNickname.c_str());
+					if (pUser != NULL)
+					{
+						v8::HandleScope handleScope;
+						for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+						{
+							(*i)->EnterContext();
+
+							v8::Handle<v8::Object> This/* = GetScriptThis()*/;
+							v8::Handle<v8::Object> UserThis/* = pUser->GetScriptThis()*/;
+							v8::Handle<v8::Object> ChannelThis/* = pChannel->GetScriptThis()*/;
+							v8::Handle<v8::Value> Message = v8::String::New(strMessage.c_str());
+
+							v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
+							v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
+							v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
+							
+							This = ctor1->NewInstance();
+							This->SetInternalField(0, v8::External::New(this));
+
+							UserThis = ctor2->NewInstance();
+							UserThis->SetInternalField(0, v8::External::New(pUser));
+
+							ChannelThis = ctor3->NewInstance();
+							ChannelThis->SetInternalField(0, v8::External::New(pChannel));
+
+							v8::Handle<v8::Value> argValues[4] = { This, UserThis, ChannelThis, Message };
+							(*i)->CallEvent("onUserChannelMessage", 4, argValues);
+
+							(*i)->ExitContext();
+						}
+					}
 				}
 			}
 		}
@@ -542,9 +666,16 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 
 	if (strCommand == "MODE")
 	{
+		std::string strNickname = vecParts[0].substr(1);
+		std::string::size_type iSeparator = strNickname.find('!');
+		if (iSeparator != std::string::npos)
+		{
+			strNickname = strNickname.substr(0, iSeparator);
+		}
+
 		std::string strChannel = vecParts[2];
 		std::string strModes = vecParts[3];
-		std::string::size_type iSeparator = strModes.find(' ');
+		iSeparator = strModes.find(' ');
 		std::string strParams;
 		if (iSeparator != std::string::npos)
 		{
@@ -554,107 +685,132 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 
 		CIrcChannel *pChannel = FindChannel(strChannel.c_str());
 
-		std::string::size_type iLastPos = strParams.find_first_not_of(' ', 0);
-		std::string::size_type iPos = strParams.find_first_of(' ', iLastPos);
-		int iSet = 0;
-		for (std::string::iterator i = strModes.begin(); i != strModes.end(); ++i)
+		if (pChannel != NULL)
 		{
-			char cMode = *i;
-			switch (cMode)
+			CIrcUser *pUser = FindUser(strNickname.c_str());
+			if (pUser != NULL)
 			{
-			case '+':
-				iSet = 1;
-				break;
-			case '-':
-				iSet = 2;
-				break;
-			}
-			if (iSet == 0 || cMode == '+' || cMode == '-')
-			{
-				continue;
-			}
-
-			char cGroup = 0;
-			bool bPrefixMode = false;
-
-			// Modes in PREFIX are not listed but could be considered type B.
-			if (IsPrefixMode(cMode))
-			{
-				cGroup = 2;
-				bPrefixMode = true;
-			}
-			else
-			{
-				cGroup = GetModeGroup(cMode);
-			}
-
-			switch (cGroup)
-			{
-				case 1:
-				case 2: // Always parameter
+				std::string strNickname = vecParts[0].substr(1);
+				std::string::size_type iSeparator = strNickname.find('!');
+				if (iSeparator != std::string::npos)
 				{
-					if (iPos != std::string::npos || iLastPos != std::string::npos)
-					{
-						std::string strParam = strParams.substr(iLastPos, iPos - iLastPos);
-						printf("1MODEEEEEEE %c%c %s!\n", iSet == 1 ? '+' : '-', cMode, strParam.c_str());
+					strNickname = strNickname.substr(0, iSeparator);
 
-						if (bPrefixMode)
+					v8::HandleScope handleScope;
+					for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+					{
+						(*i)->EnterContext();
+
+						v8::Handle<v8::Value> argValues[5] = { GetScriptThis(), pUser->GetScriptThis(), pChannel->GetScriptThis(), v8::String::New(strModes.c_str()), v8::String::New(strParams.c_str()) };
+						(*i)->CallEvent("onUserSetChannelModes", 5, argValues);
+
+						(*i)->ExitContext();
+					}
+				}
+			}
+
+			std::string::size_type iLastPos = strParams.find_first_not_of(' ', 0);
+			std::string::size_type iPos = strParams.find_first_of(' ', iLastPos);
+			int iSet = 0;
+			for (std::string::iterator i = strModes.begin(); i != strModes.end(); ++i)
+			{
+				char cMode = *i;
+				switch (cMode)
+				{
+				case '+':
+					iSet = 1;
+					break;
+				case '-':
+					iSet = 2;
+					break;
+				}
+				if (iSet == 0 || cMode == '+' || cMode == '-')
+				{
+					continue;
+				}
+
+				char cGroup = 0;
+				bool bPrefixMode = false;
+
+				// Modes in PREFIX are not listed but could be considered type B.
+				if (IsPrefixMode(cMode))
+				{
+					cGroup = 2;
+					bPrefixMode = true;
+				}
+				else
+				{
+					cGroup = GetModeGroup(cMode);
+				}
+
+				switch (cGroup)
+				{
+					case 1:
+					case 2: // Always parameter
+					{
+						if (iPos != std::string::npos || iLastPos != std::string::npos)
 						{
-							CIrcUser *pUser = FindUser(strParam.c_str());
+							std::string strParam = strParams.substr(iLastPos, iPos - iLastPos);
+							printf("1MODEEEEEEE %c%c %s!\n", iSet == 1 ? '+' : '-', cMode, strParam.c_str());
 
-							char cNewMode = 0;
-							char cPrefix = ModeToPrefix(cMode);
-							switch (cPrefix)
+							if (bPrefixMode)
 							{
-							case '~':
-								cNewMode = 32;
-								break;
-							case '&':
-								cNewMode = 16;
-								break;
-							case '@':
-								cNewMode = 8;
-								break;
-							case '%':
-								cNewMode = 4;
-								break;
-							case '+':
-								cNewMode = 2;
-								break;
+								CIrcUser *pUser = FindUser(strParam.c_str());
+
+								char cNewMode = 0;
+								char cPrefix = ModeToPrefix(cMode);
+								switch (cPrefix)
+								{
+								case '~':
+									cNewMode = 32;
+									break;
+								case '&':
+									cNewMode = 16;
+									break;
+								case '@':
+									cNewMode = 8;
+									break;
+								case '%':
+									cNewMode = 4;
+									break;
+								case '+':
+									cNewMode = 2;
+									break;
+								}
+								if (iSet == 1)
+									pUser->m_mapChannelModes[pChannel] |= cNewMode;
+								else
+									pUser->m_mapChannelModes[pChannel] &= ~cNewMode;
 							}
-							if (iSet == 1)
-								pUser->m_mapChannelModes[pChannel] |= cNewMode;
-							else
-								pUser->m_mapChannelModes[pChannel] &= ~cNewMode;
+
+							iLastPos = strParams.find_first_not_of(' ', iPos);
+							iPos = strParams.find_first_of(' ', iLastPos);
 						}
-
-						iLastPos = strParams.find_first_not_of(' ', iPos);
-						iPos = strParams.find_first_of(' ', iLastPos);
+						break;
 					}
-					break;
-				}
 
-				case 3: // Parameter if iSet == 1
-				{
-					if (iSet == 1 && (iPos != std::string::npos || iLastPos != std::string::npos))
+					case 3: // Parameter if iSet == 1
 					{
-						std::string strParam = strParams.substr(iLastPos, iPos - iLastPos);
-						printf("2MODEEEEEEE +%c %s!\n", cMode, strParam.c_str());
+						if (iSet == 1 && (iPos != std::string::npos || iLastPos != std::string::npos))
+						{
+							std::string strParam = strParams.substr(iLastPos, iPos - iLastPos);
+							printf("2MODEEEEEEE +%c %s!\n", cMode, strParam.c_str());
 
-						iLastPos = strParams.find_first_not_of(' ', iPos);
-						iPos = strParams.find_first_of(' ', iLastPos);
+							iLastPos = strParams.find_first_not_of(' ', iPos);
+							iPos = strParams.find_first_of(' ', iLastPos);
+						}
+						else if (iSet == 2)
+						{
+							printf("2MODEEEEEEE -%c!\n", cMode);
+						}
+						break;
 					}
-					else if (iSet == 2)
+
+					case 4: // No parameter
 					{
-						printf("2MODEEEEEEE -%c!\n", cMode);
+						printf("3MODEEEEEEE %c%c!\n", iSet == 1 ? '+' : '-', cMode);
+						break;
 					}
-					break;
-				}
-
-				case 4: // No parameter
-				{
-					printf("3MODEEEEEEE %c%c!\n", iSet == 1 ? '+' : '-', cMode);
-					break;
 				}
 			}
 		}
@@ -673,4 +829,12 @@ void CBot::JoinChannel(const char *szChannel)
 	{
 		m_pIrcChannelQueue->push_back(pChannel);
 	}
+}
+
+v8::Handle<v8::Value> CBot::GetScriptThis()
+{
+	v8::HandleScope handleScope;
+	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.Bot->GetFunction()->NewInstance();
+	obj->SetInternalField(0, v8::External::New(this));
+	return obj;
 }

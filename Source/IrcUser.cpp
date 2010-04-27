@@ -34,3 +34,11 @@ const char *CIrcUser::GetName()
 
 	return m_szName;
 }
+
+v8::Handle<v8::Value> CIrcUser::GetScriptThis()
+{
+	v8::HandleScope handleScope;
+	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.IrcUser->GetFunction()->NewInstance();
+	obj->SetInternalField(0, v8::External::New(this));
+	return obj;
+}

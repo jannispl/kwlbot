@@ -134,7 +134,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib"
+				AdditionalDependencies="ws2_32.lib winmm.lib .\v8\v8.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -237,6 +237,26 @@
 			</File>
 			<File
 				RelativePath=".\TcpSocket.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Scripting"
+			>
+			<File
+				RelativePath=".\Script.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Script.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ScriptFunctions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ScriptFunctions.h"
 				>
 			</File>
 		</Filter>

@@ -12,17 +12,19 @@ class CBot;
 #ifndef _BOT_H
 #define _BOT_H
 
+#include "Core.h"
 #include "IrcSocket.h"
 #include "Pool.h"
 #include "IrcChannel.h"
 #include "IrcUser.h"
+#include "Script.h"
 #include <vector>
 #include <string>
 
 class CBot
 {
 public:
-	CBot();
+	CBot(CCore *pParentCore);
 	~CBot();
 
 	CIrcSettings *GetSettings();
@@ -39,9 +41,11 @@ public:
 	char GetModeGroup(char cMode);
 	void HandleData(const std::vector<std::string> &vecParts);
 	void JoinChannel(const char *szChannel);
+	v8::Handle<v8::Value> GetScriptThis();
 
 private:
 	bool m_bGotMotd;
+	CCore *m_pParentCore;
 	CIrcSocket *m_pIrcSocket;
 	CIrcSettings m_IrcSettings;
 	CPool<CIrcChannel *> m_plIrcChannels;
