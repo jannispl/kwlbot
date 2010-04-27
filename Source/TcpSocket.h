@@ -20,6 +20,7 @@ class CTcpSocket;
   typedef int socket_t;
 
   #define closesocket(sock) close(sock)
+  #define SOCKET_ERROR (-1)
 #endif
 
 class CTcpSocket
@@ -45,13 +46,22 @@ public:
 		u_long ulFlags = bBlocking ? 0 : 1;
 		ioctlsocket(m_Socket, FIONBIO, &ulFlags);
 #else
+		int iFlags;
+#if defined(O_NONBLOCK)
+		if ((iFlags = fcntl(m_Socket, F_GETFL, 0)) == -1)
+			iFlags = 0;
+		fcntl(m_Socket, F_SETFL, iFlags | O_NONBLOCK);
+#else
+		iFlags = 1;
+		return ioctl(m_Socket, FIOBIO, &iFlags);
+#endif
 
 #endif
 	}
 
-	int Connect(const sockaddr *name, int namelen)
+	bool Connect(const sockaddr *name, int namelen)
 	{
-		return connect(m_Socket, name, namelen);
+		return connect(m_Socket, name, namelen) != SOCKET_ERROR;
 	}
 
 	static bool ResolveHostname(const char *szHostname, sockaddr_in *dest)
@@ -77,7 +87,7 @@ public:
 		return true;
 	}
 
-	int Connect(const char *szHostname, int iPort)
+	bool Connect(const char *szHostname, int iPort)
 	{
 		sockaddr_in addr;
 		addr.sin_family = AF_INET;
@@ -87,17 +97,17 @@ public:
 		return Connect((sockaddr *)&addr, sizeof(sockaddr_in));
 	}
 
-	int Bind(const sockaddr *addr, int namelen)
+	bool Bind(const sockaddr *addr, int namelen)
 	{
-		return bind(m_Socket, addr, namelen);
+		return bind(m_Socket, addr, namelen) != SOCKET_ERROR;
 	}
 
-	int Listen(int backlog)
+	bool Listen(int backlog)
 	{
-		return listen(m_Socket, backlog);
+		return listen(m_Socket, backlog) != SOCKET_ERROR;
 	}
 
-	int Write(const void *buf, size_t len = 0, int flags = 0)
+	size_t Write(const void *buf, size_t len = 0, int flags = 0)
 	{
 		if (len == 0)
 			len = strlen((const char *)buf);
@@ -105,16 +115,16 @@ public:
 		return send(m_Socket, (const char *)buf, len, flags);
 	}
 
-	int Read(void *buf, size_t len, int flags = 0)
+	size_t Read(void *buf, size_t len, int flags = 0)
 	{
 		return recv(m_Socket, (char *)buf, len, flags);
 	}
 
-	int Close()
+	bool Close()
 	{
 		int ret = closesocket(m_Socket);
 		m_Socket = 0;
-		return ret;
+		return ret != SOCKET_ERROR;
 	}
 
 private:

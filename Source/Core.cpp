@@ -56,6 +56,8 @@ void CCore::Pulse()
 
 void CCore::ScanDirectoryForBots(const char *szDirectory)
 {
+	TRACEFUNC("CCore::ScanDirectoryForBots");
+
 	WIN32_FIND_DATAA fd;
 
 	char *szPath = new char[strlen(szDirectory) + 2];

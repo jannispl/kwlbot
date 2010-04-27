@@ -23,7 +23,7 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort)
 {
 	TRACEFUNC("CIrcSocket::Connect");
 
-	if (m_TcpSocket.Connect(szHostname, iPort) != 0)
+	if (!m_TcpSocket.Connect(szHostname, iPort))
 	{
 		return false;
 	}
