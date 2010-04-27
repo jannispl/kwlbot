@@ -13,6 +13,7 @@ class CCore;
 #define _CORE_H
 
 #include "Bot.h"
+#include "Script.h"
 #include "Pool.h"
 
 class CCore
@@ -21,13 +22,20 @@ public:
 	CCore();
 	~CCore();
 
-	CBot *NewBot();
+	CBot *CreateBot();
 	bool DeleteBot(CBot *pBot);
+
+	CScript *CreateScript(const char *szFilename);
+	bool DeleteScript(CScript *pScript);
+
+	CPool<CScript *> *GetScripts();
+
 	void Pulse();
 	void ScanDirectoryForBots(const char *szDirectory);
 
 private:
 	CPool<CBot *> m_plBots;
+	CPool<CScript *> m_plScripts;
 };
 
 #endif

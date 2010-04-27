@@ -34,3 +34,10 @@ const char *CIrcChannel::GetName()
 
 	return m_szName;
 }
+
+v8::Handle<v8::Value> CIrcChannel::GetScriptThis()
+{
+	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.IrcChannel->GetFunction()->NewInstance();
+	obj->SetInternalField(0, v8::External::New(this));
+	return obj;
+}

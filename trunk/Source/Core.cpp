@@ -13,6 +13,20 @@ Purpose:	Core container which manages all bot instances
 
 CCore::CCore()
 {
+	CConfig cfg("core.cfg");
+	if (cfg.StartValueList("scripts"))
+	{
+		std::string strValue;
+		while (cfg.GetNextValue(&strValue))
+		{
+			CScript *pScript = CreateScript(("scripts/" + strValue).c_str());
+			if (pScript != NULL)
+			{
+				printf("loaded %s\n", strValue.c_str());
+			}
+		}
+	}
+
 	ScanDirectoryForBots("bots/");
 }
 
@@ -20,11 +34,11 @@ CCore::~CCore()
 {
 }
 
-CBot *CCore::NewBot()
+CBot *CCore::CreateBot()
 {
 	TRACEFUNC("CCore::NewBot");
 
-	CBot *pBot = new CBot();
+	CBot *pBot = new CBot(this);
 	m_plBots.push_back(pBot);
 	return pBot;
 }
@@ -40,8 +54,40 @@ bool CCore::DeleteBot(CBot *pBot)
 
 	m_plBots.remove(pBot);
 	delete pBot;
-
 	return true;
+}
+
+CScript *CCore::CreateScript(const char *szFilename)
+{
+	TRACEFUNC("CCore::NewScript");
+
+	CScript *pScript = new CScript();
+	if (!pScript->Load(szFilename))
+	{
+		return NULL;
+	}
+
+	m_plScripts.push_back(pScript);
+	return pScript;
+}
+
+bool CCore::DeleteScript(CScript *pScript)
+{
+	TRACEFUNC("CCore::DeleteScript");
+
+	if (pScript == NULL)
+	{
+		return false;
+	}
+
+	m_plScripts.remove(pScript);
+	delete pScript;
+	return true;
+}
+
+CPool<CScript *> *CCore::GetScripts()
+{
+	return &m_plScripts;
 }
 
 void CCore::Pulse()
@@ -78,7 +124,7 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 				{
 					CConfig Config((std::string(szDirectory) + fd.cFileName));
 
-					CBot *pBot = NewBot();
+					CBot *pBot = CreateBot();
 					pBot->GetSettings()->LoadFromConfig(&Config);
 
 					std::string strTemp;

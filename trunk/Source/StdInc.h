@@ -21,17 +21,6 @@
 #endif
 
 #include "Definitions.h"
-
-#include "Core.h"
-#include "Bot.h"
-#include "IrcSettings.h"
-#include "IrcSocket.h"
-
-#include "IrcChannel.h"
-#include "IrcUser.h"
-
-#include "Config.h"
-#include "TcpSocket.h"
 #include "Pool.h"
 
 #ifdef _DEBUG
