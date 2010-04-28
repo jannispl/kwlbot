@@ -15,7 +15,7 @@ v8::Persistent<v8::ObjectTemplate> CScript::m_GlobalTemplate;
 CScript::ClassTemplates_t CScript::m_ClassTemplates;
 
 CScript::CScript()
-	: m_bLoaded(false)
+	: m_bLoaded(false), m_bCurrentEventCancelled(false), m_bCallingEvent(false)
 {
 }
 
@@ -69,6 +69,7 @@ bool CScript::Load(const char *szFilename)
 		m_GlobalTemplate = v8::Persistent<v8::ObjectTemplate>::New(v8::ObjectTemplate::New());
 		m_GlobalTemplate->Set(v8::String::New("print"), v8::FunctionTemplate::New(CScriptFunctions::Print));
 		m_GlobalTemplate->Set(v8::String::New("addEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::AddEventHandler));
+		m_GlobalTemplate->Set(v8::String::New("cancelEvent"), v8::FunctionTemplate::New(CScriptFunctions::CancelEvent));
 	}
 
 	// create a new context
@@ -139,31 +140,32 @@ bool CScript::Load(const char *szFilename)
 	return true;
 }
 
-v8::Handle<v8::Value> CScript::CallEvent(const char *szEventName, int iArgCount, v8::Handle<v8::Value> *pArgValues)
+bool CScript::CallEvent(const char *szEventName, int iArgCount, v8::Handle<v8::Value> *pArgValues)
 {
 	TRACEFUNC("CScript::CallEvent");
 
 	v8::HandleScope handleScope;
 
-	std::map<std::string, v8::Persistent<v8::Function>>::iterator i = m_mapEventFunctions.find(szEventName);
+	// Reset it, to be on the safe side
+	m_bCurrentEventCancelled = false;
 
-	if (i == m_mapEventFunctions.end())
-	{
-		return v8::Undefined();
-	}
-
-	v8::Handle<v8::Function> function = i->second;
-
-	if (!function->IsFunction())
-	{
-		return v8::Undefined();
-	}
+	m_bCallingEvent = true;
 
 	CScriptFunctions::m_pCallingScript = this;
-	v8::Handle<v8::Value> retval = function->Call(function, iArgCount, pArgValues);
+	for (std::list<EventHandler>::iterator i = m_lstEventHandlers.begin(); i != m_lstEventHandlers.end(); ++i)
+	{
+		if (i->strEvent == szEventName && i->handlerFunction->IsFunction())
+		{
+			i->handlerFunction->Call(i->handlerFunction, iArgCount, pArgValues);
+		}
+	}
 	CScriptFunctions::m_pCallingScript = NULL;
 
-	return retval;
+	m_bCallingEvent = false;
+
+	bool bCancelled = m_bCurrentEventCancelled;
+	m_bCurrentEventCancelled = false;
+	return !bCancelled;
 }
 
 void CScript::EnterContext()

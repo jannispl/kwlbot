@@ -25,6 +25,7 @@ public:
 
 	static FuncReturn Print(const Arguments &args);
 	static FuncReturn AddEventHandler(const Arguments &args);
+	static FuncReturn CancelEvent(const Arguments &args);
 
 	static FuncReturn Bot__SendRaw(const Arguments &args);
 	static FuncReturn Bot__SendMessage(const Arguments &args);

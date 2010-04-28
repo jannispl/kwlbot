@@ -57,7 +57,29 @@ FuncReturn CScriptFunctions::AddEventHandler(const Arguments &args)
 	v8::String::Utf8Value strEvent(args[0]);
 	v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(args[1]);
 
-	m_pCallingScript->m_mapEventFunctions[std::string(*strEvent)] = v8::Persistent<v8::Function>::New(function);
+	CScript::EventHandler eventHandler;
+	eventHandler.strEvent = *strEvent;
+	eventHandler.handlerFunction = v8::Persistent<v8::Function>::New(function);
+	m_pCallingScript->m_lstEventHandlers.push_back(eventHandler);
+
+	return v8::Boolean::New(true);
+}
+
+FuncReturn CScriptFunctions::CancelEvent(const Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::CancelEvent");
+
+	if (m_pCallingScript == NULL)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (!m_pCallingScript->m_bCallingEvent)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	m_pCallingScript->m_bCurrentEventCancelled = true;
 
 	return v8::Boolean::New(true);
 }
