@@ -46,6 +46,8 @@ bool CScript::Load(const char *szFilename)
 		botProto->Set(v8::String::New("sendNotice"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendNotice));
 		botProto->Set(v8::String::New("findUser"), v8::FunctionTemplate::New(CScriptFunctions::Bot__FindUser));
 		botProto->Set(v8::String::New("findChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__FindChannel));
+		botProto->Set(v8::String::New("joinChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__JoinChannel));
+		botProto->Set(v8::String::New("leaveChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__LeaveChannel));
 
 		// CIrcUser
 		m_ClassTemplates.IrcUser = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());

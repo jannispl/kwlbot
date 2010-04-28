@@ -297,6 +297,94 @@ FuncReturn CScriptFunctions::Bot__FindChannel(const Arguments &args)
 	return obj;
 }
 
+FuncReturn CScriptFunctions::Bot__JoinChannel(const Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::Bot__JoinChannel");
+
+	if (args.Length() < 1)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (!args[0]->IsString())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::Bot)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	v8::String::Utf8Value strChannel(args[0]);
+	if (*strChannel == NULL)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	((CBot *)pObject)->JoinChannel(*strChannel);
+
+	return v8::Boolean::New(true);
+}
+
+FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::Bot__LeaveChannel");
+
+	if (args.Length() < 1)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (!(args[0]->IsString() || args[0]->IsObject()))
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::Bot)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CIrcChannel *pChannel = NULL;
+	if (args[0]->IsObject())
+	{
+		CScriptObject *pChannel_ = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
+		if (pChannel_->GetType() != CScriptObject::IrcChannel)
+		{
+			return v8::Boolean::New(false);
+		}
+
+		if (((CIrcChannel *)pChannel_)->GetParentBot() != (CBot *)pObject)
+		{
+			return v8::Boolean::New(false);
+		}
+
+		pChannel = (CIrcChannel *)pChannel_;
+	}
+	else
+	{
+		v8::String::Utf8Value strChannel_(args[0]);
+		pChannel = ((CBot *)pObject)->FindChannel(*strChannel_);
+	}
+
+	if (pChannel == NULL)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	std::string strReason;
+	if (args.Length() >= 2 && args[1]->IsString())
+	{
+		v8::String::Utf8Value strReason_(args[1]);
+		strReason = *strReason_;
+	}
+
+	return v8::Boolean::New(((CBot *)pObject)->LeaveChannel(pChannel, strReason.empty() ? NULL : strReason.c_str()));
+}
+
 FuncReturn CScriptFunctions::IrcUser__GetNickname(const Arguments &args)
 {
 	TRACEFUNC("CScriptFunctions::IrcUser__GetNickname");
