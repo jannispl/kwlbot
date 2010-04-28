@@ -44,6 +44,7 @@ public:
 	void HandleData(const std::vector<std::string> &vecParts);
 
 	void JoinChannel(const char *szChannel);
+	bool LeaveChannel(CIrcChannel *pChannel, const char *szReason = NULL);
 	void SendMessage(const char *szTarget, const char *szMessage);
 	void SendNotice(const char *szTarget, const char *szMessage);
 

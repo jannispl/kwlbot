@@ -31,6 +31,8 @@ public:
 	static FuncReturn Bot__SendNotice(const Arguments &args);
 	static FuncReturn Bot__FindUser(const Arguments &args);
 	static FuncReturn Bot__FindChannel(const Arguments &args);
+	static FuncReturn Bot__JoinChannel(const Arguments &args);
+	static FuncReturn Bot__LeaveChannel(const Arguments &args);
 
 	static FuncReturn IrcUser__GetNickname(const Arguments &args);
 	static FuncReturn IrcUser__HasChannel(const Arguments &args);

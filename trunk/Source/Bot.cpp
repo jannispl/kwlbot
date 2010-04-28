@@ -365,24 +365,49 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
 			if (pChannel != NULL)
 			{
-				CIrcUser *pUser = FindUser(strNickname.c_str());
-				if (pUser != NULL)
+				if (strNickname == GetSettings()->GetNickname())
 				{
-					m_pParentCore->GetEventManager()->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
+					printf("WE LEFT %s.\n", pChannel->GetName());
 
-					printf("Removing %s from %s.\n", pUser->GetName(), pChannel->GetName());
-					pUser->m_plIrcChannels.remove(pChannel);
-					pChannel->m_plIrcUsers.remove(pUser);
-					if (pUser->m_plIrcChannels.size() == 0)
+					for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
 					{
-						printf("We don't know %s anymore.\n", pUser->GetName());
-						m_plGlobalUsers.remove(pUser);
-						delete pUser;
+						if ((*i)->m_plIrcChannels.size() == 1)
+						{
+							printf("We lost %s.\n", (*i)->GetName());
+							m_plGlobalUsers.remove(*i);
+							delete *i;
+						}
+						i = pChannel->m_plIrcUsers.erase(i);
+						if (i == pChannel->m_plIrcUsers.end())
+						{
+							break;
+						}
 					}
+
+					m_plIrcChannels.remove(pChannel);
+					delete pChannel;
 				}
 				else
 				{
-					printf("Error: we don't know %s yet, for some reason.\n", strNickname.c_str());
+					CIrcUser *pUser = FindUser(strNickname.c_str());
+					if (pUser != NULL)
+					{
+						m_pParentCore->GetEventManager()->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
+
+						printf("Removing %s from %s.\n", pUser->GetName(), pChannel->GetName());
+						pUser->m_plIrcChannels.remove(pChannel);
+						pChannel->m_plIrcUsers.remove(pUser);
+						if (pUser->m_plIrcChannels.size() == 0)
+						{
+							printf("We don't know %s anymore.\n", pUser->GetName());
+							m_plGlobalUsers.remove(pUser);
+							delete pUser;
+						}
+					}
+					else
+					{
+						printf("Error: we don't know %s yet, for some reason.\n", strNickname.c_str());
+					}
 				}
 			}
 		}
@@ -744,6 +769,37 @@ void CBot::JoinChannel(const char *szChannel)
 	{
 		m_pIrcChannelQueue->push_back(pChannel);
 	}
+}
+
+bool CBot::LeaveChannel(CIrcChannel *pChannel, const char *szReason)
+{
+	TRACEFUNC("CBot::LeaveChannel");
+
+	bool bFound = false;
+	for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
+	{
+		if (*i == pChannel)
+		{
+			bFound = true;
+			break;
+		}
+	}
+
+	if (!bFound)
+	{
+		return false;
+	}
+
+	if (szReason != NULL)
+	{
+		SendRawFormat("PART %s :%s", pChannel->GetName(), szReason);
+	}
+	else
+	{
+		SendRawFormat("PART %s", pChannel->GetName());
+	}
+
+	return true;
 }
 
 void CBot::SendMessage(const char *szTarget, const char *szMessage)
