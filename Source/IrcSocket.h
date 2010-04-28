@@ -33,6 +33,7 @@ public:
 private:
 	CTcpSocket m_TcpSocket;
 	CBot *m_pParentBot;
+	std::string m_strBuffer;
 };
 
 #endif

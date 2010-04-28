@@ -10,9 +10,11 @@ Purpose:	Class which represents a remote IRC user
 #include "StdInc.h"
 #include "IrcUser.h"
 
-CIrcUser::CIrcUser(const char *szName)
+CIrcUser::CIrcUser(CBot *pParentBot, const char *szName)
 {
 	TRACEFUNC("CIrcUser::CIrcUser");
+
+	m_pParentBot = pParentBot;
 
 	strcpy(m_szName, szName);
 }
@@ -47,6 +49,11 @@ bool CIrcUser::HasChannel(CIrcChannel *pChannel)
 		}
 	}
 	return false;
+}
+
+CBot *CIrcUser::GetParentBot()
+{
+	return m_pParentBot;
 }
 
 CScriptObject::eScriptType CIrcUser::GetType()

@@ -127,6 +127,8 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 				{
 					CConfig Config((std::string(szDirectory) + fd.cFileName));
 
+					printf("bot '%s'\n", fd.cFileName);
+
 					CBot *pBot = CreateBot();
 					pBot->GetSettings()->LoadFromConfig(&Config);
 

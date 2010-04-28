@@ -262,7 +262,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 							if (pUser == NULL)
 							{
 								printf("We don't know %s yet, adding him (1).\n", strName.c_str());
-								pUser = new CIrcUser(strName.c_str());
+								pUser = new CIrcUser(this, strName.c_str());
 								m_plGlobalUsers.push_back(pUser);
 							}
 							else
@@ -299,7 +299,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			bool bSelf = false;
 			if (strNickname == GetSettings()->GetNickname())
 			{
-				pChannel = new CIrcChannel(strChannel.c_str());
+				pChannel = new CIrcChannel(this, strChannel.c_str());
 				m_plIrcChannels.push_back(pChannel);
 				printf("WE JOINED '%s'\n", pChannel->GetName());
 
@@ -319,7 +319,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				if (pUser == NULL)
 				{
 					printf("We don't know %s yet, adding him (2).\n", strNickname.c_str());
-					pUser = new CIrcUser(strNickname.c_str());
+					pUser = new CIrcUser(this, strNickname.c_str());
 					m_plGlobalUsers.push_back(pUser);
 				}
 				else
@@ -682,7 +682,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 						if (iPos != std::string::npos || iLastPos != std::string::npos)
 						{
 							std::string strParam = strParams.substr(iLastPos, iPos - iLastPos);
-							printf("1MODEEEEEEE %c%c %s!\n", iSet == 1 ? '+' : '-', cMode, strParam.c_str());
+							//printf("1MODEEEEEEE %c%c %s!\n", iSet == 1 ? '+' : '-', cMode, strParam.c_str());
 
 							if (bPrefixMode)
 							{
@@ -725,21 +725,21 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 						if (iSet == 1 && (iPos != std::string::npos || iLastPos != std::string::npos))
 						{
 							std::string strParam = strParams.substr(iLastPos, iPos - iLastPos);
-							printf("2MODEEEEEEE +%c %s!\n", cMode, strParam.c_str());
+							//printf("2MODEEEEEEE +%c %s!\n", cMode, strParam.c_str());
 
 							iLastPos = strParams.find_first_not_of(' ', iPos);
 							iPos = strParams.find_first_of(' ', iLastPos);
 						}
 						else if (iSet == 2)
 						{
-							printf("2MODEEEEEEE -%c!\n", cMode);
+							//printf("2MODEEEEEEE -%c!\n", cMode);
 						}
 						break;
 					}
 
 					case 4: // No parameter
 					{
-						printf("3MODEEEEEEE %c%c!\n", iSet == 1 ? '+' : '-', cMode);
+						//printf("3MODEEEEEEE %c%c!\n", iSet == 1 ? '+' : '-', cMode);
 						break;
 					}
 				}
@@ -751,7 +751,9 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 
 void CBot::JoinChannel(const char *szChannel)
 {
-	CIrcChannel *pChannel = new CIrcChannel(szChannel);
+	TRACEFUNC("CBot::JoinChannel");
+
+	CIrcChannel *pChannel = new CIrcChannel(this, szChannel);
 	if (m_bGotMotd)
 	{
 		SendRawFormat("JOIN %s", szChannel);
@@ -764,11 +766,15 @@ void CBot::JoinChannel(const char *szChannel)
 
 void CBot::SendMessage(const char *szTarget, const char *szMessage)
 {
+	TRACEFUNC("CBot::SendMessage");
+
 	SendRawFormat("PRIVMSG %s :%s", szTarget, szMessage);
 }
 
 void CBot::SendNotice(const char *szTarget, const char *szMessage)
 {
+	TRACEFUNC("CBot::SendNotice");
+
 	SendRawFormat("NOTICE %s :%s", szTarget, szMessage);
 }
 

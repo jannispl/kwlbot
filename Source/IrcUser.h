@@ -13,6 +13,7 @@ class CIrcUser;
 #define _IRCUSER_H
 
 #include "ScriptObject.h"
+#include "Bot.h"
 #include "IrcChannel.h"
 #include "Script.h"
 #include <map>
@@ -20,12 +21,14 @@ class CIrcUser;
 class CIrcUser : public CScriptObject
 {
 public:
-	CIrcUser(const char *szName);
+	CIrcUser(CBot *pParentBot, const char *szName);
 	~CIrcUser();
 
 	void SetName(const char *szName);
 	const char *GetName();
 	bool HasChannel(CIrcChannel *pChannel);
+
+	CBot *GetParentBot();
 
 	CScriptObject::eScriptType GetType();
 
@@ -33,6 +36,7 @@ public:
 	std::map<CIrcChannel *, char> m_mapChannelModes;
 
 private:
+	CBot *m_pParentBot;
 	char m_szName[MAX_NICKNAME_LEN + 1];
 };
 

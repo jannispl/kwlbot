@@ -25,6 +25,8 @@ CScript::~CScript()
 
 bool CScript::Load(const char *szFilename)
 {
+	TRACEFUNC("CScript::Load");
+
 	if (m_bLoaded)
 	{
 		return false;
@@ -137,6 +139,8 @@ bool CScript::Load(const char *szFilename)
 
 v8::Handle<v8::Value> CScript::CallEvent(const char *szEventName, int iArgCount, v8::Handle<v8::Value> *pArgValues)
 {
+	TRACEFUNC("CScript::CallEvent");
+
 	v8::HandleScope handleScope;
 
 	std::map<std::string, v8::Persistent<v8::Function>>::iterator i = m_mapEventFunctions.find(szEventName);
@@ -162,10 +166,14 @@ v8::Handle<v8::Value> CScript::CallEvent(const char *szEventName, int iArgCount,
 
 void CScript::EnterContext()
 {
+	TRACEFUNC("CScript::EnterContext");
+
 	m_ScriptContext->Enter();
 }
 
 void CScript::ExitContext()
 {
+	TRACEFUNC("CScript::ExitContext");
+
 	m_ScriptContext->Exit();
 }

@@ -10,9 +10,11 @@ Purpose:	Class which represents a remote IRC channel
 #include "StdInc.h"
 #include "IrcChannel.h"
 
-CIrcChannel::CIrcChannel(const char *szName)
+CIrcChannel::CIrcChannel(CBot *pParentBot, const char *szName)
 {
 	TRACEFUNC("CIrcChannel::CIrcChannel");
+
+	m_pParentBot = pParentBot;
 
 	strcpy(m_szName, szName);
 }
@@ -47,6 +49,11 @@ bool CIrcChannel::HasUser(CIrcUser *pUser)
 		}
 	}
 	return false;
+}
+
+CBot *CIrcChannel::GetParentBot()
+{
+	return m_pParentBot;
 }
 
 CScriptObject::eScriptType CIrcChannel::GetType()

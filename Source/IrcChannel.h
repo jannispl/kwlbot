@@ -13,6 +13,7 @@ class CIrcChannel;
 #define _IRCCHANNEL_H
 
 #include "ScriptObject.h"
+#include "Bot.h"
 #include "IrcUser.h"
 #include "Pool.h"
 #include "Script.h"
@@ -20,18 +21,21 @@ class CIrcChannel;
 class CIrcChannel : public CScriptObject
 {
 public:
-	CIrcChannel(const char *szName);
+	CIrcChannel(CBot *pParentBot, const char *szName);
 	~CIrcChannel();
 
 	void SetName(const char *szName);
 	const char *GetName();
 	bool HasUser(CIrcUser *pUser);
 
+	CBot *GetParentBot();
+
 	CScriptObject::eScriptType GetType();
 
 	CPool<CIrcUser *> m_plIrcUsers;
 
 private:
+	CBot *m_pParentBot;
 	char m_szName[MAX_CHANNEL_LEN + 1];
 };
 
