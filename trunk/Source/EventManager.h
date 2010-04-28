@@ -27,10 +27,11 @@ public:
 	void OnBotConnected(CBot *pBot);
 	void OnBotJoinedChannel(CBot *pBot, CIrcChannel *pChannel);
 	void OnUserJoinedChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel);
-	void OnUserLeftChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel);
-	void OnUserKickedUser(CBot *pBot, CIrcUser *pUser, CIrcUser *pVictim, CIrcChannel *pChannel);
-	void OnUserQuit(CBot *pBot, CIrcUser *pUser);
+	void OnUserLeftChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szReason);
+	void OnUserKickedUser(CBot *pBot, CIrcUser *pUser, CIrcUser *pVictim, CIrcChannel *pChannel, const char *szReason);
+	void OnUserQuit(CBot *pBot, CIrcUser *pUser, const char *szReason);
 	void OnUserChangedNickname(CBot *pBot, CIrcUser *pUser, const char *szOldNickname);
+	void OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, const char *szMessage);
 	void OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szMessage);
 	void OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szModes, const char *szParams);
 

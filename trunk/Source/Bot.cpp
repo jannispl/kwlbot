@@ -356,13 +356,19 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 		{
 			strNickname = strNickname.substr(0, iSeparator);
 
+			std::string strReason = vecParts[3];
+			if (!strReason.empty() && *(strReason.begin()) == ':')
+			{
+				strReason = strReason.substr(1);
+			}
+
 			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
 			if (pChannel != NULL)
 			{
 				CIrcUser *pUser = FindUser(strNickname.c_str());
 				if (pUser != NULL)
 				{
-					m_pParentCore->GetEventManager()->OnUserLeftChannel(this, pUser, pChannel);
+					m_pParentCore->GetEventManager()->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
 
 					printf("Removing %s from %s.\n", pUser->GetName(), pChannel->GetName());
 					pUser->m_plIrcChannels.remove(pChannel);
@@ -410,7 +416,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					CIrcUser *pUser = FindUser(strNickname.c_str());
 					if (pUser != NULL)
 					{
-						m_pParentCore->GetEventManager()->OnUserKickedUser(this, pUser, pVictim, pChannel);
+						m_pParentCore->GetEventManager()->OnUserKickedUser(this, pUser, pVictim, pChannel, strReason.c_str());
 					}
 
 					printf("Removing %s from %s.\n", pVictim->GetName(), pChannel->GetName());
@@ -439,12 +445,16 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 		if (iSeparator != std::string::npos)
 		{
 			strNickname = strNickname.substr(0, iSeparator);
-			std::string strReason = vecParts[2].substr(1) + vecParts[3];
+			std::string strReason = vecParts[2].substr(1);
+			if (!vecParts[3].empty())
+			{
+				strReason += " " + vecParts[3];
+			}
 
 			CIrcUser *pUser = FindUser(strNickname.c_str());
 			if (pUser != NULL)
 			{
-				m_pParentCore->GetEventManager()->OnUserQuit(this, pUser);
+				m_pParentCore->GetEventManager()->OnUserQuit(this, pUser, strReason.c_str());
 
 				for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
 				{
@@ -504,52 +514,24 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				strMessage = strMessage.substr(1);
 			}
 
-			if (strTarget == GetSettings()->GetNickname())
+			CIrcUser *pUser = FindUser(strNickname.c_str());
+			if (pUser != NULL)
 			{
-				// privmsg to bot
-				printf("[priv] <%s> %s\n", strNickname.c_str(), strMessage.c_str());
-			}
-			else
-			{
-				CIrcChannel *pChannel = FindChannel(strTarget.c_str());
-				if (pChannel != NULL)
+				if (strTarget == GetSettings()->GetNickname())
 				{
-					printf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
+					// privmsg to bot
+					printf("[priv] <%s> %s\n", strNickname.c_str(), strMessage.c_str());
 
-					CIrcUser *pUser = FindUser(strNickname.c_str());
-					if (pUser != NULL)
+					m_pParentCore->GetEventManager()->OnUserPrivateMessage(this, pUser, strMessage.c_str());
+				}
+				else
+				{
+					CIrcChannel *pChannel = FindChannel(strTarget.c_str());
+					if (pChannel != NULL)
 					{
+						printf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
+
 						m_pParentCore->GetEventManager()->OnUserChannelMessage(this, pUser, pChannel, strMessage.c_str());
-#if 0
-						v8::HandleScope handleScope;
-						for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-						{
-							(*i)->EnterContext();
-
-							v8::Handle<v8::Object> This/* = GetScriptThis()*/;
-							v8::Handle<v8::Object> UserThis/* = pUser->GetScriptThis()*/;
-							v8::Handle<v8::Object> ChannelThis/* = pChannel->GetScriptThis()*/;
-							v8::Handle<v8::Value> Message = v8::String::New(strMessage.c_str());
-
-							v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-							v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-							v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
-							
-							This = ctor1->NewInstance();
-							This->SetInternalField(0, v8::External::New(this));
-
-							UserThis = ctor2->NewInstance();
-							UserThis->SetInternalField(0, v8::External::New(pUser));
-
-							ChannelThis = ctor3->NewInstance();
-							ChannelThis->SetInternalField(0, v8::External::New(pChannel));
-
-							v8::Handle<v8::Value> argValues[4] = { This, UserThis, ChannelThis, Message };
-							(*i)->CallEvent("onUserChannelMessage", 4, argValues);
-
-							(*i)->ExitContext();
-						}
-#endif
 					}
 				}
 			}
