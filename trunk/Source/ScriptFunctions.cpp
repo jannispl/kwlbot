@@ -102,7 +102,7 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 		return v8::Boolean::New(false);
 	}
 
-	if (!args[0]->IsObject() || !args[1]->IsString())
+	if (!(args[0]->IsObject() || args[0]->IsString()) || !args[1]->IsString())
 	{
 		return v8::Boolean::New(false);
 	}
@@ -113,30 +113,38 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 		return v8::Boolean::New(false);
 	}
 
-	CScriptObject *pTarget = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
+	std::string strTarget;
 
-	const char *szTarget = NULL;
-
-	switch (pTarget->GetType())
+	if (args[0]->IsObject())
 	{
-	case CScriptObject::IrcUser:
-		if (((CIrcUser *)pTarget)->GetParentBot() != (CBot *)pObject)
+		CScriptObject *pTarget = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
+
+		switch (pTarget->GetType())
 		{
+		case CScriptObject::IrcUser:
+			if (((CIrcUser *)pTarget)->GetParentBot() != (CBot *)pObject)
+			{
+				return v8::Boolean::New(false);
+			}
+			strTarget = ((CIrcUser *)pTarget)->GetName();
+			break;
+
+		case CScriptObject::IrcChannel:
+			if (((CIrcChannel *)pTarget)->GetParentBot() != (CBot *)pObject)
+			{
+				return v8::Boolean::New(false);
+			}
+			strTarget = ((CIrcChannel *)pTarget)->GetName();
+			break;
+
+		default:
 			return v8::Boolean::New(false);
 		}
-		szTarget = ((CIrcUser *)pTarget)->GetName();
-		break;
-
-	case CScriptObject::IrcChannel:
-		if (((CIrcChannel *)pTarget)->GetParentBot() != (CBot *)pObject)
-		{
-			return v8::Boolean::New(false);
-		}
-		szTarget = ((CIrcChannel *)pTarget)->GetName();
-		break;
-
-	default:
-		return v8::Boolean::New(false);
+	}
+	else
+	{
+		v8::String::Utf8Value strTarget_(args[0]);
+		strTarget = *strTarget_;
 	}
 
 	v8::String::Utf8Value strMessage(args[1]);
@@ -145,7 +153,7 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 		return v8::Boolean::New(false);
 	}
 
-	((CBot *)pObject)->SendMessage(szTarget, *strMessage);
+	((CBot *)pObject)->SendMessage(strTarget.c_str(), *strMessage);
 
 	return v8::Boolean::New(true);
 }
@@ -159,7 +167,7 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 		return v8::Boolean::New(false);
 	}
 
-	if (!args[0]->IsObject() || !args[1]->IsString())
+	if (!(args[0]->IsObject() || args[0]->IsString()) || !args[1]->IsString())
 	{
 		return v8::Boolean::New(false);
 	}
@@ -170,30 +178,38 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 		return v8::Boolean::New(false);
 	}
 
-	CScriptObject *pTarget = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
+	std::string strTarget;
 
-	const char *szTarget = NULL;
-
-	switch (pTarget->GetType())
+	if (args[0]->IsObject())
 	{
-	case CScriptObject::IrcUser:
-		if (((CIrcUser *)pTarget)->GetParentBot() != (CBot *)pObject)
+		CScriptObject *pTarget = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
+
+		switch (pTarget->GetType())
 		{
+		case CScriptObject::IrcUser:
+			if (((CIrcUser *)pTarget)->GetParentBot() != (CBot *)pObject)
+			{
+				return v8::Boolean::New(false);
+			}
+			strTarget = ((CIrcUser *)pTarget)->GetName();
+			break;
+
+		case CScriptObject::IrcChannel:
+			if (((CIrcChannel *)pTarget)->GetParentBot() != (CBot *)pObject)
+			{
+				return v8::Boolean::New(false);
+			}
+			strTarget = ((CIrcChannel *)pTarget)->GetName();
+			break;
+
+		default:
 			return v8::Boolean::New(false);
 		}
-		szTarget = ((CIrcUser *)pTarget)->GetName();
-		break;
-
-	case CScriptObject::IrcChannel:
-		if (((CIrcChannel *)pTarget)->GetParentBot() != (CBot *)pObject)
-		{
-			return v8::Boolean::New(false);
-		}
-		szTarget = ((CIrcChannel *)pTarget)->GetName();
-		break;
-
-	default:
-		return v8::Boolean::New(false);
+	}
+	else
+	{
+		v8::String::Utf8Value strTarget_(args[0]);
+		strTarget = *strTarget_;
 	}
 
 	v8::String::Utf8Value strMessage(args[1]);
@@ -202,7 +218,7 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 		return v8::Boolean::New(false);
 	}
 
-	((CBot *)pObject)->SendNotice(szTarget, *strMessage);
+	((CBot *)pObject)->SendNotice(strTarget.c_str(), *strMessage);
 
 	return v8::Boolean::New(true);
 }
