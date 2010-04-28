@@ -13,7 +13,7 @@ class CScript;
 #define _SCRIPT_H
 
 #include "v8/v8.h"
-#include <map>
+#include <list>
 #include <string>
 
 class CScript
@@ -23,12 +23,17 @@ public:
 	~CScript();
 
 	bool Load(const char *szFilename);
-	v8::Handle<v8::Value> CallEvent(const char *szEventName, int iArgCount = 0, v8::Handle<v8::Value> *pArgValues = NULL);
+	bool CallEvent(const char *szEventName, int iArgCount = 0, v8::Handle<v8::Value> *pArgValues = NULL);
 
 	void EnterContext();
 	void ExitContext();
 
-	std::map<std::string, v8::Persistent<v8::Function>> m_mapEventFunctions;
+	typedef struct 
+	{
+		std::string strEvent;
+		v8::Persistent<v8::Function> handlerFunction;
+	} EventHandler;
+	std::list<EventHandler> m_lstEventHandlers;
 
 	typedef struct
 	{
@@ -36,8 +41,10 @@ public:
 		v8::Persistent<v8::FunctionTemplate> IrcUser;
 		v8::Persistent<v8::FunctionTemplate> IrcChannel;
 	} ClassTemplates_t;
-
 	static ClassTemplates_t m_ClassTemplates;
+
+	bool m_bCallingEvent;
+	bool m_bCurrentEventCancelled;
 
 private:
 	bool m_bLoaded;
