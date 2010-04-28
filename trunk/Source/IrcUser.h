@@ -12,11 +12,12 @@ class CIrcUser;
 #ifndef _IRCUSER_H
 #define _IRCUSER_H
 
+#include "ScriptObject.h"
 #include "IrcChannel.h"
 #include "Script.h"
 #include <map>
 
-class CIrcUser
+class CIrcUser : public CScriptObject
 {
 public:
 	CIrcUser(const char *szName);
@@ -24,8 +25,9 @@ public:
 
 	void SetName(const char *szName);
 	const char *GetName();
+	bool HasChannel(CIrcChannel *pChannel);
 
-	v8::Handle<v8::Value> GetScriptThis();
+	CScriptObject::eScriptType GetType();
 
 	CPool<CIrcChannel *> m_plIrcChannels;
 	std::map<CIrcChannel *, char> m_mapChannelModes;

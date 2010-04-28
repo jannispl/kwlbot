@@ -33,8 +33,8 @@ public:
 	typedef struct
 	{
 		v8::Persistent<v8::FunctionTemplate> Bot;
-		v8::Persistent<v8::FunctionTemplate> IrcChannel;
 		v8::Persistent<v8::FunctionTemplate> IrcUser;
+		v8::Persistent<v8::FunctionTemplate> IrcChannel;
 	} ClassTemplates_t;
 
 	static ClassTemplates_t m_ClassTemplates;

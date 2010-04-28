@@ -13,6 +13,8 @@ Purpose:	Core container which manages all bot instances
 
 CCore::CCore()
 {
+	m_pEventManager = new CEventManager(this);
+
 	CConfig cfg("core.cfg");
 	if (cfg.StartValueList("scripts"))
 	{
@@ -32,6 +34,7 @@ CCore::CCore()
 
 CCore::~CCore()
 {
+	delete m_pEventManager;
 }
 
 CBot *CCore::CreateBot()
@@ -146,4 +149,9 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 		while (FindNextFileA(hDir, &fd));
 		FindClose(hDir);
 	}
+}
+
+CEventManager *CCore::GetEventManager()
+{
+	return m_pEventManager;
 }

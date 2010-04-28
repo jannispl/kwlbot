@@ -15,6 +15,7 @@ class CCore;
 #include "Bot.h"
 #include "Script.h"
 #include "Pool.h"
+#include "EventManager.h"
 
 class CCore
 {
@@ -33,7 +34,11 @@ public:
 	void Pulse();
 	void ScanDirectoryForBots(const char *szDirectory);
 
+	CEventManager *GetEventManager();
+
 private:
+	CEventManager *m_pEventManager;
+
 	CPool<CBot *> m_plBots;
 	CPool<CScript *> m_plScripts;
 };

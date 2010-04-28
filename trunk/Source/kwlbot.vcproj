@@ -121,7 +121,7 @@
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="StdInc.h"
 				WarningLevel="3"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -136,10 +136,11 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="ws2_32.lib winmm.lib .\v8\v8.lib"
 				LinkIncremental="1"
-				GenerateDebugInformation="true"
+				GenerateDebugInformation="false"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				FixedBaseAddress="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -244,6 +245,14 @@
 			Name="Scripting"
 			>
 			<File
+				RelativePath=".\EventManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\EventManager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Script.cpp"
 				>
 			</File>
@@ -257,6 +266,10 @@
 			</File>
 			<File
 				RelativePath=".\ScriptFunctions.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ScriptObject.h"
 				>
 			</File>
 		</Filter>
