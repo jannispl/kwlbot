@@ -71,8 +71,6 @@ void CIrcSocket::Pulse()
 {
 	TRACEFUNC("CIrcSocket::Pulse");
 
-	static std::string strBuffer;
-
 	char szBuffer[256];
 	int i = ReadRaw(szBuffer, 255);
 	if (i == 0)
@@ -92,14 +90,14 @@ void CIrcSocket::Pulse()
 			if (*cpy == '\n')
 			{
 				part[pos - 1] = '\0';
-				if (strBuffer.empty())
+				if (m_strBuffer.empty())
 				{
 					HandleData(part);
 				}
 				else
 				{
-					HandleData((strBuffer + part).c_str());
-					strBuffer.clear();
+					HandleData((m_strBuffer + part).c_str());
+					m_strBuffer.clear();
 				}
 				part[0] = 0;
 				pos = 0;
@@ -113,7 +111,7 @@ void CIrcSocket::Pulse()
 		if (part[0] != 0)
 		{
 			part[pos] = 0;
-			strBuffer += part;
+			m_strBuffer += part;
 		}
 	}
 }

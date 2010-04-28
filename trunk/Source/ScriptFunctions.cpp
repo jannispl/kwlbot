@@ -16,6 +16,8 @@ CScript *CScriptFunctions::m_pCallingScript = NULL;
 
 FuncReturn CScriptFunctions::Print(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::Print");
+
 	int iParams = args.Length();
 	if (iParams < 1)
 	{
@@ -40,6 +42,8 @@ FuncReturn CScriptFunctions::Print(const Arguments &args)
 
 FuncReturn CScriptFunctions::AddEventHandler(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::AddEventHandler");
+
 	if (args.Length() < 2 || m_pCallingScript == NULL)
 	{
 		return v8::Boolean::New(false);
@@ -60,6 +64,8 @@ FuncReturn CScriptFunctions::AddEventHandler(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__SendRaw(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::Bot__SendRaw");
+
 	if (args.Length() < 1)
 	{
 		return v8::Boolean::New(false);
@@ -89,6 +95,8 @@ FuncReturn CScriptFunctions::Bot__SendRaw(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::Bot__SendMessage");
+
 	if (args.Length() < 2)
 	{
 		return v8::Boolean::New(false);
@@ -112,10 +120,18 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 	switch (pTarget->GetType())
 	{
 	case CScriptObject::IrcUser:
+		if (((CIrcUser *)pTarget)->GetParentBot() != (CBot *)pObject)
+		{
+			return v8::Boolean::New(false);
+		}
 		szTarget = ((CIrcUser *)pTarget)->GetName();
 		break;
-		
+
 	case CScriptObject::IrcChannel:
+		if (((CIrcChannel *)pTarget)->GetParentBot() != (CBot *)pObject)
+		{
+			return v8::Boolean::New(false);
+		}
 		szTarget = ((CIrcChannel *)pTarget)->GetName();
 		break;
 
@@ -136,6 +152,8 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::Bot__SendNotice");
+
 	if (args.Length() < 2)
 	{
 		return v8::Boolean::New(false);
@@ -159,10 +177,18 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 	switch (pTarget->GetType())
 	{
 	case CScriptObject::IrcUser:
+		if (((CIrcUser *)pTarget)->GetParentBot() != (CBot *)pObject)
+		{
+			return v8::Boolean::New(false);
+		}
 		szTarget = ((CIrcUser *)pTarget)->GetName();
 		break;
 
 	case CScriptObject::IrcChannel:
+		if (((CIrcChannel *)pTarget)->GetParentBot() != (CBot *)pObject)
+		{
+			return v8::Boolean::New(false);
+		}
 		szTarget = ((CIrcChannel *)pTarget)->GetName();
 		break;
 
@@ -183,6 +209,8 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__FindUser(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::Bot__FindUser");
+
 	if (args.Length() < 1)
 	{
 		return v8::Boolean::New(false);
@@ -218,6 +246,8 @@ FuncReturn CScriptFunctions::Bot__FindUser(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__FindChannel(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::Bot__FindChannel");
+
 	if (args.Length() < 1)
 	{
 		return v8::Boolean::New(false);
@@ -253,6 +283,8 @@ FuncReturn CScriptFunctions::Bot__FindChannel(const Arguments &args)
 
 FuncReturn CScriptFunctions::IrcUser__GetNickname(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::IrcUser__GetNickname");
+
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcUser)
 	{
@@ -264,6 +296,8 @@ FuncReturn CScriptFunctions::IrcUser__GetNickname(const Arguments &args)
 
 FuncReturn CScriptFunctions::IrcUser__HasChannel(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::IrcUser__HasChannel");
+
 	if (args.Length() < 1)
 	{
 		return v8::Boolean::New(false);
@@ -286,11 +320,18 @@ FuncReturn CScriptFunctions::IrcUser__HasChannel(const Arguments &args)
 		return v8::Boolean::New(false);
 	}
 
+	if (((CIrcChannel *)pChannel)->GetParentBot() != ((CIrcUser *)pObject)->GetParentBot())
+	{
+		return v8::Boolean::New(false);
+	}
+
 	return v8::Boolean::New(((CIrcUser *)pObject)->HasChannel((CIrcChannel *)pChannel));
 }
 
 FuncReturn CScriptFunctions::IrcChannel__GetName(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::IrcChannel__GetName");
+
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcChannel)
 	{
@@ -302,6 +343,8 @@ FuncReturn CScriptFunctions::IrcChannel__GetName(const Arguments &args)
 
 FuncReturn CScriptFunctions::IrcChannel__HasUser(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::IrcChannel__HasUser");
+
 	if (args.Length() < 1)
 	{
 		return v8::Boolean::New(false);
@@ -320,6 +363,11 @@ FuncReturn CScriptFunctions::IrcChannel__HasUser(const Arguments &args)
 
 	CScriptObject *pUser = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
 	if (pUser->GetType() != CScriptObject::IrcUser)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (((CIrcUser *)pUser)->GetParentBot() != ((CIrcChannel *)pObject)->GetParentBot())
 	{
 		return v8::Boolean::New(false);
 	}
