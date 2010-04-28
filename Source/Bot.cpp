@@ -182,16 +182,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 
 			m_bGotMotd = true;
 
-			v8::HandleScope handleScope;
-			for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-			{
-				(*i)->EnterContext();
-
-				v8::Handle<v8::Value> argValues[1] = { GetScriptThis() };
-				(*i)->CallEvent("onBotConnected", 1, argValues);
-
-				(*i)->ExitContext();
-			}
+			m_pParentCore->GetEventManager()->OnBotConnected(this);
 			return;
 		}
 	}
@@ -340,29 +331,11 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 
 				if (bSelf)
 				{
-					v8::HandleScope handleScope;
-					for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-					{
-						(*i)->EnterContext();
-
-						v8::Handle<v8::Value> argValues[2] = { GetScriptThis(), pChannel->GetScriptThis() };
-						(*i)->CallEvent("onBotJoinedChannel", 2, argValues);
-
-						(*i)->ExitContext();
-					}
+					m_pParentCore->GetEventManager()->OnBotJoinedChannel(this, pChannel);
 				}
 				else
 				{
-					v8::HandleScope handleScope;
-					for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-					{
-						(*i)->EnterContext();
-
-						v8::Handle<v8::Value> argValues[3] = { GetScriptThis(), pUser->GetScriptThis(), pChannel->GetScriptThis() };
-						(*i)->CallEvent("onUserJoinedChannel", 3, argValues);
-
-						(*i)->ExitContext();
-					}
+					m_pParentCore->GetEventManager()->OnUserJoinedChannel(this, pUser, pChannel);
 				}
 			}
 		}
@@ -389,16 +362,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				CIrcUser *pUser = FindUser(strNickname.c_str());
 				if (pUser != NULL)
 				{
-					v8::HandleScope handleScope;
-					for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-					{
-						(*i)->EnterContext();
-
-						v8::Handle<v8::Value> argValues[3] = { GetScriptThis(), pUser->GetScriptThis(), pChannel->GetScriptThis() };
-						(*i)->CallEvent("onUserLeftChannel", 3, argValues);
-
-						(*i)->ExitContext();
-					}
+					m_pParentCore->GetEventManager()->OnUserLeftChannel(this, pUser, pChannel);
 
 					printf("Removing %s from %s.\n", pUser->GetName(), pChannel->GetName());
 					pUser->m_plIrcChannels.remove(pChannel);
@@ -446,16 +410,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					CIrcUser *pUser = FindUser(strNickname.c_str());
 					if (pUser != NULL)
 					{
-						v8::HandleScope handleScope;
-						for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-						{
-							(*i)->EnterContext();
-
-							v8::Handle<v8::Value> argValues[4] = { GetScriptThis(), pUser->GetScriptThis(), pVictim->GetScriptThis(), pChannel->GetScriptThis() };
-							(*i)->CallEvent("onUserKickedUser", 4, argValues);
-
-							(*i)->ExitContext();
-						}
+						m_pParentCore->GetEventManager()->OnUserKickedUser(this, pUser, pVictim, pChannel);
 					}
 
 					printf("Removing %s from %s.\n", pVictim->GetName(), pChannel->GetName());
@@ -489,16 +444,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			CIrcUser *pUser = FindUser(strNickname.c_str());
 			if (pUser != NULL)
 			{
-				v8::HandleScope handleScope;
-				for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-				{
-					(*i)->EnterContext();
-
-					v8::Handle<v8::Value> argValues[2] = { GetScriptThis(), pUser->GetScriptThis() };
-					(*i)->CallEvent("onUserQuit", 2, argValues);
-
-					(*i)->ExitContext();
-				}
+				m_pParentCore->GetEventManager()->OnUserQuit(this, pUser);
 
 				for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
 				{
@@ -537,16 +483,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				printf("Renaming %s to %s.\n", pUser->GetName(), strNewNick.c_str());
 				pUser->SetName(strNewNick.c_str());
 
-				v8::HandleScope handleScope;
-				for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-				{
-					(*i)->EnterContext();
-
-					v8::Handle<v8::Value> argValues[3] = { GetScriptThis(), pUser->GetScriptThis(), v8::String::New(strNickname.c_str()) };
-					(*i)->CallEvent("onUserQuit", 3, argValues);
-
-					(*i)->ExitContext();
-				}
+				m_pParentCore->GetEventManager()->OnUserChangedNickname(this, pUser, strNickname.c_str());
 			}
 		}
 		return;
@@ -582,6 +519,8 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					CIrcUser *pUser = FindUser(strNickname.c_str());
 					if (pUser != NULL)
 					{
+						m_pParentCore->GetEventManager()->OnUserChannelMessage(this, pUser, pChannel, strMessage.c_str());
+#if 0
 						v8::HandleScope handleScope;
 						for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
 						{
@@ -610,6 +549,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 
 							(*i)->ExitContext();
 						}
+#endif
 					}
 				}
 			}
@@ -696,16 +636,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				{
 					strNickname = strNickname.substr(0, iSeparator);
 
-					v8::HandleScope handleScope;
-					for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-					{
-						(*i)->EnterContext();
-
-						v8::Handle<v8::Value> argValues[5] = { GetScriptThis(), pUser->GetScriptThis(), pChannel->GetScriptThis(), v8::String::New(strModes.c_str()), v8::String::New(strParams.c_str()) };
-						(*i)->CallEvent("onUserSetChannelModes", 5, argValues);
-
-						(*i)->ExitContext();
-					}
+					m_pParentCore->GetEventManager()->OnUserSetChannelModes(this, pUser, pChannel, strModes.c_str(), strParams.c_str());
 				}
 			}
 
@@ -831,10 +762,17 @@ void CBot::JoinChannel(const char *szChannel)
 	}
 }
 
-v8::Handle<v8::Value> CBot::GetScriptThis()
+void CBot::SendMessage(const char *szTarget, const char *szMessage)
 {
-	v8::HandleScope handleScope;
-	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.Bot->GetFunction()->NewInstance();
-	obj->SetInternalField(0, v8::External::New(this));
-	return obj;
+	SendRawFormat("PRIVMSG %s :%s", szTarget, szMessage);
+}
+
+void CBot::SendNotice(const char *szTarget, const char *szMessage)
+{
+	SendRawFormat("NOTICE %s :%s", szTarget, szMessage);
+}
+
+CScriptObject::eScriptType CBot::GetType()
+{
+	return Bot;
 }

@@ -12,11 +12,12 @@ class CIrcChannel;
 #ifndef _IRCCHANNEL_H
 #define _IRCCHANNEL_H
 
+#include "ScriptObject.h"
 #include "IrcUser.h"
 #include "Pool.h"
 #include "Script.h"
 
-class CIrcChannel
+class CIrcChannel : public CScriptObject
 {
 public:
 	CIrcChannel(const char *szName);
@@ -24,8 +25,9 @@ public:
 
 	void SetName(const char *szName);
 	const char *GetName();
+	bool HasUser(CIrcUser *pUser);
 
-	v8::Handle<v8::Value> GetScriptThis();
+	CScriptObject::eScriptType GetType();
 
 	CPool<CIrcUser *> m_plIrcUsers;
 

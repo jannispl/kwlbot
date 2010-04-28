@@ -35,9 +35,21 @@ const char *CIrcChannel::GetName()
 	return m_szName;
 }
 
-v8::Handle<v8::Value> CIrcChannel::GetScriptThis()
+bool CIrcChannel::HasUser(CIrcUser *pUser)
 {
-	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.IrcChannel->GetFunction()->NewInstance();
-	obj->SetInternalField(0, v8::External::New(this));
-	return obj;
+	TRACEFUNC("CIrcChannel::HasUser");
+
+	for (CPool<CIrcUser *>::iterator i = m_plIrcUsers.begin(); i != m_plIrcUsers.end(); ++i)
+	{
+		if (*i == pUser)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+CScriptObject::eScriptType CIrcChannel::GetType()
+{
+	return IrcChannel;
 }

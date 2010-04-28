@@ -12,16 +12,18 @@ class CBot;
 #ifndef _BOT_H
 #define _BOT_H
 
+#include "ScriptObject.h"
 #include "Core.h"
 #include "IrcSocket.h"
 #include "Pool.h"
 #include "IrcChannel.h"
 #include "IrcUser.h"
 #include "Script.h"
+#include "EventManager.h"
 #include <vector>
 #include <string>
 
-class CBot
+class CBot : public CScriptObject
 {
 public:
 	CBot(CCore *pParentCore);
@@ -40,14 +42,19 @@ public:
 	bool IsPrefixMode(char cMode);
 	char GetModeGroup(char cMode);
 	void HandleData(const std::vector<std::string> &vecParts);
+
 	void JoinChannel(const char *szChannel);
-	v8::Handle<v8::Value> GetScriptThis();
+	void SendMessage(const char *szTarget, const char *szMessage);
+	void SendNotice(const char *szTarget, const char *szMessage);
+
+	CScriptObject::eScriptType GetType();
 
 private:
 	bool m_bGotMotd;
 	CCore *m_pParentCore;
 	CIrcSocket *m_pIrcSocket;
 	CIrcSettings m_IrcSettings;
+
 	CPool<CIrcChannel *> m_plIrcChannels;
 	CPool<CIrcChannel *> *m_pIrcChannelQueue;
 	CPool<CIrcUser *> m_plGlobalUsers;

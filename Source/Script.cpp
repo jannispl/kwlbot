@@ -32,68 +32,45 @@ bool CScript::Load(const char *szFilename)
 
 	v8::HandleScope handleScope;
 
-	/*
-	// create a template for our class
-	Handle<FunctionTemplate> obj_templ = FunctionTemplate::New();
-	obj_templ->SetClassName(String::New("TestClass"));
-
-	// add our member functions to the class
-	Handle<ObjectTemplate> obj_proto = obj_templ->PrototypeTemplate();
-	obj_proto->Set("DoSomething", FunctionTemplate::New(DoSomethingJS));
-	obj_proto->Set("GetSomething", FunctionTemplate::New(GetSomethingJS));
-
-	// add our member variables to the class
-	Handle<ObjectTemplate> obj_inst = obj_templ->InstanceTemplate();
-	obj_inst->SetInternalFieldCount(1);
-	obj_inst->SetAccessor(String::New("iX"), GetClassX, SetClassX);
-	*/
-
 	if (m_GlobalTemplate.IsEmpty())
 	{
-		printf("filling templates\n");
+		// CBot
 		m_ClassTemplates.Bot = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
 		m_ClassTemplates.Bot->SetClassName(v8::String::New("Bot"));
 		m_ClassTemplates.Bot->InstanceTemplate()->SetInternalFieldCount(1);
 		v8::Handle<v8::ObjectTemplate> botProto = m_ClassTemplates.Bot->PrototypeTemplate();
 		botProto->Set(v8::String::New("sendRaw"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendRaw));
+		botProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendMessage));
+		botProto->Set(v8::String::New("sendNotice"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendNotice));
+		botProto->Set(v8::String::New("findUser"), v8::FunctionTemplate::New(CScriptFunctions::Bot__FindUser));
+		botProto->Set(v8::String::New("findChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__FindChannel));
 
-		m_ClassTemplates.IrcChannel = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
-		m_ClassTemplates.IrcChannel->SetClassName(v8::String::New("IrcChannel"));
-		m_ClassTemplates.IrcChannel->InstanceTemplate()->SetInternalFieldCount(1);
-		v8::Handle<v8::ObjectTemplate> channelProto = m_ClassTemplates.IrcChannel->PrototypeTemplate();
-		//channelProto->Set(
-
+		// CIrcUser
 		m_ClassTemplates.IrcUser = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
 		m_ClassTemplates.IrcUser->SetClassName(v8::String::New("IrcUser"));
 		m_ClassTemplates.IrcUser->InstanceTemplate()->SetInternalFieldCount(1);
 		v8::Handle<v8::ObjectTemplate> userProto = m_ClassTemplates.IrcUser->PrototypeTemplate();
-		//channelProto->Set(
+		userProto->Set(v8::String::New("getNickname"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetNickname));
+		userProto->Set(v8::String::New("hasChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__HasChannel));
 
-		v8::Handle<v8::ObjectTemplate> tmpl = v8::ObjectTemplate::New();
+		// CIrcChannel
+		m_ClassTemplates.IrcChannel = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
+		m_ClassTemplates.IrcChannel->SetClassName(v8::String::New("IrcChannel"));
+		m_ClassTemplates.IrcChannel->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> channelProto = m_ClassTemplates.IrcChannel->PrototypeTemplate();
+		channelProto->Set(v8::String::New("getName"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__GetName));
+		channelProto->Set(v8::String::New("hasUser"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__HasUser));
 
-		tmpl->Set(v8::String::New("print"), v8::FunctionTemplate::New(CScriptFunctions::Print));
-		tmpl->Set(v8::String::New("addEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::AddEventHandler));
-
-		m_GlobalTemplate = v8::Persistent<v8::ObjectTemplate>::New(tmpl);
+		// global
+		m_GlobalTemplate = v8::Persistent<v8::ObjectTemplate>::New(v8::ObjectTemplate::New());
+		m_GlobalTemplate->Set(v8::String::New("print"), v8::FunctionTemplate::New(CScriptFunctions::Print));
+		m_GlobalTemplate->Set(v8::String::New("addEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::AddEventHandler));
 	}
 
-	/*for (int i = 0; CScriptingManager::m_ScriptFunctions[i].szName[0] != 0; ++i)
-	{
-		m_GlobalTemplate->Set(String::New(CScriptingManager::m_ScriptFunctions[i].szName), FunctionTemplate::New(CScriptingManager::m_ScriptFunctions[i].pfnJavaFunction));
-	}*/
-	//m_GlobalTemplate->Set(String::New("TestClass"), FunctionTemplate::New(JavaFunctions::TestClass__constructor));
-
 	// create a new context
-
 	m_ScriptContext = v8::Context::New(NULL, m_GlobalTemplate);
 
 	v8::Context::Scope contextScope(m_ScriptContext);
-	/*// create an instance of our class
-	TestClass *p = new TestClass();
-	Handle<Function> obj_ctor = obj_templ->GetFunction();
-	Local<Object> obj = obj_ctor->NewInstance();
-	obj->SetInternalField(0, External::New(p));
-	context->Global()->Set(String::New("TestClassInstance"), obj);*/
 
 	v8::Handle<v8::String> strFilename = v8::String::New(szFilename);
 
@@ -176,7 +153,9 @@ v8::Handle<v8::Value> CScript::CallEvent(const char *szEventName, int iArgCount,
 		return v8::Undefined();
 	}
 
+	CScriptFunctions::m_pCallingScript = this;
 	v8::Handle<v8::Value> retval = function->Call(function, iArgCount, pArgValues);
+	CScriptFunctions::m_pCallingScript = NULL;
 
 	return retval;
 }

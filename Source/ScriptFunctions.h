@@ -27,6 +27,16 @@ public:
 	static FuncReturn AddEventHandler(const Arguments &args);
 
 	static FuncReturn Bot__SendRaw(const Arguments &args);
+	static FuncReturn Bot__SendMessage(const Arguments &args);
+	static FuncReturn Bot__SendNotice(const Arguments &args);
+	static FuncReturn Bot__FindUser(const Arguments &args);
+	static FuncReturn Bot__FindChannel(const Arguments &args);
+
+	static FuncReturn IrcUser__GetNickname(const Arguments &args);
+	static FuncReturn IrcUser__HasChannel(const Arguments &args);
+
+	static FuncReturn IrcChannel__GetName(const Arguments &args);
+	static FuncReturn IrcChannel__HasUser(const Arguments &args);
 };
 
 #endif
