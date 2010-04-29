@@ -17,6 +17,12 @@ class CTcpSocket;
 
   typedef SOCKET socket_t;
 #else
+  #include <sys/types.h>
+  #include <sys/socket.h>
+  #include <fcntl.h>
+  #include <arpa/inet.h>
+  #include <netdb.h>
+
   typedef int socket_t;
 
   #define closesocket(sock) close(sock)
@@ -28,8 +34,10 @@ class CTcpSocket
 public:
 	CTcpSocket()
 	{
+#ifdef WIN32
 		WSADATA wsa;
 		WSAStartup(MAKEWORD(2, 0), &wsa);
+#endif
 
 		m_Socket = socket(AF_INET, SOCK_STREAM, 0);
 	}
@@ -47,14 +55,14 @@ public:
 		ioctlsocket(m_Socket, FIONBIO, &ulFlags);
 #else
 		int iFlags;
-#if defined(O_NONBLOCK)
+//#if defined(O_NONBLOCK)
 		if ((iFlags = fcntl(m_Socket, F_GETFL, 0)) == -1)
 			iFlags = 0;
 		fcntl(m_Socket, F_SETFL, iFlags | O_NONBLOCK);
-#else
+/*#else
 		iFlags = 1;
 		return ioctl(m_Socket, FIOBIO, &iFlags);
-#endif
+#endif*/
 
 #endif
 	}
@@ -74,7 +82,7 @@ public:
 		unsigned int uiIP = inet_addr(szHostname);
 		if (uiIP != INADDR_NONE)
 		{
-			dest->sin_addr.S_un.S_addr = uiIP;
+			dest->sin_addr.s_addr = uiIP;
 			return true;
 		}
 

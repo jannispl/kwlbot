@@ -20,6 +20,8 @@
   #include <unistd.h>
 #endif
 
+#include <stdarg.h>
+
 #include "Definitions.h"
 #include "Pool.h"
 
@@ -30,3 +32,4 @@
 #else
   #define TRACEFUNC(func)
 #endif
+

@@ -11,6 +11,10 @@ Purpose:	Core container which manages all bot instances
 #include "Core.h"
 #include "Config.h"
 
+#ifndef WIN32
+#include <dirent.h>
+#endif
+
 CCore::CCore()
 {
 	m_pEventManager = new CEventManager(this);
@@ -107,6 +111,7 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 {
 	TRACEFUNC("CCore::ScanDirectoryForBots");
 
+#ifdef WIN32
 	WIN32_FIND_DATAA fd;
 
 	char *szPath = new char[strlen(szDirectory) + 2];
@@ -126,8 +131,6 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 					(fd.cFileName[len - 1] == 'i' || fd.cFileName[len - 1] == 'I'))
 				{
 					CConfig Config((std::string(szDirectory) + fd.cFileName));
-
-					printf("bot '%s'\n", fd.cFileName);
 
 					CBot *pBot = CreateBot();
 					pBot->GetSettings()->LoadFromConfig(&Config);
@@ -151,6 +154,46 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 		while (FindNextFileA(hDir, &fd));
 		FindClose(hDir);
 	}
+#else
+	dirent *pEntry;
+	DIR *pDir = opendir("./bots/");
+	do
+	{
+		pEntry = readdir(pDir);
+		if (pEntry != NULL)
+		{
+			if (pEntry->d_type == DT_REG)
+			{
+				unsigned char len = strlen(pEntry->d_name);
+				if ((pEntry->d_name[len - 3] == 'i' || pEntry->d_name[len - 3] == 'I') &&
+				    (pEntry->d_name[len - 2] == 'n' || pEntry->d_name[len - 2] == 'N') &&
+				    (pEntry->d_name[len - 1] == 'i' || pEntry->d_name[len - 1] == 'I'))
+				{
+					CConfig Config((std::string(szDirectory) + pEntry->d_name));
+
+					CBot *pBot = CreateBot();
+					pBot->GetSettings()->LoadFromConfig(&Config);
+
+					std::string strTemp;
+					if (Config.GetSingleValue("server", &strTemp))
+					{
+						pBot->GetSocket()->Connect(strTemp.c_str());
+					}
+					
+					if (Config.StartValueList("channels"))
+					{
+						while (Config.GetNextValue(&strTemp))
+						{
+							pBot->JoinChannel(strTemp.c_str());
+						}
+					}
+
+				}
+			}
+		}
+	}
+	while (pEntry != NULL);
+#endif
 }
 
 CEventManager *CCore::GetEventManager()
