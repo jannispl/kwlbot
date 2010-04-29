@@ -156,8 +156,6 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 {
 	TRACEFUNC("CBot::HandleData");
 
-	DWORD dwTick = GetTickCount();
-
 	bool bPrefix = *(vecParts[0].begin()) == ':';
 	
 	std::string strPrefix;

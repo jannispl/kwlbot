@@ -16,6 +16,10 @@ CCore *g_pCore = NULL;
 CDebug *g_pDebug = NULL;
 #endif
 
+#ifndef WIN32
+#define Sleep(ms) usleep(ms * 1000)
+#endif
+
 int main(int iArgCount, char *szArgs[])
 {
 #ifdef _DEBUG
@@ -23,7 +27,9 @@ int main(int iArgCount, char *szArgs[])
 #endif
 	TRACEFUNC("main");
 
+printf("before core\n");
 	g_pCore = new CCore();
+printf("after core\n");
 
 	while (true)
 	{
