@@ -12,6 +12,8 @@ Purpose:	Class which represents an IRC bot
 
 CBot::CBot(CCore *pParentCore)
 {
+	TRACEFUNC("CBot::CBot");
+
 	m_pParentCore = pParentCore;
 
 	m_pIrcSocket = new CIrcSocket(this);
@@ -22,6 +24,8 @@ CBot::CBot(CCore *pParentCore)
 
 CBot::~CBot()
 {
+	TRACEFUNC("CBot::~CBot");
+
 	if (m_pIrcSocket != NULL)
 	{
 		delete m_pIrcSocket;

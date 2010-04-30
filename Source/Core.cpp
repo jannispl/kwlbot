@@ -17,6 +17,8 @@ Purpose:	Core container which manages all bot instances
 
 CCore::CCore()
 {
+	TRACEFUNC("CCore::CCore");
+
 	printf("Initializing kwlbot\n");
 	printf("Version %s\n", VERSION_STRING);
 
@@ -39,6 +41,8 @@ CCore::CCore()
 
 CCore::~CCore()
 {
+	TRACEFUNC("CCore::~CCore");
+
 	delete m_pEventManager;
 }
 
@@ -141,7 +145,15 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 				std::string strTemp;
 				if (Config.GetSingleValue("server", &strTemp))
 				{
-					pBot->GetSocket()->Connect(strTemp.c_str());
+					std::string::size_type iPortSep = strTemp.find(':');
+					if (iPortSep == std::string::npos)
+					{
+						pBot->GetSocket()->Connect(strTemp.c_str());
+					}
+					else
+					{
+						pBot->GetSocket()->Connect(strTemp.substr(0, iPortSep).c_str(), atoi(strTemp.substr(iPortSep + 1).c_str()));
+					}
 				}
 
 				if (Config.StartValueList("channels"))
@@ -184,7 +196,15 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 					std::string strTemp;
 					if (Config.GetSingleValue("server", &strTemp))
 					{
-						pBot->GetSocket()->Connect(strTemp.c_str());
+						std::string::size_type iPortSep = strTemp.find(':');
+						if (iPortSep == std::string::npos)
+						{
+							pBot->GetSocket()->Connect(strTemp.c_str());
+						}
+						else
+						{
+							pBot->GetSocket()->Connect(strTemp.substr(0, iPortSep).c_str(), atoi(strTemp.substr(iPortSep + 1).c_str()));
+						}
 					}
 					
 					if (Config.StartValueList("channels"))

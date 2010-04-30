@@ -1,3 +1,12 @@
+/*
+kwlbot IRC bot
+
+
+File:		ScriptObject.h
+Purpose:	Abstract class which is used for script objects
+
+*/
+
 class CScriptObject;
 
 #ifndef _SCRIPTOBJECT_H

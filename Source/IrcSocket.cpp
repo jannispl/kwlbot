@@ -12,11 +12,14 @@ Purpose:	Class which manages a connection to an IRC server
 
 CIrcSocket::CIrcSocket(CBot *pParentBot)
 {
+	TRACEFUNC("CIrcSocket::CIrcSocket");
+
 	m_pParentBot = pParentBot;
 }
 
 CIrcSocket::~CIrcSocket()
 {
+	TRACEFUNC("CIrcSocket::~CIrcSocket");
 }
 
 bool CIrcSocket::Connect(const char *szHostname, int iPort)
