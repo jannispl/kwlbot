@@ -37,7 +37,7 @@ public:
 
 private:
 	CBot *m_pParentBot;
-	char m_szName[MAX_NICKNAME_LEN + 1];
+	char *m_szName;
 };
 
 #endif

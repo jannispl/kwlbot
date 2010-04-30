@@ -11,21 +11,38 @@ Purpose:	Class which represents a remote IRC channel
 #include "IrcChannel.h"
 
 CIrcChannel::CIrcChannel(CBot *pParentBot, const char *szName)
+	: m_szName(NULL)
 {
 	TRACEFUNC("CIrcChannel::CIrcChannel");
 
 	m_pParentBot = pParentBot;
 
-	strcpy(m_szName, szName);
+	SetName(szName);
 }
 
 CIrcChannel::~CIrcChannel()
 {
+	TRACEFUNC("CIrcChannel::~CIrcChannel");
+
+	if (m_szName != NULL)
+	{
+		free(m_szName);
+	}
 }
 
 void CIrcChannel::SetName(const char *szName)
 {
 	TRACEFUNC("CIrcChannel::SetName");
+
+	size_t iLen = strlen(szName);
+	if (m_szName == NULL)
+	{
+		m_szName = (char *)malloc(iLen + 1);
+	}
+	else
+	{
+		m_szName = (char *)realloc(m_szName, iLen + 1);
+	}
 
 	strcpy(m_szName, szName);
 }

@@ -16,7 +16,14 @@ IRC
   CIrcChannel			(Class which represents a remote IRC channel)
   CIrcUser				(Class which represents a remote IRC user)
   
+Scripting
+  CEventManager			(Handles calling events in scripts)
+  CScript				(Class which represents a script)
+  CScriptFunctions		(Contains definitions for scripting functions)
+  CScriptObject			()
+  
 Utility
   CConfig				(Config parser)
+  CFile					(Utility class which handles files)
   CPool					(Template class which represents a pool for elements)
   CTcpSocket			(Utility class which handles sockets)

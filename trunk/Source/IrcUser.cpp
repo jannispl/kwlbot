@@ -11,21 +11,36 @@ Purpose:	Class which represents a remote IRC user
 #include "IrcUser.h"
 
 CIrcUser::CIrcUser(CBot *pParentBot, const char *szName)
+	: m_szName(NULL)
 {
 	TRACEFUNC("CIrcUser::CIrcUser");
 
 	m_pParentBot = pParentBot;
 
-	strcpy(m_szName, szName);
+	SetName(szName);
 }
 
 CIrcUser::~CIrcUser()
 {
+	if (m_szName != NULL)
+	{
+		free(m_szName);
+	}
 }
 
 void CIrcUser::SetName(const char *szName)
 {
 	TRACEFUNC("CIrcUser::SetName");
+
+	size_t iLen = strlen(szName);
+	if (m_szName == NULL)
+	{
+		m_szName = (char *)malloc(iLen + 1);
+	}
+	else
+	{
+		m_szName = (char *)realloc(m_szName, iLen + 1);
+	}
 
 	strcpy(m_szName, szName);
 }
