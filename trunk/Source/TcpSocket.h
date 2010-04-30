@@ -2,15 +2,15 @@
 kwlbot IRC bot
 
 
-File:		CTcpSocket.h
+File:		TcpSocket.h
 Purpose:	Utility class which handles sockets
 
 */
 
 class CTcpSocket;
 
-#ifndef _CTCPSOCKET_H
-#define _CTCPSOCKET_H
+#ifndef _TCPSOCKET_H
+#define _TCPSOCKET_H
 
 #ifdef WIN32
   #include <winsock2.h>
