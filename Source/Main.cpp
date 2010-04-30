@@ -27,9 +27,7 @@ int main(int iArgCount, char *szArgs[])
 #endif
 	TRACEFUNC("main");
 
-printf("before core\n");
 	g_pCore = new CCore();
-printf("after core\n");
 
 	while (true)
 	{
