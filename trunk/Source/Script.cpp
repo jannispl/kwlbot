@@ -65,11 +65,23 @@ bool CScript::Load(const char *szFilename)
 		channelProto->Set(v8::String::New("getName"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__GetName));
 		channelProto->Set(v8::String::New("hasUser"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__HasUser));
 
+		// CFile
+		m_ClassTemplates.File = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
+		m_ClassTemplates.File->SetClassName(v8::String::New("File"));
+		m_ClassTemplates.File->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> fileProto = m_ClassTemplates.File->PrototypeTemplate();
+		fileProto->Set(v8::String::New("destroy"), v8::FunctionTemplate::New(CScriptFunctions::File__Destroy));
+		fileProto->Set(v8::String::New("read"), v8::FunctionTemplate::New(CScriptFunctions::File__Read));
+		fileProto->Set(v8::String::New("write"), v8::FunctionTemplate::New(CScriptFunctions::File__Write));
+		fileProto->Set(v8::String::New("eof"), v8::FunctionTemplate::New(CScriptFunctions::File__Eof));
+
 		// global
 		m_GlobalTemplate = v8::Persistent<v8::ObjectTemplate>::New(v8::ObjectTemplate::New());
 		m_GlobalTemplate->Set(v8::String::New("print"), v8::FunctionTemplate::New(CScriptFunctions::Print));
 		m_GlobalTemplate->Set(v8::String::New("addEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::AddEventHandler));
 		m_GlobalTemplate->Set(v8::String::New("cancelEvent"), v8::FunctionTemplate::New(CScriptFunctions::CancelEvent));
+
+		m_GlobalTemplate->Set(v8::String::New("File"), v8::FunctionTemplate::New(CScriptFunctions::File__constructor));
 	}
 
 	// create a new context

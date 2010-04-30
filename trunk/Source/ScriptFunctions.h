@@ -40,6 +40,12 @@ public:
 
 	static FuncReturn IrcChannel__GetName(const Arguments &args);
 	static FuncReturn IrcChannel__HasUser(const Arguments &args);
+
+	static FuncReturn File__constructor(const Arguments &args);
+	static FuncReturn File__Destroy(const Arguments &args);
+	static FuncReturn File__Read(const Arguments &args);
+	static FuncReturn File__Write(const Arguments &args);
+	static FuncReturn File__Eof(const Arguments &args);
 };
 
 #endif

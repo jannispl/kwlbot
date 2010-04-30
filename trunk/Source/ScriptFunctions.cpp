@@ -11,6 +11,7 @@ Purpose:	Contains definitions for scripting functions
 #include "ScriptFunctions.h"
 #include "Bot.h"
 #include "ScriptObject.h"
+#include "File.h"
 
 CScript *CScriptFunctions::m_pCallingScript = NULL;
 
@@ -499,4 +500,148 @@ FuncReturn CScriptFunctions::IrcChannel__HasUser(const Arguments &args)
 	}
 
 	return v8::Boolean::New(((CIrcChannel *)pObject)->HasUser((CIrcUser *)pUser));
+}
+
+FuncReturn CScriptFunctions::File__constructor(const Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::File__constructor");
+
+	if (!args.IsConstructCall() || args.Length() < 2)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (!args[0]->IsString() || !args[1]->IsString())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	v8::String::Utf8Value strName(args[0]);
+	if (*strName == NULL)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	v8::String::Utf8Value strMode(args[1]);
+	if (*strMode == NULL)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CFile *pFile = new CFile(*strName, *strMode);
+
+	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.File->GetFunction();
+	v8::Local<v8::Object> obj = ctor->NewInstance();
+	obj->SetInternalField(0, v8::External::New(pFile));
+
+	return obj;
+}
+
+FuncReturn CScriptFunctions::File__Destroy(const Arguments &args)
+{
+	if (args.Holder()->GetInternalField(0) == v8::Null())
+	{
+		return v8::Null();
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::File)
+	{
+		return args.Holder()->GetInternalField(0);
+	}
+
+	delete pObject;
+
+	args.Holder()->SetInternalField(0, v8::Null());
+
+	v8::Persistent<v8::Object> persistent(v8::Persistent<v8::Object>::New(args.Holder()));
+	persistent.ClearWeak();
+	persistent.Dispose();
+	persistent.Clear();
+
+	return v8::Null();
+}
+
+FuncReturn CScriptFunctions::File__Read(const Arguments &args)
+{
+	if (args.Holder()->GetInternalField(0) == v8::Null())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (args.Length() < 1)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (!args[0]->IsInt32())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::File)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	unsigned int iLength = args[0]->ToInt32()->Uint32Value();
+	char *szData = new char[iLength + 1];
+
+	size_t iSize = ((CFile *)pObject)->Read(szData, 1, iLength);
+	szData[iSize] = '\0';
+
+	v8::Handle<v8::String> strRet = v8::String::New(szData, iSize);
+
+	delete[] szData;
+
+	return strRet;
+}
+
+FuncReturn CScriptFunctions::File__Write(const Arguments &args)
+{
+	if (args.Holder()->GetInternalField(0) == v8::Null())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (args.Length() < 1)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (!args[0]->IsString())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::File)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	v8::String::Utf8Value strData(args[0]);
+	if (*strData == NULL)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	return v8::Int32::New(((CFile *)pObject)->Write(*strData, 1, strData.length()));
+}
+
+FuncReturn CScriptFunctions::File__Eof(const Arguments &args)
+{
+	if (args.Holder()->GetInternalField(0) == v8::Null())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::File)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	return v8::Int32::New(((CFile *)pObject)->Eof());
 }

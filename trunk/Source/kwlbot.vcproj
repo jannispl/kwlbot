@@ -233,6 +233,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\File.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Pool.h"
 				>
 			</File>
