@@ -259,13 +259,13 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 							CIrcUser *pUser = FindUser(strName.c_str());
 							if (pUser == NULL)
 							{
-								printf("We don't know %s yet, adding him (1).\n", strName.c_str());
+								dbgprintf("We don't know %s yet, adding him (1).\n", strName.c_str());
 								pUser = new CIrcUser(this, strName.c_str());
 								m_plGlobalUsers.push_back(pUser);
 							}
 							else
 							{
-								printf("We already know %s.\n", pUser->GetName());
+								dbgprintf("We already know %s.\n", pUser->GetName());
 							}
 							pUser->m_plIrcChannels.push_back(pChannel);
 							pUser->m_mapChannelModes[pChannel] = cMode;
@@ -299,7 +299,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			{
 				pChannel = new CIrcChannel(this, strChannel.c_str());
 				m_plIrcChannels.push_back(pChannel);
-				printf("WE JOINED '%s'\n", pChannel->GetName());
+				dbgprintf("WE JOINED '%s'\n", pChannel->GetName());
 
 				bSelf = true;
 			}
@@ -308,7 +308,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				pChannel = FindChannel(strChannel.c_str());
 				if (pChannel != NULL)
 				{
-					printf("'%s' JOINED '%s'\n", strNickname.c_str(), pChannel->GetName());
+					dbgprintf("'%s' JOINED '%s'\n", strNickname.c_str(), pChannel->GetName());
 				}
 			}
 			if (pChannel != NULL)
@@ -316,13 +316,13 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				CIrcUser *pUser = FindUser(strNickname.c_str());
 				if (pUser == NULL)
 				{
-					printf("We don't know %s yet, adding him (2).\n", strNickname.c_str());
+					dbgprintf("We don't know %s yet, adding him (2).\n", strNickname.c_str());
 					pUser = new CIrcUser(this, strNickname.c_str());
 					m_plGlobalUsers.push_back(pUser);
 				}
 				else
 				{
-					printf("We already know %s.\n", strNickname.c_str());
+					dbgprintf("We already know %s.\n", strNickname.c_str());
 				}
 				pUser->m_plIrcChannels.push_back(pChannel);
 				pChannel->m_plIrcUsers.push_back(pUser);
@@ -365,13 +365,13 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			{
 				if (strNickname == GetSettings()->GetNickname())
 				{
-					printf("WE LEFT %s.\n", pChannel->GetName());
+					dbgprintf("WE LEFT %s.\n", pChannel->GetName());
 
 					for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
 					{
 						if ((*i)->m_plIrcChannels.size() == 1)
 						{
-							printf("We lost %s.\n", (*i)->GetName());
+							dbgprintf("We lost %s.\n", (*i)->GetName());
 							m_plGlobalUsers.remove(*i);
 							delete *i;
 						}
@@ -392,19 +392,19 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					{
 						m_pParentCore->GetEventManager()->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
 
-						printf("Removing %s from %s.\n", pUser->GetName(), pChannel->GetName());
+						dbgprintf("Removing %s from %s.\n", pUser->GetName(), pChannel->GetName());
 						pUser->m_plIrcChannels.remove(pChannel);
 						pChannel->m_plIrcUsers.remove(pUser);
 						if (pUser->m_plIrcChannels.size() == 0)
 						{
-							printf("We don't know %s anymore.\n", pUser->GetName());
+							dbgprintf("We don't know %s anymore.\n", pUser->GetName());
 							m_plGlobalUsers.remove(pUser);
 							delete pUser;
 						}
 					}
 					else
 					{
-						printf("Error: we don't know %s yet, for some reason.\n", strNickname.c_str());
+						dbgprintf("Error: we don't know %s yet, for some reason.\n", strNickname.c_str());
 					}
 				}
 			}
@@ -442,19 +442,19 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 						m_pParentCore->GetEventManager()->OnUserKickedUser(this, pUser, pVictim, pChannel, strReason.c_str());
 					}
 
-					printf("Removing %s from %s.\n", pVictim->GetName(), pChannel->GetName());
+					dbgprintf("Removing %s from %s.\n", pVictim->GetName(), pChannel->GetName());
 					pUser->m_plIrcChannels.remove(pChannel);
 					pChannel->m_plIrcUsers.remove(pVictim);
 					if (pVictim->m_plIrcChannels.size() == 0)
 					{
-						printf("We don't know %s anymore.\n", pVictim->GetName());
+						dbgprintf("We don't know %s anymore.\n", pVictim->GetName());
 						m_plGlobalUsers.remove(pVictim);
 						delete pVictim;
 					}
 				}
 				else
 				{
-					printf("Error: we don't know %s yet, for some reason.\n", strVictim.c_str());
+					dbgprintf("Error: we don't know %s yet, for some reason.\n", strVictim.c_str());
 				}
 			}
 		}
@@ -484,13 +484,13 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					(*i)->m_plIrcUsers.remove(pUser);
 				}
 
-				printf("We don't know %s anymore.\n", pUser->GetName());
+				dbgprintf("We don't know %s anymore.\n", pUser->GetName());
 				m_plGlobalUsers.remove(pUser);
 				delete pUser;
 			}
 			else
 			{
-				printf("Error: we don't know %s yet, for some reason.\n", strNickname.c_str());
+				dbgprintf("Error: we don't know %s yet, for some reason.\n", strNickname.c_str());
 			}
 		}
 		return;
@@ -513,7 +513,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			CIrcUser *pUser = FindUser(strNickname.c_str());
 			if (pUser != NULL)
 			{
-				printf("Renaming %s to %s.\n", pUser->GetName(), strNewNick.c_str());
+				dbgprintf("Renaming %s to %s.\n", pUser->GetName(), strNewNick.c_str());
 				pUser->SetName(strNewNick.c_str());
 
 				m_pParentCore->GetEventManager()->OnUserChangedNickname(this, pUser, strNickname.c_str());
@@ -543,7 +543,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				if (strTarget == GetSettings()->GetNickname())
 				{
 					// privmsg to bot
-					printf("[priv] <%s> %s\n", strNickname.c_str(), strMessage.c_str());
+					dbgprintf("[priv] <%s> %s\n", strNickname.c_str(), strMessage.c_str());
 
 					m_pParentCore->GetEventManager()->OnUserPrivateMessage(this, pUser, strMessage.c_str());
 				}
@@ -552,7 +552,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					CIrcChannel *pChannel = FindChannel(strTarget.c_str());
 					if (pChannel != NULL)
 					{
-						printf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
+						dbgprintf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
 
 						m_pParentCore->GetEventManager()->OnUserChannelMessage(this, pUser, pChannel, strMessage.c_str());
 					}
@@ -687,7 +687,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 						if (iPos != std::string::npos || iLastPos != std::string::npos)
 						{
 							std::string strParam = strParams.substr(iLastPos, iPos - iLastPos);
-							//printf("1MODEEEEEEE %c%c %s!\n", iSet == 1 ? '+' : '-', cMode, strParam.c_str());
+							//dbgprintf("1MODEEEEEEE %c%c %s!\n", iSet == 1 ? '+' : '-', cMode, strParam.c_str());
 
 							if (bPrefixMode)
 							{
@@ -730,21 +730,21 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 						if (iSet == 1 && (iPos != std::string::npos || iLastPos != std::string::npos))
 						{
 							std::string strParam = strParams.substr(iLastPos, iPos - iLastPos);
-							//printf("2MODEEEEEEE +%c %s!\n", cMode, strParam.c_str());
+							//dbgprintf("2MODEEEEEEE +%c %s!\n", cMode, strParam.c_str());
 
 							iLastPos = strParams.find_first_not_of(' ', iPos);
 							iPos = strParams.find_first_of(' ', iLastPos);
 						}
 						else if (iSet == 2)
 						{
-							//printf("2MODEEEEEEE -%c!\n", cMode);
+							//dbgprintf("2MODEEEEEEE -%c!\n", cMode);
 						}
 						break;
 					}
 
 					case 4: // No parameter
 					{
-						//printf("3MODEEEEEEE %c%c!\n", iSet == 1 ? '+' : '-', cMode);
+						//dbgprintf("3MODEEEEEEE %c%c!\n", iSet == 1 ? '+' : '-', cMode);
 						break;
 					}
 				}
