@@ -11,7 +11,8 @@ public:
 		None,
 		Bot,
 		IrcUser,
-		IrcChannel
+		IrcChannel,
+		File
 	};
 
 	virtual eScriptType GetType() = 0;

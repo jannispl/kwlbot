@@ -12,9 +12,10 @@ class CFile;
 #ifndef _FILE_H
 #define _FILE_H
 
+#include "ScriptObject.h"
 #include <stdio.h>
 
-class CFile
+class CFile : public CScriptObject
 {
 public:
 	CFile(const char *szFilename, const char *szMode)
@@ -42,7 +43,9 @@ public:
 
 	size_t Write(const void *pData, size_t iSize, size_t iCount)
 	{
-		return fwrite(pData, iSize, iCount, m_pFile);
+		size_t iRet = fwrite(pData, iSize, iCount, m_pFile);
+		fflush(m_pFile);
+		return iRet;
 	}
 
 	void Rewind()
@@ -73,6 +76,16 @@ public:
 	int Flush()
 	{
 		return fflush(m_pFile);
+	}
+
+	int Eof()
+	{
+		return feof(m_pFile);
+	}
+
+	CScriptObject::eScriptType GetType()
+	{
+		return File;
 	}
 
 private:
