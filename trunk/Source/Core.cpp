@@ -17,6 +17,11 @@ Purpose:	Core container which manages all bot instances
 
 CCore::CCore()
 {
+	printf("Initializing kwlbot\n");
+	printf("Version %s\n", VERSION_STRING);
+
+	printf("\n\n");
+
 	m_pEventManager = new CEventManager(this);
 
 	CConfig cfg("core.cfg");
@@ -26,10 +31,6 @@ CCore::CCore()
 		while (cfg.GetNextValue(&strValue))
 		{
 			CScript *pScript = CreateScript(("scripts/" + strValue).c_str());
-			if (pScript != NULL)
-			{
-				printf("loaded %s\n", strValue.c_str());
-			}
 		}
 	}
 
@@ -118,45 +119,51 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 	sprintf(szPath, "%s*", szDirectory);
 	HANDLE hDir = FindFirstFileA(szPath, &fd);
 	delete[] szPath;
-	if (hDir != INVALID_HANDLE_VALUE)
+	if (hDir == INVALID_HANDLE_VALUE)
 	{
-		do
+		printf("Warning: No /bots/ directory\n");
+		return;
+	}
+	do
+	{
+		if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
-			if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+			size_t len = strlen(fd.cFileName);
+			if ((fd.cFileName[len - 3] == 'i' || fd.cFileName[len - 3] == 'I') &&
+			(fd.cFileName[len - 2] == 'n' || fd.cFileName[len - 2] == 'N') &&
+			(fd.cFileName[len - 1] == 'i' || fd.cFileName[len - 1] == 'I'))
 			{
-				size_t len = strlen(fd.cFileName);
+				CConfig Config((std::string(szDirectory) + fd.cFileName));
 
-				if ((fd.cFileName[len - 3] == 'i' || fd.cFileName[len - 3] == 'I') &&
-					(fd.cFileName[len - 2] == 'n' || fd.cFileName[len - 2] == 'N') &&
-					(fd.cFileName[len - 1] == 'i' || fd.cFileName[len - 1] == 'I'))
+				CBot *pBot = CreateBot();
+				pBot->GetSettings()->LoadFromConfig(&Config);
+
+				std::string strTemp;
+				if (Config.GetSingleValue("server", &strTemp))
 				{
-					CConfig Config((std::string(szDirectory) + fd.cFileName));
+					pBot->GetSocket()->Connect(strTemp.c_str());
+				}
 
-					CBot *pBot = CreateBot();
-					pBot->GetSettings()->LoadFromConfig(&Config);
-
-					std::string strTemp;
-					if (Config.GetSingleValue("server", &strTemp))
+				if (Config.StartValueList("channels"))
+				{
+					while (Config.GetNextValue(&strTemp))
 					{
-						pBot->GetSocket()->Connect(strTemp.c_str());
-					}
-
-					if (Config.StartValueList("channels"))
-					{
-						while (Config.GetNextValue(&strTemp))
-						{
-							pBot->JoinChannel(strTemp.c_str());
-						}
+						pBot->JoinChannel(strTemp.c_str());
 					}
 				}
 			}
 		}
-		while (FindNextFileA(hDir, &fd));
-		FindClose(hDir);
 	}
+	while (FindNextFileA(hDir, &fd));
+	FindClose(hDir);
 #else
 	dirent *pEntry;
 	DIR *pDir = opendir("./bots/");
+	if (pDir == NULL)
+	{
+		printf("Warning: No /bots/ directory\n");
+		return;
+	}
 	do
 	{
 		pEntry = readdir(pDir);

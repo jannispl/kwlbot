@@ -1,6 +1,8 @@
 #ifndef _DEFINITIONS_H
 #define _DEFINITIONS_H
 
+#define VERSION_STRING "v0.1 (" __DATE__ " " __TIME__ ")"
+
 #define SLEEP_MS (25)
 
 #define IRC_EOL "\r\n"
