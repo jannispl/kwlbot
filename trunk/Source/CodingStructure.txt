@@ -20,7 +20,7 @@ Scripting
   CEventManager			(Handles calling events in scripts)
   CScript				(Class which represents a script)
   CScriptFunctions		(Contains definitions for scripting functions)
-  CScriptObject			()
+  CScriptObject			(Abstract class which is used for script objects)
   
 Utility
   CConfig				(Config parser)

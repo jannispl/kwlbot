@@ -539,6 +539,8 @@ FuncReturn CScriptFunctions::File__constructor(const Arguments &args)
 
 FuncReturn CScriptFunctions::File__Destroy(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::File__Destroy");
+
 	if (args.Holder()->GetInternalField(0) == v8::Null())
 	{
 		return v8::Null();
@@ -564,6 +566,8 @@ FuncReturn CScriptFunctions::File__Destroy(const Arguments &args)
 
 FuncReturn CScriptFunctions::File__Read(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::File__Read");
+
 	if (args.Holder()->GetInternalField(0) == v8::Null())
 	{
 		return v8::Boolean::New(false);
@@ -600,6 +604,8 @@ FuncReturn CScriptFunctions::File__Read(const Arguments &args)
 
 FuncReturn CScriptFunctions::File__Write(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::File__Write");
+
 	if (args.Holder()->GetInternalField(0) == v8::Null())
 	{
 		return v8::Boolean::New(false);
@@ -632,6 +638,8 @@ FuncReturn CScriptFunctions::File__Write(const Arguments &args)
 
 FuncReturn CScriptFunctions::File__Eof(const Arguments &args)
 {
+	TRACEFUNC("CScriptFunctions::File__Eof");
+
 	if (args.Holder()->GetInternalField(0) == v8::Null())
 	{
 		return v8::Boolean::New(false);
