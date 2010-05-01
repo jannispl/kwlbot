@@ -17,10 +17,12 @@ CScript::ClassTemplates_t CScript::m_ClassTemplates;
 CScript::CScript()
 	: m_bLoaded(false), m_bCurrentEventCancelled(false), m_bCallingEvent(false)
 {
+	TRACEFUNC("CScript::CScript");
 }
 
 CScript::~CScript()
 {
+	TRACEFUNC("CScript::~CScript");
 }
 
 bool CScript::Load(const char *szFilename)
