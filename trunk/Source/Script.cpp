@@ -73,6 +73,7 @@ bool CScript::Load(const char *szFilename)
 		m_ClassTemplates.File->InstanceTemplate()->SetInternalFieldCount(1);
 		v8::Handle<v8::ObjectTemplate> fileProto = m_ClassTemplates.File->PrototypeTemplate();
 		fileProto->Set(v8::String::New("destroy"), v8::FunctionTemplate::New(CScriptFunctions::File__Destroy));
+		fileProto->Set(v8::String::New("isValid"), v8::FunctionTemplate::New(CScriptFunctions::File__IsValid));
 		fileProto->Set(v8::String::New("read"), v8::FunctionTemplate::New(CScriptFunctions::File__Read));
 		fileProto->Set(v8::String::New("write"), v8::FunctionTemplate::New(CScriptFunctions::File__Write));
 		fileProto->Set(v8::String::New("eof"), v8::FunctionTemplate::New(CScriptFunctions::File__Eof));
