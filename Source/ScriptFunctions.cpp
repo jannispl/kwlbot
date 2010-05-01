@@ -564,6 +564,24 @@ FuncReturn CScriptFunctions::File__Destroy(const Arguments &args)
 	return v8::Null();
 }
 
+FuncReturn CScriptFunctions::File__IsValid(const Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::File__IsValid");
+
+	if (args.Holder()->GetInternalField(0) == v8::Null())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::File)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	return v8::Boolean::New(((CFile *)pObject)->IsValid());
+}
+
 FuncReturn CScriptFunctions::File__Read(const Arguments &args)
 {
 	TRACEFUNC("CScriptFunctions::File__Read");

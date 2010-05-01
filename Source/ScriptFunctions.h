@@ -43,6 +43,7 @@ public:
 
 	static FuncReturn File__constructor(const Arguments &args);
 	static FuncReturn File__Destroy(const Arguments &args);
+	static FuncReturn File__IsValid(const Arguments &args);
 	static FuncReturn File__Read(const Arguments &args);
 	static FuncReturn File__Write(const Arguments &args);
 	static FuncReturn File__Eof(const Arguments &args);
