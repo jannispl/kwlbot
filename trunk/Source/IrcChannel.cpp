@@ -9,6 +9,7 @@ Purpose:	Class which represents a remote IRC channel
 
 #include "StdInc.h"
 #include "IrcChannel.h"
+#include <cstdlib>
 
 CIrcChannel::CIrcChannel(CBot *pParentBot, const char *szName)
 	: m_szName(NULL)

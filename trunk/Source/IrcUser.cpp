@@ -9,6 +9,7 @@ Purpose:	Class which represents a remote IRC user
 
 #include "StdInc.h"
 #include "IrcUser.h"
+#include <cstdlib>
 
 CIrcUser::CIrcUser(CBot *pParentBot, const char *szName)
 	: m_szName(NULL)

@@ -22,7 +22,7 @@ class CTcpSocket;
   #include <fcntl.h>
   #include <arpa/inet.h>
   #include <netdb.h>
-
+  #include <cstring>
   typedef int socket_t;
 
   #define closesocket(sock) close(sock)
