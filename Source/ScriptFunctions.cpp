@@ -548,7 +548,7 @@ void CScriptFunctions::File__WeakCallback(v8::Persistent<v8::Value> pv, void *no
 
 	v8::V8::AdjustAmountOfExternalAllocatedMemory(-5000);
 
-	delete v8::Local<v8::External>::Cast(lv)->Value();
+	delete (CFile *)v8::Local<v8::External>::Cast(lv)->Value();
 
 	/**
 	We have to ensure that we have no dangling External in JS space. This
