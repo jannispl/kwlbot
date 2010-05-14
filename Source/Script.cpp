@@ -66,6 +66,7 @@ bool CScript::Load(const char *szFilename)
 		v8::Handle<v8::ObjectTemplate> channelProto = m_ClassTemplates.IrcChannel->PrototypeTemplate();
 		channelProto->Set(v8::String::New("getName"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__GetName));
 		channelProto->Set(v8::String::New("hasUser"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__HasUser));
+		channelProto->Set(v8::String::New("setTopic"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SetTopic));
 
 		// CFile
 		m_ClassTemplates.File = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());

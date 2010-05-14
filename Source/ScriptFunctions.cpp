@@ -502,6 +502,66 @@ FuncReturn CScriptFunctions::IrcChannel__HasUser(const Arguments &args)
 	return v8::Boolean::New(((CIrcChannel *)pObject)->HasUser((CIrcUser *)pUser));
 }
 
+
+FuncReturn CScriptFunctions::IrcChannel__SetTopic(const Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::IrcChannel__SetTopic");
+
+	if (args.Length() < 1)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (!args[0]->IsString())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::IrcChannel)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	v8::String::Utf8Value strTopic(args[0]);
+	if (*strTopic == NULL)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	((CIrcChannel *)pObject)->SetTopic(*strTopic);
+
+	return v8::Boolean::New(true);
+}
+
+void CScriptFunctions::File__WeakCallback(v8::Persistent<v8::Value> pv, void *nobj)
+{
+	v8::HandleScope handle_scope;
+
+	v8::Local<v8::Object> jobj(v8::Object::Cast(*pv));
+	//if( jobj->InternalFieldCount() != (FieldCount) ) return; // how to warn about this?
+	v8::Local<v8::Value> lv(jobj->GetInternalField(0));
+	if (lv.IsEmpty() || !lv->IsExternal())
+	{
+		return; // how to warn about this?
+	}
+
+	v8::V8::AdjustAmountOfExternalAllocatedMemory(-5000);
+
+	delete v8::Local<v8::External>::Cast(lv)->Value();
+
+	/**
+	We have to ensure that we have no dangling External in JS space. This
+	is so that functions like IODevice.close() can act safely with the
+	knowledge that member funcs called after that won't get a dangling
+	pointer. Without this, some code will crash in that case.
+	*/
+	jobj->SetInternalField(0, v8::Null());
+	pv.Dispose();
+	pv.Clear();
+}
+
+
 FuncReturn CScriptFunctions::File__constructor(const Arguments &args)
 {
 	TRACEFUNC("CScriptFunctions::File__constructor");
@@ -530,10 +590,12 @@ FuncReturn CScriptFunctions::File__constructor(const Arguments &args)
 
 	CFile *pFile = new CFile(*strName, *strMode);
 
-	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.File->GetFunction();
-	v8::Local<v8::Object> obj = ctor->NewInstance();
-	obj->SetInternalField(0, v8::External::New(pFile));
+	v8::V8::AdjustAmountOfExternalAllocatedMemory(5000);
 
+	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.File->GetFunction();
+	v8::Persistent<v8::Object> obj = v8::Persistent<v8::Object>::New(ctor->NewInstance());
+	obj.MakeWeak(pFile, File__WeakCallback);
+	obj->SetInternalField(0, v8::External::New(pFile));
 	return obj;
 }
 
@@ -552,14 +614,15 @@ FuncReturn CScriptFunctions::File__Destroy(const Arguments &args)
 		return args.Holder()->GetInternalField(0);
 	}
 
-	delete pObject;
-
-	args.Holder()->SetInternalField(0, v8::Null());
+	/*delete pObject;
 
 	v8::Persistent<v8::Object> persistent(v8::Persistent<v8::Object>::New(args.Holder()));
 	persistent.ClearWeak();
 	persistent.Dispose();
-	persistent.Clear();
+	persistent.Clear();*/
+
+	v8::Persistent<v8::Object> persistent(v8::Persistent<v8::Object>::New(args.Holder()));
+	File__WeakCallback(persistent, pObject);
 
 	return v8::Null();
 }

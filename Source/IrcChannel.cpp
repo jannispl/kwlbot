@@ -68,6 +68,13 @@ bool CIrcChannel::HasUser(CIrcUser *pUser)
 	return false;
 }
 
+void CIrcChannel::SetTopic(const char *szTopic)
+{
+	TRACEFUNC("CIrcChannel::SetTopic");
+
+	m_pParentBot->SendRawFormat("TOPIC %s :%s", GetName(), szTopic);
+}
+
 CBot *CIrcChannel::GetParentBot()
 {
 	return m_pParentBot;
