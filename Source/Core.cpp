@@ -8,6 +8,8 @@ Purpose:	Core container which manages all bot instances
 */
 
 #include "StdInc.h"
+#include <iostream>
+#include <stdlib.h>
 #include "Core.h"
 #include "Config.h"
 

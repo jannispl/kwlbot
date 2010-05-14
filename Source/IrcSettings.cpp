@@ -9,6 +9,7 @@ Purpose:	Class which manages IRC-related settings
 
 #include "StdInc.h"
 #include "IrcSettings.h"
+#include <string.h>
 
 bool CIrcSettings::LoadFromConfig(CConfig *pConfig)
 {
