@@ -40,7 +40,9 @@ public:
 
 	static FuncReturn IrcChannel__GetName(const Arguments &args);
 	static FuncReturn IrcChannel__HasUser(const Arguments &args);
+	static FuncReturn IrcChannel__SetTopic(const Arguments &args);
 
+	static void File__WeakCallback(v8::Persistent<v8::Value> pv, void *nobj);
 	static FuncReturn File__constructor(const Arguments &args);
 	static FuncReturn File__Destroy(const Arguments &args);
 	static FuncReturn File__IsValid(const Arguments &args);

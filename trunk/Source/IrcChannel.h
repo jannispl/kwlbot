@@ -27,6 +27,7 @@ public:
 	void SetName(const char *szName);
 	const char *GetName();
 	bool HasUser(CIrcUser *pUser);
+	void SetTopic(const char *szTopic);
 
 	CBot *GetParentBot();
 
