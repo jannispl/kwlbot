@@ -26,7 +26,7 @@
 
 #define DLLEXPORT __declspec(dllimport)
 
-#include "../Source/Definitions.h"
+#include "../libkwl/Definitions.h"
 
 #ifdef _DEBUG
   #include "../Source/Debug.h"
