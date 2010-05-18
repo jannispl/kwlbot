@@ -1,27 +1,18 @@
-/*
-kwlbot IRC bot
-
-
-File:		EventManager.cpp
-Purpose:	Handles calling events in scripts
-
-*/
-
 #include "StdInc.h"
-#include "EventManager.h"
+#include "ScriptEventManager.h"
 
-CEventManager::CEventManager(CCore *pParentCore)
+CScriptEventManager::CScriptEventManager(CCore *pParentCore)
 {
 	m_pParentCore = pParentCore;
 }
 
-CEventManager::~CEventManager()
+CScriptEventManager::~CScriptEventManager()
 {
 }
 
-void CEventManager::OnBotConnected(CBot *pBot)
+void CScriptEventManager::OnBotConnected(CBot *pBot)
 {
-	TRACEFUNC("CEventManager::OnBotConnected");
+	TRACEFUNC("CScriptEventManager::OnBotConnected");
 
 	v8::HandleScope handleScope;
 	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
@@ -39,9 +30,9 @@ void CEventManager::OnBotConnected(CBot *pBot)
 	}
 }
 
-void CEventManager::OnBotJoinedChannel(CBot *pBot, CIrcChannel *pChannel)
+void CScriptEventManager::OnBotJoinedChannel(CBot *pBot, CIrcChannel *pChannel)
 {
-	TRACEFUNC("CEventManager::OnBotJoinedChannel");
+	TRACEFUNC("CScriptEventManager::OnBotJoinedChannel");
 
 	v8::HandleScope handleScope;
 	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
@@ -64,9 +55,9 @@ void CEventManager::OnBotJoinedChannel(CBot *pBot, CIrcChannel *pChannel)
 	}
 }
 
-void CEventManager::OnUserJoinedChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel)
+void CScriptEventManager::OnUserJoinedChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel)
 {
-	TRACEFUNC("CEventManager::OnUserJoinedChannel");
+	TRACEFUNC("CScriptEventManager::OnUserJoinedChannel");
 
 	v8::HandleScope handleScope;
 	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
@@ -93,9 +84,9 @@ void CEventManager::OnUserJoinedChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel
 	}
 }
 
-void CEventManager::OnUserLeftChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szReason)
+void CScriptEventManager::OnUserLeftChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szReason)
 {
-	TRACEFUNC("CEventManager::OnUserLeftChannel");
+	TRACEFUNC("CScriptEventManager::OnUserLeftChannel");
 
 	v8::HandleScope handleScope;
 	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
@@ -122,9 +113,9 @@ void CEventManager::OnUserLeftChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *
 	}
 }
 
-void CEventManager::OnUserKickedUser(CBot *pBot, CIrcUser *pUser, CIrcUser *pVictim, CIrcChannel *pChannel, const char *szReason)
+void CScriptEventManager::OnUserKickedUser(CBot *pBot, CIrcUser *pUser, CIrcUser *pVictim, CIrcChannel *pChannel, const char *szReason)
 {
-	TRACEFUNC("CEventManager::OnUserKickedUser");
+	TRACEFUNC("CScriptEventManager::OnUserKickedUser");
 
 	v8::HandleScope handleScope;
 	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
@@ -154,9 +145,9 @@ void CEventManager::OnUserKickedUser(CBot *pBot, CIrcUser *pUser, CIrcUser *pVic
 	}
 }
 
-void CEventManager::OnUserQuit(CBot *pBot, CIrcUser *pUser, const char *szReason)
+void CScriptEventManager::OnUserQuit(CBot *pBot, CIrcUser *pUser, const char *szReason)
 {
-	TRACEFUNC("CEventManager::OnUserQuit");
+	TRACEFUNC("CScriptEventManager::OnUserQuit");
 
 	v8::HandleScope handleScope;
 	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
@@ -179,9 +170,9 @@ void CEventManager::OnUserQuit(CBot *pBot, CIrcUser *pUser, const char *szReason
 	}
 }
 
-void CEventManager::OnUserChangedNickname(CBot *pBot, CIrcUser *pUser, const char *szOldNickname)
+void CScriptEventManager::OnUserChangedNickname(CBot *pBot, CIrcUser *pUser, const char *szOldNickname)
 {
-	TRACEFUNC("CEventManager::OnUserChangedNickname");
+	TRACEFUNC("CScriptEventManager::OnUserChangedNickname");
 
 	v8::HandleScope handleScope;
 	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
@@ -204,9 +195,9 @@ void CEventManager::OnUserChangedNickname(CBot *pBot, CIrcUser *pUser, const cha
 	}
 }
 
-void CEventManager::OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, const char *szMessage)
+void CScriptEventManager::OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, const char *szMessage)
 {
-	TRACEFUNC("CEventManager::OnUserPrivateMessage");
+	TRACEFUNC("CScriptEventManager::OnUserPrivateMessage");
 
 	v8::HandleScope handleScope;
 	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
@@ -229,9 +220,9 @@ void CEventManager::OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, const char
 	}
 }
 
-void CEventManager::OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szMessage)
+void CScriptEventManager::OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szMessage)
 {
-	TRACEFUNC("CEventManager::OnUserChannelMessage");
+	TRACEFUNC("CScriptEventManager::OnUserChannelMessage");
 
 	v8::HandleScope handleScope;
 	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
@@ -258,9 +249,9 @@ void CEventManager::OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrcChanne
 	}
 }
 
-void CEventManager::OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szModes, const char *szParams)
+void CScriptEventManager::OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szModes, const char *szParams)
 {
-	TRACEFUNC("CEventManager::OnUserSetChannelModes");
+	TRACEFUNC("CScriptEventManager::OnUserSetChannelModes");
 
 	v8::HandleScope handleScope;
 	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)

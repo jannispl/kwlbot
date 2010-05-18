@@ -23,7 +23,7 @@ class CBot;
 #include <vector>
 #include <string>
 
-class CBot : public CScriptObject
+class DLLEXPORT CBot : public CScriptObject
 {
 public:
 	CBot(CCore *pParentCore);

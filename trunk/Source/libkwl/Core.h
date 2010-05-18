@@ -16,8 +16,9 @@ class CCore;
 #include "Script.h"
 #include "Pool.h"
 #include "EventManager.h"
+#include "GlobalModule.h"
 
-class CCore
+class DLLEXPORT CCore
 {
 public:
 	CCore();
@@ -29,18 +30,28 @@ public:
 	CScript *CreateScript(const char *szFilename);
 	bool DeleteScript(CScript *pScript);
 
+	CGlobalModule *CreateGlobalModule(const char *szPath);
+	bool DeleteGlobalModule(CGlobalModule *pGlobalModule);
+
+	CPool<CBot *> *GetBots();
 	CPool<CScript *> *GetScripts();
+	CPool<CGlobalModule *> *GetGlobalModules();
 
 	void Pulse();
 	void ScanDirectoryForBots(const char *szDirectory);
 
-	CEventManager *GetEventManager();
+	CEventManager *GetScriptEventManager();
+	CPool<CEventManager *> *GetEventManagers();
+
+	void AddEventManager(CEventManager *pEventManager);
 
 private:
-	CEventManager *m_pEventManager;
+	CEventManager *m_pScriptEventManager;
+	CPool<CEventManager *> m_plEventManagers;
 
 	CPool<CBot *> m_plBots;
 	CPool<CScript *> m_plScripts;
+	CPool<CGlobalModule *> m_plGlobalModules;
 };
 
 #endif

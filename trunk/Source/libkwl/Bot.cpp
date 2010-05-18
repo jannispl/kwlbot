@@ -184,7 +184,11 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 
 			m_bGotMotd = true;
 
-			m_pParentCore->GetEventManager()->OnBotConnected(this);
+			m_pParentCore->GetScriptEventManager()->OnBotConnected(this);
+			for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+			{
+				(*i)->OnBotConnected(this);
+			}
 			return;
 		}
 	}
@@ -333,11 +337,19 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 
 				if (bSelf)
 				{
-					m_pParentCore->GetEventManager()->OnBotJoinedChannel(this, pChannel);
+					m_pParentCore->GetScriptEventManager()->OnBotJoinedChannel(this, pChannel);
+					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+					{
+						(*i)->OnBotJoinedChannel(this, pChannel);
+					}
 				}
 				else
 				{
-					m_pParentCore->GetEventManager()->OnUserJoinedChannel(this, pUser, pChannel);
+					m_pParentCore->GetScriptEventManager()->OnUserJoinedChannel(this, pUser, pChannel);
+					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+					{
+						(*i)->OnUserJoinedChannel(this, pUser, pChannel);
+					}
 				}
 			}
 		}
@@ -394,7 +406,11 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					CIrcUser *pUser = FindUser(strNickname.c_str());
 					if (pUser != NULL)
 					{
-						m_pParentCore->GetEventManager()->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
+						m_pParentCore->GetScriptEventManager()->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
+						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+						{
+							(*i)->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
+						}
 
 						dbgprintf("Removing %s from %s.\n", pUser->GetName(), pChannel->GetName());
 						pUser->m_plIrcChannels.remove(pChannel);
@@ -443,7 +459,11 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					CIrcUser *pUser = FindUser(strNickname.c_str());
 					if (pUser != NULL)
 					{
-						m_pParentCore->GetEventManager()->OnUserKickedUser(this, pUser, pVictim, pChannel, strReason.c_str());
+						m_pParentCore->GetScriptEventManager()->OnUserKickedUser(this, pUser, pVictim, pChannel, strReason.c_str());
+						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+						{
+							(*i)->OnUserKickedUser(this, pUser, pVictim, pChannel, strReason.c_str());
+						}
 					}
 
 					dbgprintf("Removing %s from %s.\n", pVictim->GetName(), pChannel->GetName());
@@ -481,7 +501,11 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			CIrcUser *pUser = FindUser(strNickname.c_str());
 			if (pUser != NULL)
 			{
-				m_pParentCore->GetEventManager()->OnUserQuit(this, pUser, strReason.c_str());
+				m_pParentCore->GetScriptEventManager()->OnUserQuit(this, pUser, strReason.c_str());
+				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+				{
+					(*i)->OnUserQuit(this, pUser, strReason.c_str());
+				}
 
 				for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
 				{
@@ -520,7 +544,11 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				dbgprintf("Renaming %s to %s.\n", pUser->GetName(), strNewNick.c_str());
 				pUser->SetName(strNewNick.c_str());
 
-				m_pParentCore->GetEventManager()->OnUserChangedNickname(this, pUser, strNickname.c_str());
+				m_pParentCore->GetScriptEventManager()->OnUserChangedNickname(this, pUser, strNickname.c_str());
+				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+				{
+					(*i)->OnUserChangedNickname(this, pUser, strNickname.c_str());
+				}
 			}
 		}
 		return;
@@ -549,7 +577,11 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					// privmsg to bot
 					dbgprintf("[priv] <%s> %s\n", strNickname.c_str(), strMessage.c_str());
 
-					m_pParentCore->GetEventManager()->OnUserPrivateMessage(this, pUser, strMessage.c_str());
+					m_pParentCore->GetScriptEventManager()->OnUserPrivateMessage(this, pUser, strMessage.c_str());
+					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+					{
+						(*i)->OnUserPrivateMessage(this, pUser, strMessage.c_str());
+					}
 				}
 				else
 				{
@@ -558,7 +590,11 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					{
 						dbgprintf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
 
-						m_pParentCore->GetEventManager()->OnUserChannelMessage(this, pUser, pChannel, strMessage.c_str());
+						m_pParentCore->GetScriptEventManager()->OnUserChannelMessage(this, pUser, pChannel, strMessage.c_str());
+						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+						{
+							(*i)->OnUserChannelMessage(this, pUser, pChannel, strMessage.c_str());
+						}
 					}
 				}
 			}
@@ -645,7 +681,11 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				{
 					strNickname = strNickname.substr(0, iSeparator);
 
-					m_pParentCore->GetEventManager()->OnUserSetChannelModes(this, pUser, pChannel, strModes.c_str(), strParams.c_str());
+					m_pParentCore->GetScriptEventManager()->OnUserSetChannelModes(this, pUser, pChannel, strModes.c_str(), strParams.c_str());
+					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+					{
+						(*i)->OnUserSetChannelModes(this, pUser, pChannel, strModes.c_str(), strParams.c_str());
+					}
 				}
 			}
 

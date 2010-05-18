@@ -18,7 +18,7 @@ class CIrcChannel;
 #include "Pool.h"
 #include "Script.h"
 
-class CIrcChannel : public CScriptObject
+class DLLEXPORT CIrcChannel : public CScriptObject
 {
 public:
 	CIrcChannel(CBot *pParentBot, const char *szName);
