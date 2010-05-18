@@ -9,6 +9,31 @@ Purpose:	Template class which represents a pool for elements
 
 #include <list>
 #define CPool std::list
+/*
+template <typename T>
+class CPool
+{
+public:
+	typedef T elem_t;
+
+	std::list<elem_t>::iterator begin()
+	{
+		return m_lstElements.begin();
+	}
+
+	std::list<elem_t>::iterator end()
+	{
+		return m_lstElements.end();
+	}
+
+	class iterator
+	{
+	public:
+	};
+
+private:
+	std::list<elem_t> m_lstElements;
+};
 
 /*
 template <typename T> class CPool;

@@ -12,14 +12,15 @@ class CScript;
 #ifndef _SCRIPT_H
 #define _SCRIPT_H
 
+#include "Core.h"
 #include "v8/v8.h"
 #include <list>
 #include <string>
 
-class CScript
+class DLLEXPORT CScript
 {
 public:
-	CScript();
+	CScript(CCore *pParentCore);
 	~CScript();
 
 	bool Load(const char *szFilename);
@@ -28,7 +29,7 @@ public:
 	void EnterContext();
 	void ExitContext();
 
-	typedef struct 
+	typedef struct
 	{
 		std::string strEvent;
 		v8::Persistent<v8::Function> handlerFunction;
@@ -48,7 +49,11 @@ public:
 	bool m_bCurrentEventCancelled;
 
 private:
+	CCore *m_pParentCore;
+
 	bool m_bLoaded;
+
+	template class DLLEXPORT v8::Persistent<v8::Context>;
 	v8::Persistent<v8::Context> m_ScriptContext;
 
 	static v8::Persistent<v8::ObjectTemplate> m_GlobalTemplate;

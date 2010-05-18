@@ -1,28 +1,16 @@
-/*
-kwlbot IRC bot
+class CScriptEventManager;
 
-
-File:		EventManager.cpp
-Purpose:	Handles calling events in scripts
-
-*/
-
-class CEventManager;
-
-#ifndef _CEVENTMANAGER_H
-#define _CEVENTMANAGER_H
+#ifndef _SCRIPTEVENTMANAGER_H
+#define _SCRIPTEVENTMANAGER_H
 
 #include "Core.h"
-#include "Bot.h"
-#include "IrcUser.h"
-#include "IrcChannel.h"
-#include "Script.h"
+#include "EventManager.h"
 
-class CEventManager
+class CScriptEventManager : public CEventManager
 {
 public:
-	CEventManager(CCore *pParentCore);
-	~CEventManager();
+	CScriptEventManager(CCore *pParentCore);
+	~CScriptEventManager();
 
 	void OnBotConnected(CBot *pBot);
 	void OnBotJoinedChannel(CBot *pBot, CIrcChannel *pChannel);

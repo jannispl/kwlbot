@@ -29,7 +29,7 @@ class CTcpSocket;
   #define SOCKET_ERROR (-1)
 #endif
 
-class CTcpSocket
+class DLLEXPORT CTcpSocket
 {
 public:
 	CTcpSocket()

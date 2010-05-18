@@ -16,7 +16,7 @@ class CIrcSocket;
 #include "IrcSettings.h"
 #include "Bot.h"
 
-class CIrcSocket
+class DLLEXPORT CIrcSocket
 {
 public:
 	CIrcSocket(CBot *pParentBot);

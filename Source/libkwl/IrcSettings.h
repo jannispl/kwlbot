@@ -14,7 +14,7 @@ class CIrcSettings;
 
 #include "Config.h"
 
-class CIrcSettings
+class DLLEXPORT CIrcSettings
 {
 public:
 	bool LoadFromConfig(CConfig *pConfig);

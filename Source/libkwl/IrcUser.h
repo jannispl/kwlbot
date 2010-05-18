@@ -18,7 +18,7 @@ class CIrcUser;
 #include "Script.h"
 #include <map>
 
-class CIrcUser : public CScriptObject
+class DLLEXPORT CIrcUser : public CScriptObject
 {
 public:
 	CIrcUser(CBot *pParentBot, const char *szName);

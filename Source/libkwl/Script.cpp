@@ -14,8 +14,8 @@ Purpose:	Class which represents a script
 v8::Persistent<v8::ObjectTemplate> CScript::m_GlobalTemplate;
 CScript::ClassTemplates_t CScript::m_ClassTemplates;
 
-CScript::CScript()
-	: m_bLoaded(false), m_bCurrentEventCancelled(false), m_bCallingEvent(false)
+CScript::CScript(CCore *pParentCore)
+	: m_pParentCore(pParentCore), m_bLoaded(false), m_bCurrentEventCancelled(false), m_bCallingEvent(false)
 {
 	TRACEFUNC("CScript::CScript");
 }
@@ -86,6 +86,12 @@ bool CScript::Load(const char *szFilename)
 		m_GlobalTemplate->Set(v8::String::New("cancelEvent"), v8::FunctionTemplate::New(CScriptFunctions::CancelEvent));
 
 		m_GlobalTemplate->Set(v8::String::New("File"), v8::FunctionTemplate::New(CScriptFunctions::File__constructor));
+
+		// Ask the global modules if they have something
+		for (CPool<CGlobalModule *>::iterator i = m_pParentCore->GetGlobalModules()->begin(); i != m_pParentCore->GetGlobalModules()->end(); ++i)
+		{
+			(*i)->TemplateRequest(m_GlobalTemplate);
+		}
 	}
 
 	// create a new context

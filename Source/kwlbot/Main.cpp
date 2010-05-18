@@ -8,7 +8,7 @@ Purpose:	Contains the entry point of the application
 */
 
 #include "StdInc.h"
-#include "Core.h"
+#include "../Source/Core.h"
 
 CCore *g_pCore = NULL;
 #ifdef _DEBUG

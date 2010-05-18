@@ -18,7 +18,7 @@ class CScriptFunctions;
 using v8::Arguments;
 typedef v8::Handle<v8::Value> FuncReturn;
 
-class CScriptFunctions
+class DLLEXPORT CScriptFunctions
 {
 public:
 	static CScript *m_pCallingScript;

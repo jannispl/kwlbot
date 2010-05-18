@@ -16,6 +16,8 @@
   #define NORPC
 
   #include <windows.h>
+
+  #pragma warning(disable:4251)
 #else
   #include <unistd.h>
 #endif
@@ -35,3 +37,4 @@
   #define dbgprintf
 #endif
 
+#define DLLEXPORT __declspec(dllexport)
