@@ -17,6 +17,7 @@ class CCore;
 #include "Pool.h"
 #include "EventManager.h"
 #include "GlobalModule.h"
+#include "IrcSettings.h"
 
 class DLLEXPORT CCore
 {
@@ -24,7 +25,7 @@ public:
 	CCore();
 	~CCore();
 
-	CBot *CreateBot();
+	CBot *CreateBot(const CIrcSettings &ircSettings);
 	bool DeleteBot(CBot *pBot);
 
 	CScript *CreateScript(const char *szFilename);

@@ -26,7 +26,7 @@ class CBot;
 class DLLEXPORT CBot : public CScriptObject
 {
 public:
-	CBot(CCore *pParentCore);
+	CBot(CCore *pParentCore, const CIrcSettings &ircSettings);
 	~CBot();
 
 	CIrcSettings *GetSettings();
