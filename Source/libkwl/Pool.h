@@ -8,90 +8,166 @@ Purpose:	Template class which represents a pool for elements
 */
 
 #include <list>
-#define CPool std::list
-/*
-template <typename T>
-class CPool
-{
-public:
-	typedef T elem_t;
-
-	std::list<elem_t>::iterator begin()
-	{
-		return m_lstElements.begin();
-	}
-
-	std::list<elem_t>::iterator end()
-	{
-		return m_lstElements.end();
-	}
-
-	class iterator
-	{
-	public:
-	};
-
-private:
-	std::list<elem_t> m_lstElements;
-};
-
-/*
-template <typename T> class CPool;
 
 #ifndef _POOL_H
 #define _POOL_H
 
-#include <vector>
-
-template <typename T>
-class CPool
+template <typename T> class CPool
 {
 public:
-	typedef unsigned int index_t;
-	typedef T elem_t;
-
-	index_t Add(const elem_t &Elem)
+	class iterator
 	{
-		m_lstElements.push_back(Elem);
-		return m_lstElements.size() - 1;
-	}
-
-	const T& Get(index_t iIndex)
-	{
-		return m_lstElements[iIndex];
-	}
-
-	const T& operator[](index_t iIndex)
-	{
-		return Get(iIndex);
-	}
-
-	void Remove(index_t iIndex)
-	{
-		m_lstElements.erase(m_lstElements.begin() + iIndex);
-	}
-
-	bool Remove(const elem_t &Elem)
-	{
-		for (std::vector<T>::iterator i = m_lstElements.begin(); i != m_lstElements.end(); ++i)
+	public:
+		iterator()
+			: m_pCurr(NULL)
 		{
-			if (*i == Elem)
+		}
+
+		iterator(T *it)
+			: m_pCurr(it)
+		{
+		}
+
+		inline T *ptr() const
+		{
+			return m_pCurr;
+		}
+
+		inline void operator ++()
+		{
+			++m_pCurr;
+		}
+
+		T operator *() const
+		{
+			return *m_pCurr;
+		}
+
+		bool operator !=(const iterator &it)
+		{
+			return m_pCurr != it.ptr();
+		}
+
+		bool operator ==(const iterator &it)
+		{
+			return m_pCurr == it.ptr();
+		}
+
+	private:
+		T *m_pCurr;
+	};
+
+	CPool()
+		: m_pElements(NULL), m_iNumElements(0)
+	{
+	}
+
+	~CPool()
+	{
+		if (m_pElements != NULL)
+		{
+			free(m_pElements);
+		}
+	}
+
+	void push_back(T elem)
+	{
+		alloc_element();
+		m_pElements[m_iNumElements] = elem;
+		++m_iNumElements;
+	}
+
+	iterator begin() const
+	{
+		return iterator(m_pElements);
+	}
+
+	iterator end() const
+	{
+		return iterator(m_pElements + m_iNumElements);
+	}
+
+	inline size_t size() const
+	{
+		return m_iNumElements;
+	}
+
+	T front() const
+	{
+		return *m_pElements;
+	}
+
+	T back()
+	{
+		return *(T *)(end().ptr() - 1);
+	}
+
+	iterator erase(iterator it)
+	{
+		if (m_iNumElements == 0)
+		{
+			return end();
+		}
+
+		--m_iNumElements;
+		if (m_iNumElements != 0)
+		{
+			T *last = (T *)end().ptr();
+			if (it.ptr() != last)
 			{
-				m_lstElements.erase(i);
+				memcpy(it.ptr(), last, sizeof(T));
+			}
+
+			m_pElements = (T *)realloc(m_pElements, m_iNumElements * sizeof(T));
+
+			return iterator(last);
+		}
+		else
+		{
+			free(m_pElements);
+			m_pElements = NULL;
+		}
+		return end();
+	}
+
+	bool remove(T elem)
+	{
+		for (iterator i = begin(); i != end(); ++i)
+		{
+			if (*i == elem)
+			{
+				erase(i);
 				return true;
 			}
 		}
 		return false;
 	}
 
-	index_t GetSize()
+	void clear()
 	{
-		return m_lstElements.size();
+		if (m_pElements != NULL)
+		{
+			free(m_pElements);
+			m_pElements = 0;
+			m_iNumElements = 0;
+		}
 	}
 
 private:
-	std::vector<T> m_lstElements;
+	size_t m_iNumElements;
+	T *m_pElements;
+
+	void alloc_element()
+	{
+		if (m_pElements == NULL)
+		{
+			m_pElements = (T *)malloc(sizeof(T));
+		}
+		else
+		{
+			m_pElements = (T *)realloc(m_pElements, (m_iNumElements + 1) * sizeof(T));
+		}
+	}
 };
 
 #endif
-*/

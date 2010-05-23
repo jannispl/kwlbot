@@ -30,10 +30,14 @@ public:
 	void Pulse();
 	void HandleData(const char *szData);
 
+	const char *GetCurrentNickname();
+
 private:
 	CTcpSocket m_TcpSocket;
 	CBot *m_pParentBot;
+
 	std::string m_strBuffer;
+	std::string m_strCurrentNickname;
 };
 
 #endif

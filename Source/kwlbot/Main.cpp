@@ -39,5 +39,6 @@ int main(int iArgCount, char *szArgs[])
 #ifdef _DEBUG
 	delete g_pDebug;
 #endif
+
 	return 0;
 }

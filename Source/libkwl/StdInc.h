@@ -1,3 +1,12 @@
+/*
+kwlbot IRC bot
+
+
+File:		StdInc.h
+Purpose:	Precompiled header file
+
+*/
+
 #include <stdio.h>
 
 #ifdef WIN32

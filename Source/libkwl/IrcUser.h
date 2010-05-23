@@ -32,6 +32,7 @@ public:
 
 	CScriptObject::eScriptType GetType();
 
+	template class DLLEXPORT CPool<CIrcChannel *>;
 	CPool<CIrcChannel *> m_plIrcChannels;
 	std::map<CIrcChannel *, char> m_mapChannelModes;
 

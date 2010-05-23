@@ -38,6 +38,12 @@ bool CIrcSettings::LoadFromConfig(CConfig *pConfig)
 		return false;
 	}
 	SetRealname(strTemp.c_str());
+
+	if (!pConfig->GetSingleValue("altnick", &strTemp))
+	{
+		strTemp = GetNickname() + std::string("`");
+	}
+	SetAlternativeNickname(strTemp.c_str());
 	
 	return true;
 }
@@ -81,6 +87,19 @@ bool CIrcSettings::SetRealname(const char *szRealname)
 	return true;
 }
 
+bool CIrcSettings::SetAlternativeNickname(const char *szNickname)
+{
+	TRACEFUNC("CIrcSettings::SetAlternativeNickname");
+
+	if (strlen(szNickname) > MAX_NICKNAME_LEN)
+	{
+		return false;
+	}
+
+	strcpy(m_szAlternativeNickname, szNickname);
+	return true;
+}
+
 const char *CIrcSettings::GetNickname()
 {
 	TRACEFUNC("CIrcSettings::GetNickname");
@@ -100,4 +119,11 @@ const char *CIrcSettings::GetRealname()
 	TRACEFUNC("CIrcSettings::GetRealname");
 
 	return m_szRealname;
+}
+
+const char *CIrcSettings::GetAlternativeNickname()
+{
+	TRACEFUNC("CIrcSettings::GetAlternativeNickname");
+
+	return m_szAlternativeNickname;
 }

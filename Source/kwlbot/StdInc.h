@@ -1,3 +1,12 @@
+/*
+kwlbot IRC bot
+
+
+File:		StdInc.h
+Purpose:	Precompiled header file
+
+*/
+
 #include <stdio.h>
 
 #ifdef WIN32
@@ -17,7 +26,7 @@
 
   #include <windows.h>
 
-  #pragma warning(disable:4251)
+  //#pragma warning(disable:4251)
 #else
   #include <unistd.h>
 #endif

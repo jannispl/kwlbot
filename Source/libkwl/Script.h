@@ -13,12 +13,15 @@ class CScript;
 #define _SCRIPT_H
 
 #include "Core.h"
+#include "ScriptFunctions.h"
 #include "v8/v8.h"
 #include <list>
 #include <string>
 
 class DLLEXPORT CScript
 {
+	friend class CScriptFunctions;
+
 public:
 	CScript(CCore *pParentCore);
 	~CScript();
@@ -31,17 +34,12 @@ public:
 
 	typedef struct
 	{
-		std::string strEvent;
-		v8::Persistent<v8::Function> handlerFunction;
-	} EventHandler;
-	std::list<EventHandler> m_lstEventHandlers;
-
-	typedef struct
-	{
 		v8::Persistent<v8::FunctionTemplate> Bot;
 		v8::Persistent<v8::FunctionTemplate> IrcUser;
 		v8::Persistent<v8::FunctionTemplate> IrcChannel;
 		v8::Persistent<v8::FunctionTemplate> File;
+		v8::Persistent<v8::FunctionTemplate> ScriptModule;
+		v8::Persistent<v8::FunctionTemplate> ScriptModuleProcedure;
 	} ClassTemplates_t;
 	static ClassTemplates_t m_ClassTemplates;
 
@@ -56,7 +54,16 @@ private:
 	template class DLLEXPORT v8::Persistent<v8::Context>;
 	v8::Persistent<v8::Context> m_ScriptContext;
 
+	template class DLLEXPORT v8::Persistent<v8::ObjectTemplate>;
 	static v8::Persistent<v8::ObjectTemplate> m_GlobalTemplate;
+
+	typedef struct
+	{
+		std::string strEvent;
+		v8::Persistent<v8::Function> handlerFunction;
+	} EventHandler;
+	template class DLLEXPORT CPool<EventHandler *>;
+	CPool<EventHandler *> m_lstEventHandlers;
 };
 
 #endif

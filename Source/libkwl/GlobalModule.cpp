@@ -1,3 +1,12 @@
+/*
+kwlbot IRC bot
+
+
+File:		GlobalModule.cpp
+Purpose:	Class which represents a global module
+
+*/
+
 #include "StdInc.h"
 #include "GlobalModule.h"
 
@@ -15,6 +24,7 @@ CGlobalModule::CGlobalModule(CCore *pCore, const char *szPath)
 
 	if (m_pLibrary == NULL)
 	{
+		memset(&m_Functions, 0, sizeof(m_Functions));
 		return;
 	}
 
