@@ -1,3 +1,12 @@
+/*
+kwlbot IRC bot
+
+
+File:		ScriptEventManager.h
+Purpose:	Handles calling events in scripts
+
+*/
+
 class CScriptEventManager;
 
 #ifndef _SCRIPTEVENTMANAGER_H

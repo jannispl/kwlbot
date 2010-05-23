@@ -2,8 +2,8 @@
 kwlbot IRC bot
 
 
-File:		EventManager.cpp
-Purpose:	Handles calling events in scripts
+File:		EventManager.h
+Purpose:	Abstract class which defines an event manager
 
 */
 

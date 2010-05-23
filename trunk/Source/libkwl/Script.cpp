@@ -79,6 +79,20 @@ bool CScript::Load(const char *szFilename)
 		fileProto->Set(v8::String::New("write"), v8::FunctionTemplate::New(CScriptFunctions::File__Write));
 		fileProto->Set(v8::String::New("eof"), v8::FunctionTemplate::New(CScriptFunctions::File__Eof));
 
+		// CScriptModule
+		m_ClassTemplates.ScriptModule = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
+		m_ClassTemplates.ScriptModule->SetClassName(v8::String::New("ScriptModule"));
+		m_ClassTemplates.ScriptModule->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> scriptModuleProto = m_ClassTemplates.ScriptModule->PrototypeTemplate();
+		scriptModuleProto->Set(v8::String::New("GetProcedure"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__GetProcedure));
+
+		// CScriptModule::Procedure
+		m_ClassTemplates.ScriptModuleProcedure = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
+		m_ClassTemplates.ScriptModuleProcedure->SetClassName(v8::String::New("ScriptModuleProcedure"));
+		m_ClassTemplates.ScriptModuleProcedure->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> scriptModuleFunctionProto = m_ClassTemplates.ScriptModuleProcedure->PrototypeTemplate();
+		scriptModuleFunctionProto->Set(v8::String::New("Call"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModuleFunction__Call));
+
 		// global
 		m_GlobalTemplate = v8::Persistent<v8::ObjectTemplate>::New(v8::ObjectTemplate::New());
 		m_GlobalTemplate->Set(v8::String::New("print"), v8::FunctionTemplate::New(CScriptFunctions::Print));
@@ -86,6 +100,7 @@ bool CScript::Load(const char *szFilename)
 		m_GlobalTemplate->Set(v8::String::New("cancelEvent"), v8::FunctionTemplate::New(CScriptFunctions::CancelEvent));
 
 		m_GlobalTemplate->Set(v8::String::New("File"), v8::FunctionTemplate::New(CScriptFunctions::File__constructor));
+		m_GlobalTemplate->Set(v8::String::New("ScriptModule"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__constructor));
 
 		// Ask the global modules if they have something
 		for (CPool<CGlobalModule *>::iterator i = m_pParentCore->GetGlobalModules()->begin(); i != m_pParentCore->GetGlobalModules()->end(); ++i)
@@ -174,11 +189,11 @@ bool CScript::CallEvent(const char *szEventName, int iArgCount, v8::Handle<v8::V
 	m_bCallingEvent = true;
 
 	CScriptFunctions::m_pCallingScript = this;
-	for (std::list<EventHandler>::iterator i = m_lstEventHandlers.begin(); i != m_lstEventHandlers.end(); ++i)
+	for (CPool<EventHandler *>::iterator i = m_lstEventHandlers.begin(); i != m_lstEventHandlers.end(); ++i)
 	{
-		if (i->strEvent == szEventName && i->handlerFunction->IsFunction())
+		if ((*i)->strEvent == szEventName && (*i)->handlerFunction->IsFunction())
 		{
-			i->handlerFunction->Call(i->handlerFunction, iArgCount, pArgValues);
+			(*i)->handlerFunction->Call((*i)->handlerFunction, iArgCount, pArgValues);
 		}
 	}
 	CScriptFunctions::m_pCallingScript = NULL;

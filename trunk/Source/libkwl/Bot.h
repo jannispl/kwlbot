@@ -56,8 +56,11 @@ private:
 	CIrcSocket *m_pIrcSocket;
 	CIrcSettings m_IrcSettings;
 
+	template class DLLEXPORT CPool<CIrcChannel *>;
 	CPool<CIrcChannel *> m_plIrcChannels;
 	CPool<CIrcChannel *> *m_pIrcChannelQueue;
+
+	template class DLLEXPORT CPool<CIrcUser *>;
 	CPool<CIrcUser *> m_plGlobalUsers;
 
 	struct

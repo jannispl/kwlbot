@@ -12,6 +12,7 @@ Purpose:	Contains definitions for scripting functions
 #include "Bot.h"
 #include "ScriptObject.h"
 #include "File.h"
+#include "ScriptModule.h"
 
 CScript *CScriptFunctions::m_pCallingScript = NULL;
 
@@ -58,10 +59,10 @@ FuncReturn CScriptFunctions::AddEventHandler(const Arguments &args)
 	v8::String::Utf8Value strEvent(args[0]);
 	v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(args[1]);
 
-	CScript::EventHandler eventHandler;
-	eventHandler.strEvent = *strEvent;
-	eventHandler.handlerFunction = v8::Persistent<v8::Function>::New(function);
-	m_pCallingScript->m_lstEventHandlers.push_back(eventHandler);
+	CScript::EventHandler *pEventHandler = new CScript::EventHandler;
+	pEventHandler->strEvent = *strEvent;
+	pEventHandler->handlerFunction = v8::Persistent<v8::Function>::New(function);
+	m_pCallingScript->m_lstEventHandlers.push_back(pEventHandler);
 
 	return v8::Boolean::New(true);
 }
@@ -534,33 +535,47 @@ FuncReturn CScriptFunctions::IrcChannel__SetTopic(const Arguments &args)
 	return v8::Boolean::New(true);
 }
 
-void CScriptFunctions::File__WeakCallback(v8::Persistent<v8::Value> pv, void *nobj)
+void CScriptFunctions::WeakCallbackUsingDelete(v8::Persistent<v8::Value> pv, void *nobj)
 {
 	v8::HandleScope handle_scope;
 
 	v8::Local<v8::Object> jobj(v8::Object::Cast(*pv));
-	//if( jobj->InternalFieldCount() != (FieldCount) ) return; // how to warn about this?
+	//if( jobj->InternalFieldCount() != (FieldCount) ) return; // warn about this?
 	v8::Local<v8::Value> lv(jobj->GetInternalField(0));
 	if (lv.IsEmpty() || !lv->IsExternal())
 	{
-		return; // how to warn about this?
+		return;
 	}
 
 	v8::V8::AdjustAmountOfExternalAllocatedMemory(-5000);
 
 	delete v8::Local<v8::External>::Cast(lv)->Value();
 
-	/**
-	We have to ensure that we have no dangling External in JS space. This
-	is so that functions like IODevice.close() can act safely with the
-	knowledge that member funcs called after that won't get a dangling
-	pointer. Without this, some code will crash in that case.
-	*/
 	jobj->SetInternalField(0, v8::Null());
 	pv.Dispose();
 	pv.Clear();
 }
 
+void CScriptFunctions::WeakCallbackUsingFree(v8::Persistent<v8::Value> pv, void *nobj)
+{
+	v8::HandleScope handle_scope;
+
+	v8::Local<v8::Object> jobj(v8::Object::Cast(*pv));
+	//if( jobj->InternalFieldCount() != (FieldCount) ) return; // warn about this?
+	v8::Local<v8::Value> lv(jobj->GetInternalField(0));
+	if (lv.IsEmpty() || !lv->IsExternal())
+	{
+		return;
+	}
+
+	v8::V8::AdjustAmountOfExternalAllocatedMemory(-5000);
+
+	free(v8::Local<v8::External>::Cast(lv)->Value());
+
+	jobj->SetInternalField(0, v8::Null());
+	pv.Dispose();
+	pv.Clear();
+}
 
 FuncReturn CScriptFunctions::File__constructor(const Arguments &args)
 {
@@ -594,7 +609,7 @@ FuncReturn CScriptFunctions::File__constructor(const Arguments &args)
 
 	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.File->GetFunction();
 	v8::Persistent<v8::Object> obj = v8::Persistent<v8::Object>::New(ctor->NewInstance());
-	obj.MakeWeak(pFile, File__WeakCallback);
+	obj.MakeWeak(pFile, WeakCallbackUsingDelete);
 	obj->SetInternalField(0, v8::External::New(pFile));
 	return obj;
 }
@@ -614,15 +629,8 @@ FuncReturn CScriptFunctions::File__Destroy(const Arguments &args)
 		return args.Holder()->GetInternalField(0);
 	}
 
-	/*delete pObject;
-
 	v8::Persistent<v8::Object> persistent(v8::Persistent<v8::Object>::New(args.Holder()));
-	persistent.ClearWeak();
-	persistent.Dispose();
-	persistent.Clear();*/
-
-	v8::Persistent<v8::Object> persistent(v8::Persistent<v8::Object>::New(args.Holder()));
-	File__WeakCallback(persistent, pObject);
+	WeakCallbackUsingDelete(persistent, pObject);
 
 	return v8::Null();
 }
@@ -733,4 +741,85 @@ FuncReturn CScriptFunctions::File__Eof(const Arguments &args)
 	}
 
 	return v8::Int32::New(((CFile *)pObject)->Eof());
+}
+
+FuncReturn CScriptFunctions::ScriptModule__constructor(const v8::Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::ScriptModule__constructor");
+
+	if (!args.IsConstructCall() || args.Length() < 1)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (!args[0]->IsString())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	v8::String::Utf8Value strPath(args[0]);
+	if (*strPath == NULL)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CScriptModule *pScriptModule = new CScriptModule(*strPath);
+
+	v8::V8::AdjustAmountOfExternalAllocatedMemory(5000);
+
+	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.ScriptModule->GetFunction();
+	v8::Persistent<v8::Object> obj = v8::Persistent<v8::Object>::New(ctor->NewInstance());
+	obj.MakeWeak(pScriptModule, WeakCallbackUsingDelete);
+	obj->SetInternalField(0, v8::External::New(pScriptModule));
+	return obj;
+}
+
+FuncReturn CScriptFunctions::ScriptModule__GetProcedure(const v8::Arguments &args)
+{
+	if (args.Holder()->GetInternalField(0) == v8::Null() || args.Length() < 1)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	if (!args[0]->IsString())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	v8::String::Utf8Value strName(args[0]);
+	if (*strName == NULL)	
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::ScriptModule)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CScriptModule::Procedure *pProcedure = ((CScriptModule *)pObject)->AllocateProcedure(*strName);
+
+	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.ScriptModuleProcedure->GetFunction();
+	v8::Persistent<v8::Object> obj = v8::Persistent<v8::Object>::New(ctor->NewInstance());
+	obj.MakeWeak(pProcedure, WeakCallbackUsingDelete);
+	obj->SetInternalField(0, v8::External::New(pProcedure));
+
+	return obj;
+}
+
+FuncReturn CScriptFunctions::ScriptModuleFunction__Call(const v8::Arguments &args)
+{
+	if (args.Holder()->GetInternalField(0) == v8::Null())
+	{
+		return v8::Boolean::New(false);
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::ScriptModuleProcedure)
+	{
+		return v8::Boolean::New(false);
+	}
+
+	return v8::Integer::New(((CScriptModule::Procedure *)pObject)->Call());
 }

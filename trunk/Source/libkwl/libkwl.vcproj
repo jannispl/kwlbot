@@ -116,7 +116,7 @@
 				AdditionalOptions="/LD"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;USING_V8_SHARED"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
@@ -291,6 +291,14 @@
 			</File>
 			<File
 				RelativePath=".\GlobalModule.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ScriptModule.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ScriptModule.h"
 				>
 			</File>
 		</Filter>

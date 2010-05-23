@@ -21,7 +21,9 @@ public:
 		Bot,
 		IrcUser,
 		IrcChannel,
-		File
+		File,
+		ScriptModule,
+		ScriptModuleProcedure
 	};
 
 	virtual eScriptType GetType() = 0;

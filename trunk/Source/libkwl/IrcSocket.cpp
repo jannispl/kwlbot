@@ -20,6 +20,8 @@ CIrcSocket::CIrcSocket(CBot *pParentBot)
 CIrcSocket::~CIrcSocket()
 {
 	TRACEFUNC("CIrcSocket::~CIrcSocket");
+
+	m_TcpSocket.Close();
 }
 
 bool CIrcSocket::Connect(const char *szHostname, int iPort)
@@ -36,6 +38,7 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort)
 	CIrcSettings *pSettings = m_pParentBot->GetSettings();
 	SendRawFormat("NICK %s", pSettings->GetNickname());
 	SendRawFormat("USER %s \"\" \"%s\" :%s", pSettings->GetIdent(), szHostname, pSettings->GetRealname());
+	m_strCurrentNickname = pSettings->GetNickname();
 
 	return true;
 }
@@ -75,46 +78,47 @@ void CIrcSocket::Pulse()
 	TRACEFUNC("CIrcSocket::Pulse");
 
 	char szBuffer[256];
-	int i = ReadRaw(szBuffer, 255);
-	if (i == 0)
+	int iSize = ReadRaw(szBuffer, 255);
+	if (iSize == 0)
 	{
 		// connection closed
+		printf("[%s] Connection closed\n", m_pParentBot->GetSettings()->GetNickname());
 	}
-	else if (i != -1)
+	else if (iSize != -1)
 	{
-		szBuffer[i] = '\0';
+		szBuffer[iSize] = '\0';
 
-		char part[256] = { 0 };
-		size_t pos = 0;
+		char szPart[256] = { 0 };
+		size_t iPos = 0;
 
-		char *cpy = szBuffer;
-		while (*cpy)
+		char *pCopy = szBuffer;
+		while (*pCopy)
 		{
-			if (*cpy == '\n')
+			if (*pCopy == '\n')
 			{
-				part[pos - 1] = '\0';
+				szPart[iPos - 1] = '\0';
 				if (m_strBuffer.empty())
 				{
-					HandleData(part);
+					HandleData(szPart);
 				}
 				else
 				{
-					HandleData((m_strBuffer + part).c_str());
+					HandleData((m_strBuffer + szPart).c_str());
 					m_strBuffer.clear();
 				}
-				part[0] = 0;
-				pos = 0;
+				szPart[0] = 0;
+				iPos = 0;
 			}
 			else
 			{
-				part[pos++] = *cpy;
+				szPart[iPos++] = *pCopy;
 			}
-			++cpy;
+			++pCopy;
 		}
-		if (part[0] != 0)
+		if (szPart[0] != 0)
 		{
-			part[pos] = 0;
-			m_strBuffer += part;
+			szPart[iPos] = 0;
+			m_strBuffer += szPart;
 		}
 	}
 }
@@ -143,7 +147,7 @@ void CIrcSocket::HandleData(const char *szData)
 		++i;
 	}
 	
-	while (i < 4)
+	while (i <= 3)
 	{
 		vecParts.push_back(std::string());
 		++i;
@@ -154,6 +158,13 @@ void CIrcSocket::HandleData(const char *szData)
 	if (vecParts[0] == "PING")
 	{
 		SendRawFormat("PONG %s", vecParts[1].c_str());
+		return;
+	}
+
+	if (vecParts[1] == "433" && vecParts[3].substr(0, vecParts[3].find(' ')) == m_pParentBot->GetSettings()->GetNickname())
+	{
+		m_strCurrentNickname = m_pParentBot->GetSettings()->GetAlternativeNickname();
+		SendRawFormat("NICK %s", m_strCurrentNickname.c_str());
 		return;
 	}
 }

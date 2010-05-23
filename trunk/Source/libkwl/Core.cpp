@@ -21,7 +21,6 @@ Purpose:	Core container which manages all bot instances
 CCore::CCore()
 {
 	TRACEFUNC("CCore::CCore");
-
 	printf("Initializing kwlbot\n");
 	printf("Version %s\n", VERSION_STRING);
 
@@ -84,6 +83,7 @@ CCore::~CCore()
 	for (CPool<CEventManager *>::iterator i = m_plEventManagers.begin(); i != m_plEventManagers.end(); ++i)
 	{
 		delete *i;
+		m_plEventManagers.erase(i);
 		if ((i = m_plEventManagers.erase(i)) == m_plEventManagers.end())
 		{
 			break;
@@ -211,7 +211,7 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 	delete[] szPath;
 	if (hDir == INVALID_HANDLE_VALUE)
 	{
-		printf("Warning: No /bots/ directory\n");
+		printf("Warning: No /bots/ directory, I will stay idle.\n");
 		return;
 	}
 	do
@@ -259,7 +259,7 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 	DIR *pDir = opendir("./bots/");
 	if (pDir == NULL)
 	{
-		printf("Warning: No /bots/ directory\n");
+		printf("Warning: No /bots/ directory, I will stay idle\n");
 		return;
 	}
 	do

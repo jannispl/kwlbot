@@ -18,7 +18,7 @@ class CScriptFunctions;
 using v8::Arguments;
 typedef v8::Handle<v8::Value> FuncReturn;
 
-class DLLEXPORT CScriptFunctions
+class CScriptFunctions
 {
 public:
 	static CScript *m_pCallingScript;
@@ -42,13 +42,20 @@ public:
 	static FuncReturn IrcChannel__HasUser(const Arguments &args);
 	static FuncReturn IrcChannel__SetTopic(const Arguments &args);
 
-	static void File__WeakCallback(v8::Persistent<v8::Value> pv, void *nobj);
+	static void WeakCallbackUsingDelete(v8::Persistent<v8::Value> pv, void *nobj);
+	static void WeakCallbackUsingFree(v8::Persistent<v8::Value> pv, void *nobj);
+
 	static FuncReturn File__constructor(const Arguments &args);
 	static FuncReturn File__Destroy(const Arguments &args);
 	static FuncReturn File__IsValid(const Arguments &args);
 	static FuncReturn File__Read(const Arguments &args);
 	static FuncReturn File__Write(const Arguments &args);
 	static FuncReturn File__Eof(const Arguments &args);
+
+	static FuncReturn ScriptModule__constructor(const Arguments &args);
+	static FuncReturn ScriptModule__GetProcedure(const Arguments &args);
+
+	static FuncReturn ScriptModuleFunction__Call(const Arguments &args);
 };
 
 #endif

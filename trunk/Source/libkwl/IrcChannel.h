@@ -33,6 +33,7 @@ public:
 
 	CScriptObject::eScriptType GetType();
 
+	template class DLLEXPORT CPool<CIrcUser *>;
 	CPool<CIrcUser *> m_plIrcUsers;
 
 private:

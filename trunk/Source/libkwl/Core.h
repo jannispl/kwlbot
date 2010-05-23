@@ -47,10 +47,14 @@ public:
 
 private:
 	CEventManager *m_pScriptEventManager;
+	template class DLLEXPORT CPool<CEventManager *>;
 	CPool<CEventManager *> m_plEventManagers;
 
+	template class DLLEXPORT CPool<CBot *>;
 	CPool<CBot *> m_plBots;
+	template class DLLEXPORT CPool<CScript *>;
 	CPool<CScript *> m_plScripts;
+	template class DLLEXPORT CPool<CGlobalModule *>;
 	CPool<CGlobalModule *> m_plGlobalModules;
 };
 

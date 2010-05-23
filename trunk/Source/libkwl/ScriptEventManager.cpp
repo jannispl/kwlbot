@@ -1,3 +1,12 @@
+/*
+kwlbot IRC bot
+
+
+File:		ScriptEventManager.cpp
+Purpose:	Handles calling events in scripts
+
+*/
+
 #include "StdInc.h"
 #include "ScriptEventManager.h"
 
