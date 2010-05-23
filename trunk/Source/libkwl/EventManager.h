@@ -24,6 +24,8 @@ public:
 	//CEventManager(CCore *pParentCore);
 	//~CEventManager();
 
+	virtual void OnBotCreated(CBot *pBot) = 0;
+	virtual void OnBotDestroyed(CBot *pBot) = 0;
 	virtual void OnBotConnected(CBot *pBot) = 0;
 	virtual void OnBotJoinedChannel(CBot *pBot, CIrcChannel *pChannel) = 0;
 	virtual void OnUserJoinedChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel) = 0;

@@ -21,6 +21,8 @@ public:
 	CScriptEventManager(CCore *pParentCore);
 	~CScriptEventManager();
 
+	void OnBotCreated(CBot *pBot);
+	void OnBotDestroyed(CBot *pBot);
 	void OnBotConnected(CBot *pBot);
 	void OnBotJoinedChannel(CBot *pBot, CIrcChannel *pChannel);
 	void OnUserJoinedChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel);

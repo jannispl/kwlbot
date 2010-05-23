@@ -93,11 +93,11 @@ CCore::~CCore()
 	delete m_pScriptEventManager;
 }
 
-CBot *CCore::CreateBot()
+CBot *CCore::CreateBot(const CIrcSettings &ircSettings)
 {
 	TRACEFUNC("CCore::CreateBot");
 
-	CBot *pBot = new CBot(this);
+	CBot *pBot = new CBot(this, ircSettings);
 	m_plBots.push_back(pBot);
 	return pBot;
 }
@@ -225,8 +225,9 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 			{
 				CConfig Config((std::string(szDirectory) + fd.cFileName));
 
-				CBot *pBot = CreateBot();
-				pBot->GetSettings()->LoadFromConfig(&Config);
+				CIrcSettings ircSettings;
+				ircSettings.LoadFromConfig(&Config);
+				CBot *pBot = CreateBot(ircSettings);
 
 				std::string strTemp;
 				if (Config.GetSingleValue("server", &strTemp))

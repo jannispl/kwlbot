@@ -10,21 +10,34 @@ Purpose:	Class which represents an IRC bot
 #include "StdInc.h"
 #include "Bot.h"
 
-CBot::CBot(CCore *pParentCore)
+CBot::CBot(CCore *pParentCore, const CIrcSettings &ircSettings)
 {
 	TRACEFUNC("CBot::CBot");
 
 	m_pParentCore = pParentCore;
+	m_IrcSettings = ircSettings;
 
 	m_pIrcSocket = new CIrcSocket(this);
 	m_pIrcChannelQueue = new CPool<CIrcChannel *>();
 
 	m_bGotMotd = false;
+
+	m_pParentCore->GetScriptEventManager()->OnBotCreated(this);
+	for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+	{
+		(*i)->OnBotCreated(this);
+	}
 }
 
 CBot::~CBot()
 {
 	TRACEFUNC("CBot::~CBot");
+
+	m_pParentCore->GetScriptEventManager()->OnBotDestroyed(this);
+	for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+	{
+		(*i)->OnBotDestroyed(this);
+	}
 
 	if (m_pIrcSocket != NULL)
 	{

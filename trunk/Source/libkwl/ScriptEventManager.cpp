@@ -19,6 +19,46 @@ CScriptEventManager::~CScriptEventManager()
 {
 }
 
+void CScriptEventManager::OnBotCreated(CBot *pBot)
+{
+	TRACEFUNC("CScriptEventManager::OnBotCreated");
+
+	v8::HandleScope handleScope;
+	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+	{
+		(*i)->EnterContext();
+
+		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
+		v8::Local<v8::Object> bot = ctor1->NewInstance();
+		bot->SetInternalField(0, v8::External::New(pBot));
+
+		v8::Handle<v8::Value> argValues[1] = { bot };
+		(*i)->CallEvent("onBotCreated", 1, argValues);
+
+		(*i)->ExitContext();
+	}
+}
+
+void CScriptEventManager::OnBotDestroyed(CBot *pBot)
+{
+	TRACEFUNC("CScriptEventManager::OnBotDestroyed");
+
+	v8::HandleScope handleScope;
+	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+	{
+		(*i)->EnterContext();
+
+		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
+		v8::Local<v8::Object> bot = ctor1->NewInstance();
+		bot->SetInternalField(0, v8::External::New(pBot));
+
+		v8::Handle<v8::Value> argValues[1] = { bot };
+		(*i)->CallEvent("onBotDestroyed", 1, argValues);
+
+		(*i)->ExitContext();
+	}
+}
+
 void CScriptEventManager::OnBotConnected(CBot *pBot)
 {
 	TRACEFUNC("CScriptEventManager::OnBotConnected");
