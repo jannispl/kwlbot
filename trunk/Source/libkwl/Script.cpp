@@ -58,6 +58,7 @@ bool CScript::Load(const char *szFilename)
 		v8::Handle<v8::ObjectTemplate> userProto = m_ClassTemplates.IrcUser->PrototypeTemplate();
 		userProto->Set(v8::String::New("getNickname"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetNickname));
 		userProto->Set(v8::String::New("hasChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__HasChannel));
+		userProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__SendMessage));
 
 		// CIrcChannel
 		m_ClassTemplates.IrcChannel = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
@@ -67,6 +68,7 @@ bool CScript::Load(const char *szFilename)
 		channelProto->Set(v8::String::New("getName"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__GetName));
 		channelProto->Set(v8::String::New("hasUser"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__HasUser));
 		channelProto->Set(v8::String::New("setTopic"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SetTopic));
+		channelProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SendMessage));
 
 		// CFile
 		m_ClassTemplates.File = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
@@ -90,8 +92,8 @@ bool CScript::Load(const char *szFilename)
 		m_ClassTemplates.ScriptModuleProcedure = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
 		m_ClassTemplates.ScriptModuleProcedure->SetClassName(v8::String::New("ScriptModuleProcedure"));
 		m_ClassTemplates.ScriptModuleProcedure->InstanceTemplate()->SetInternalFieldCount(1);
-		v8::Handle<v8::ObjectTemplate> scriptModuleFunctionProto = m_ClassTemplates.ScriptModuleProcedure->PrototypeTemplate();
-		scriptModuleFunctionProto->Set(v8::String::New("Call"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModuleFunction__Call));
+		v8::Handle<v8::ObjectTemplate> scriptModuleProcedureProto = m_ClassTemplates.ScriptModuleProcedure->PrototypeTemplate();
+		scriptModuleProcedureProto->Set(v8::String::New("Call"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModuleProcedure__Call));
 
 		// global
 		m_GlobalTemplate = v8::Persistent<v8::ObjectTemplate>::New(v8::ObjectTemplate::New());

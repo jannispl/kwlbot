@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			CharacterSet="1"
+			CharacterSet="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -229,6 +229,10 @@
 		<Filter
 			Name="Utility"
 			>
+			<File
+				RelativePath=".\ArgumentList.h"
+				>
+			</File>
 			<File
 				RelativePath=".\Config.h"
 				>

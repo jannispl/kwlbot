@@ -67,6 +67,13 @@ bool CIrcUser::HasChannel(CIrcChannel *pChannel)
 	return false;
 }
 
+char CIrcUser::GetModeOnChannel(CIrcChannel *pChannel)
+{
+	TRACEFUNC("CIrcUser::GetModeOnChannel");
+
+	return m_mapChannelModes[pChannel];
+}
+
 CBot *CIrcUser::GetParentBot()
 {
 	return m_pParentBot;
