@@ -20,6 +20,8 @@ class CIrcUser;
 
 class DLLEXPORT CIrcUser : public CScriptObject
 {
+	friend class CBot;
+
 public:
 	CIrcUser(CBot *pParentBot, const char *szName);
 	~CIrcUser();
@@ -27,6 +29,7 @@ public:
 	void SetName(const char *szName);
 	const char *GetName();
 	bool HasChannel(CIrcChannel *pChannel);
+	char GetModeOnChannel(CIrcChannel *pChannel);
 
 	CBot *GetParentBot();
 
@@ -34,11 +37,11 @@ public:
 
 	template class DLLEXPORT CPool<CIrcChannel *>;
 	CPool<CIrcChannel *> m_plIrcChannels;
-	std::map<CIrcChannel *, char> m_mapChannelModes;
 
 private:
 	CBot *m_pParentBot;
 	char *m_szName;
+	std::map<CIrcChannel *, char> m_mapChannelModes;
 };
 
 #endif

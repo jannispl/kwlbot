@@ -13,13 +13,14 @@ class CScriptModule;
 #define _SCRIPTMODULE_H
 
 #include "ScriptObject.h"
+#include "ArgumentList.h"
 
 class CScriptModule : public CScriptObject
 {
 public:
 	typedef bool (* InitModule_t)(char *szName);
 	typedef void (* ExitModule_t)();
-	typedef int (* Procedure_t)();
+	typedef int (* Procedure_t)(const CArgumentList &args);
 
 	class Procedure : public CScriptObject
 	{
@@ -27,7 +28,7 @@ public:
 		Procedure(CScriptModule *pScriptModule, const char *szName);
 		~Procedure();
 
-		int Call();
+		int Call(const CArgumentList &args);
 
 		CScriptObject::eScriptType GetType();
 

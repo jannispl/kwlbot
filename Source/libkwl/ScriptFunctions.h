@@ -37,10 +37,12 @@ public:
 
 	static FuncReturn IrcUser__GetNickname(const Arguments &args);
 	static FuncReturn IrcUser__HasChannel(const Arguments &args);
+	static FuncReturn IrcUser__SendMessage(const Arguments &args);
 
 	static FuncReturn IrcChannel__GetName(const Arguments &args);
 	static FuncReturn IrcChannel__HasUser(const Arguments &args);
 	static FuncReturn IrcChannel__SetTopic(const Arguments &args);
+	static FuncReturn IrcChannel__SendMessage(const Arguments &args);
 
 	static void WeakCallbackUsingDelete(v8::Persistent<v8::Value> pv, void *nobj);
 	static void WeakCallbackUsingFree(v8::Persistent<v8::Value> pv, void *nobj);
@@ -55,7 +57,7 @@ public:
 	static FuncReturn ScriptModule__constructor(const Arguments &args);
 	static FuncReturn ScriptModule__GetProcedure(const Arguments &args);
 
-	static FuncReturn ScriptModuleFunction__Call(const Arguments &args);
+	static FuncReturn ScriptModuleProcedure__Call(const Arguments &args);
 };
 
 #endif

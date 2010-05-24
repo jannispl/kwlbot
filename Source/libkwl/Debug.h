@@ -14,7 +14,7 @@ class CDebug;
 #ifndef _DEBUG_H
 #define _DEBUG_H
 
-class DLLEXPORT CDebug
+class __declspec(dllexport) CDebug
 {
 public:
 	CDebug();

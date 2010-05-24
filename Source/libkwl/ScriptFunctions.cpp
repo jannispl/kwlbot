@@ -13,6 +13,7 @@ Purpose:	Contains definitions for scripting functions
 #include "ScriptObject.h"
 #include "File.h"
 #include "ScriptModule.h"
+#include "ArgumentList.h"
 
 CScript *CScriptFunctions::m_pCallingScript = NULL;
 
@@ -23,7 +24,7 @@ FuncReturn CScriptFunctions::Print(const Arguments &args)
 	int iParams = args.Length();
 	if (iParams < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	for (int i = 0; i < iParams; ++i)
@@ -39,7 +40,7 @@ FuncReturn CScriptFunctions::Print(const Arguments &args)
 	printf("\n");
 	fflush(stdout);
 
-	return v8::Boolean::New(true);
+	return v8::True();
 }
 
 FuncReturn CScriptFunctions::AddEventHandler(const Arguments &args)
@@ -48,12 +49,12 @@ FuncReturn CScriptFunctions::AddEventHandler(const Arguments &args)
 
 	if (args.Length() < 2 || m_pCallingScript == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsString() || !args[1]->IsFunction())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::String::Utf8Value strEvent(args[0]);
@@ -64,7 +65,7 @@ FuncReturn CScriptFunctions::AddEventHandler(const Arguments &args)
 	pEventHandler->handlerFunction = v8::Persistent<v8::Function>::New(function);
 	m_pCallingScript->m_lstEventHandlers.push_back(pEventHandler);
 
-	return v8::Boolean::New(true);
+	return v8::True();
 }
 
 FuncReturn CScriptFunctions::CancelEvent(const Arguments &args)
@@ -73,17 +74,17 @@ FuncReturn CScriptFunctions::CancelEvent(const Arguments &args)
 
 	if (m_pCallingScript == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!m_pCallingScript->m_bCallingEvent)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	m_pCallingScript->m_bCurrentEventCancelled = true;
 
-	return v8::Boolean::New(true);
+	return v8::True();
 }
 
 FuncReturn CScriptFunctions::Bot__SendRaw(const Arguments &args)
@@ -92,29 +93,29 @@ FuncReturn CScriptFunctions::Bot__SendRaw(const Arguments &args)
 
 	if (args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsString())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::Bot)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::String::Utf8Value strRaw(args[0]);
 	if (*strRaw == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	((CBot *)pObject)->SendRaw(*strRaw);
 
-	return v8::Boolean::New(true);
+	return v8::True();
 }
 
 FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
@@ -123,18 +124,18 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 
 	if (args.Length() < 2)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!(args[0]->IsObject() || args[0]->IsString()) || !args[1]->IsString())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::Bot)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	std::string strTarget;
@@ -148,7 +149,7 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 		case CScriptObject::IrcUser:
 			if (((CIrcUser *)pTarget)->GetParentBot() != (CBot *)pObject)
 			{
-				return v8::Boolean::New(false);
+				return v8::False();
 			}
 			strTarget = ((CIrcUser *)pTarget)->GetName();
 			break;
@@ -156,13 +157,13 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 		case CScriptObject::IrcChannel:
 			if (((CIrcChannel *)pTarget)->GetParentBot() != (CBot *)pObject)
 			{
-				return v8::Boolean::New(false);
+				return v8::False();
 			}
 			strTarget = ((CIrcChannel *)pTarget)->GetName();
 			break;
 
 		default:
-			return v8::Boolean::New(false);
+			return v8::False();
 		}
 	}
 	else
@@ -174,12 +175,12 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 	v8::String::Utf8Value strMessage(args[1]);
 	if (*strMessage == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	((CBot *)pObject)->SendMessage(strTarget.c_str(), *strMessage);
 
-	return v8::Boolean::New(true);
+	return v8::True();
 }
 
 FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
@@ -188,18 +189,18 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 
 	if (args.Length() < 2)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!(args[0]->IsObject() || args[0]->IsString()) || !args[1]->IsString())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::Bot)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	std::string strTarget;
@@ -213,7 +214,7 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 		case CScriptObject::IrcUser:
 			if (((CIrcUser *)pTarget)->GetParentBot() != (CBot *)pObject)
 			{
-				return v8::Boolean::New(false);
+				return v8::False();
 			}
 			strTarget = ((CIrcUser *)pTarget)->GetName();
 			break;
@@ -221,13 +222,13 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 		case CScriptObject::IrcChannel:
 			if (((CIrcChannel *)pTarget)->GetParentBot() != (CBot *)pObject)
 			{
-				return v8::Boolean::New(false);
+				return v8::False();
 			}
 			strTarget = ((CIrcChannel *)pTarget)->GetName();
 			break;
 
 		default:
-			return v8::Boolean::New(false);
+			return v8::False();
 		}
 	}
 	else
@@ -239,12 +240,12 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 	v8::String::Utf8Value strMessage(args[1]);
 	if (*strMessage == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	((CBot *)pObject)->SendNotice(strTarget.c_str(), *strMessage);
 
-	return v8::Boolean::New(true);
+	return v8::True();
 }
 
 FuncReturn CScriptFunctions::Bot__FindUser(const Arguments &args)
@@ -253,30 +254,30 @@ FuncReturn CScriptFunctions::Bot__FindUser(const Arguments &args)
 
 	if (args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsString())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::Bot)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::String::Utf8Value strUser(args[0]);
 	if (*strUser == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CIrcUser *pUser = ((CBot *)pObject)->FindUser(*strUser);
 	if (pUser == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.IrcUser->GetFunction()->NewInstance();
@@ -290,30 +291,30 @@ FuncReturn CScriptFunctions::Bot__FindChannel(const Arguments &args)
 
 	if (args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsString())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::Bot)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::String::Utf8Value strChannel(args[0]);
 	if (*strChannel == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CIrcChannel *pChannel = ((CBot *)pObject)->FindChannel(*strChannel);
 	if (pChannel == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.IrcChannel->GetFunction()->NewInstance();
@@ -327,29 +328,29 @@ FuncReturn CScriptFunctions::Bot__JoinChannel(const Arguments &args)
 
 	if (args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsString())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::Bot)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::String::Utf8Value strChannel(args[0]);
 	if (*strChannel == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	((CBot *)pObject)->JoinChannel(*strChannel);
 
-	return v8::Boolean::New(true);
+	return v8::True();
 }
 
 FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
@@ -358,18 +359,18 @@ FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
 
 	if (args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!(args[0]->IsString() || args[0]->IsObject()))
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::Bot)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CIrcChannel *pChannel = NULL;
@@ -378,12 +379,12 @@ FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
 		CScriptObject *pChannel_ = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
 		if (pChannel_->GetType() != CScriptObject::IrcChannel)
 		{
-			return v8::Boolean::New(false);
+			return v8::False();
 		}
 
 		if (((CIrcChannel *)pChannel_)->GetParentBot() != (CBot *)pObject)
 		{
-			return v8::Boolean::New(false);
+			return v8::False();
 		}
 
 		pChannel = (CIrcChannel *)pChannel_;
@@ -396,7 +397,7 @@ FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
 
 	if (pChannel == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	std::string strReason;
@@ -416,7 +417,7 @@ FuncReturn CScriptFunctions::IrcUser__GetNickname(const Arguments &args)
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcUser)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	return v8::String::New(((CIrcUser *)pObject)->GetName());
@@ -428,32 +429,63 @@ FuncReturn CScriptFunctions::IrcUser__HasChannel(const Arguments &args)
 
 	if (args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsObject())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcUser)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pChannel = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
 	if (pChannel->GetType() != CScriptObject::IrcChannel)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (((CIrcChannel *)pChannel)->GetParentBot() != ((CIrcUser *)pObject)->GetParentBot())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	return v8::Boolean::New(((CIrcUser *)pObject)->HasChannel((CIrcChannel *)pChannel));
+}
+
+FuncReturn CScriptFunctions::IrcUser__SendMessage(const Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::IrcUser__SendMessage");
+
+	if (args.Length() < 1)
+	{
+		return v8::False();
+	}
+
+	if (!args[0]->IsString())
+	{
+		return v8::False();
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::IrcUser)
+	{
+		return v8::False();
+	}
+
+	v8::String::Utf8Value strMessage(args[0]);
+	if (*strMessage == NULL)
+	{
+		return v8::False();
+	}
+
+	((CIrcUser *)pObject)->GetParentBot()->SendMessage(((CIrcUser *)pObject)->GetName(), *strMessage);
+
+	return v8::True();
 }
 
 FuncReturn CScriptFunctions::IrcChannel__GetName(const Arguments &args)
@@ -463,7 +495,7 @@ FuncReturn CScriptFunctions::IrcChannel__GetName(const Arguments &args)
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcChannel)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	return v8::String::New(((CIrcChannel *)pObject)->GetName());
@@ -475,29 +507,29 @@ FuncReturn CScriptFunctions::IrcChannel__HasUser(const Arguments &args)
 
 	if (args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsObject())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcChannel)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pUser = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
 	if (pUser->GetType() != CScriptObject::IrcUser)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (((CIrcUser *)pUser)->GetParentBot() != ((CIrcChannel *)pObject)->GetParentBot())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	return v8::Boolean::New(((CIrcChannel *)pObject)->HasUser((CIrcUser *)pUser));
@@ -510,29 +542,60 @@ FuncReturn CScriptFunctions::IrcChannel__SetTopic(const Arguments &args)
 
 	if (args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsString())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcChannel)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::String::Utf8Value strTopic(args[0]);
 	if (*strTopic == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	((CIrcChannel *)pObject)->SetTopic(*strTopic);
 
-	return v8::Boolean::New(true);
+	return v8::True();
+}
+
+FuncReturn CScriptFunctions::IrcChannel__SendMessage(const Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::IrcChannel__SendMessage");
+
+	if (args.Length() < 1)
+	{
+		return v8::False();
+	}
+
+	if (!args[0]->IsString())
+	{
+		return v8::False();
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::IrcChannel)
+	{
+		return v8::False();
+	}
+
+	v8::String::Utf8Value strMessage(args[0]);
+	if (*strMessage == NULL)
+	{
+		return v8::False();
+	}
+
+	((CIrcChannel *)pObject)->GetParentBot()->SendMessage(((CIrcChannel *)pObject)->GetName(), *strMessage);
+
+	return v8::True();
 }
 
 void CScriptFunctions::WeakCallbackUsingDelete(v8::Persistent<v8::Value> pv, void *nobj)
@@ -583,24 +646,24 @@ FuncReturn CScriptFunctions::File__constructor(const Arguments &args)
 
 	if (!args.IsConstructCall() || args.Length() < 2)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsString() || !args[1]->IsString())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::String::Utf8Value strName(args[0]);
 	if (*strName == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::String::Utf8Value strMode(args[1]);
 	if (*strMode == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CFile *pFile = new CFile(*strName, *strMode);
@@ -641,13 +704,13 @@ FuncReturn CScriptFunctions::File__IsValid(const Arguments &args)
 
 	if (args.Holder()->GetInternalField(0) == v8::Null())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::File)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	return v8::Boolean::New(((CFile *)pObject)->IsValid());
@@ -659,23 +722,23 @@ FuncReturn CScriptFunctions::File__Read(const Arguments &args)
 
 	if (args.Holder()->GetInternalField(0) == v8::Null())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsInt32())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::File)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	unsigned int iLength = args[0]->ToInt32()->Uint32Value();
@@ -697,29 +760,29 @@ FuncReturn CScriptFunctions::File__Write(const Arguments &args)
 
 	if (args.Holder()->GetInternalField(0) == v8::Null())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsString())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::File)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::String::Utf8Value strData(args[0]);
 	if (*strData == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	return v8::Int32::New(((CFile *)pObject)->Write(*strData, 1, strData.length()));
@@ -731,13 +794,13 @@ FuncReturn CScriptFunctions::File__Eof(const Arguments &args)
 
 	if (args.Holder()->GetInternalField(0) == v8::Null())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::File)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	return v8::Int32::New(((CFile *)pObject)->Eof());
@@ -749,18 +812,18 @@ FuncReturn CScriptFunctions::ScriptModule__constructor(const v8::Arguments &args
 
 	if (!args.IsConstructCall() || args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsString())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::String::Utf8Value strPath(args[0]);
 	if (*strPath == NULL)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptModule *pScriptModule = new CScriptModule(*strPath);
@@ -778,24 +841,24 @@ FuncReturn CScriptFunctions::ScriptModule__GetProcedure(const v8::Arguments &arg
 {
 	if (args.Holder()->GetInternalField(0) == v8::Null() || args.Length() < 1)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	if (!args[0]->IsString())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	v8::String::Utf8Value strName(args[0]);
 	if (*strName == NULL)	
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::ScriptModule)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptModule::Procedure *pProcedure = ((CScriptModule *)pObject)->AllocateProcedure(*strName);
@@ -808,18 +871,40 @@ FuncReturn CScriptFunctions::ScriptModule__GetProcedure(const v8::Arguments &arg
 	return obj;
 }
 
-FuncReturn CScriptFunctions::ScriptModuleFunction__Call(const v8::Arguments &args)
+FuncReturn CScriptFunctions::ScriptModuleProcedure__Call(const v8::Arguments &args)
 {
 	if (args.Holder()->GetInternalField(0) == v8::Null())
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::ScriptModuleProcedure)
 	{
-		return v8::Boolean::New(false);
+		return v8::False();
 	}
 
-	return v8::Integer::New(((CScriptModule::Procedure *)pObject)->Call());
+	CArgumentList list;
+
+	for (int i = 0; i < args.Length(); ++i)
+	{
+		if (args[i]->IsInt32())
+		{
+			list.Add(args[i]->ToInt32()->Value());
+		}
+		else if (args[i]->IsNumber())
+		{
+			list.Add((float)args[i]->ToNumber()->Value());
+		}
+		else if (args[i]->IsBoolean())
+		{
+			list.Add(args[i]->ToBoolean()->Value());
+		}
+		else if (args[i]->IsObject())
+		{
+			list.Add(v8::Local<v8::External>::Cast(args[i]->ToObject()->GetInternalField(0))->Value());
+		}
+	}
+
+	return v8::Integer::New(((CScriptModule::Procedure *)pObject)->Call(list));
 }

@@ -38,7 +38,7 @@ Purpose:	Precompiled header file
 #include "../libkwl/Definitions.h"
 
 #ifdef _DEBUG
-  #include "../Source/Debug.h"
+  #include "../libkwl/Debug.h"
   extern CDebug *g_pDebug;
   #define TRACEFUNC(func) g_pDebug->SetLastFunction(func)
   #define dbgprintf printf

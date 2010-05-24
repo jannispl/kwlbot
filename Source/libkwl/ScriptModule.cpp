@@ -98,14 +98,14 @@ CScriptModule::Procedure::~Procedure()
 {
 }
 
-int CScriptModule::Procedure::Call()
+int CScriptModule::Procedure::Call(const CArgumentList &args)
 {
 	if (m_pfnPointer == NULL)
 	{
 		return -1;
 	}
 
-	return m_pfnPointer();
+	return m_pfnPointer(args);
 }
 
 CScriptObject::eScriptType CScriptModule::Procedure::GetType()

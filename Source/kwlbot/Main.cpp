@@ -11,9 +11,6 @@ Purpose:	Contains the entry point of the application
 #include "../libkwl/Core.h"
 
 CCore *g_pCore = NULL;
-#ifdef _DEBUG
-CDebug *g_pDebug = NULL;
-#endif
 
 #ifndef WIN32
 #define Sleep(ms) usleep(ms * 1000)
@@ -21,9 +18,6 @@ CDebug *g_pDebug = NULL;
 
 int main(int iArgCount, char *szArgs[])
 {
-#ifdef _DEBUG
-	g_pDebug = new CDebug();
-#endif
 	TRACEFUNC("main");
 
 	g_pCore = new CCore();
@@ -36,9 +30,6 @@ int main(int iArgCount, char *szArgs[])
 	}
 
 	delete g_pCore;
-#ifdef _DEBUG
-	delete g_pDebug;
-#endif
 
 	return 0;
 }
