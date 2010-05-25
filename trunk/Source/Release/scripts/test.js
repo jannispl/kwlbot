@@ -18,4 +18,3 @@ addEventHandler("onUserChannelMessage",
 	}
 );
 
-TestFunc();

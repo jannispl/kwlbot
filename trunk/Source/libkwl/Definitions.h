@@ -1,7 +1,7 @@
 #ifndef _DEFINITIONS_H
 #define _DEFINITIONS_H
 
-#define VERSION_STRING "v0.1 (" __DATE__ " " __TIME__ ")"
+#define VERSION_STRING "v0.2 (" __DATE__ " " __TIME__ ")"
 
 #define SLEEP_MS (25)
 

@@ -9,7 +9,6 @@ Purpose:	Class which manages IRC-related settings
 
 #include "StdInc.h"
 #include "IrcSettings.h"
-#include <string.h>
 
 bool CIrcSettings::LoadFromConfig(CConfig *pConfig)
 {
@@ -44,6 +43,12 @@ bool CIrcSettings::LoadFromConfig(CConfig *pConfig)
 		strTemp = GetNickname() + std::string("`");
 	}
 	SetAlternativeNickname(strTemp.c_str());
+
+	if (!pConfig->GetSingleValue("quitmsg", &strTemp))
+	{
+		strTemp = GetNickname();
+	}
+	SetQuitMessage(strTemp.c_str());
 	
 	return true;
 }
@@ -52,12 +57,7 @@ bool CIrcSettings::SetNickname(const char *szNickname)
 {
 	TRACEFUNC("CIrcSettings::SetNickname");
 
-	if (strlen(szNickname) > MAX_NICKNAME_LEN)
-	{
-		return false;
-	}
-
-	strcpy(m_szNickname, szNickname);
+	m_strNickname = szNickname;
 	return true;
 }
 
@@ -65,12 +65,7 @@ bool CIrcSettings::SetIdent(const char *szIdent)
 {
 	TRACEFUNC("CIrcSettings::SetIdent");
 
-	if (strlen(szIdent) > MAX_IDENT_LEN)
-	{
-		return false;
-	}
-
-	strcpy(m_szIdent, szIdent);
+	m_strIdent = szIdent;
 	return true;
 }
 
@@ -78,12 +73,7 @@ bool CIrcSettings::SetRealname(const char *szRealname)
 {
 	TRACEFUNC("CIrcSettings::SetRealname");
 
-	if (strlen(szRealname) > MAX_REALNAME_LEN)
-	{
-		return false;
-	}
-
-	strcpy(m_szRealname, szRealname);
+	m_strRealname = szRealname;
 	return true;
 }
 
@@ -91,12 +81,15 @@ bool CIrcSettings::SetAlternativeNickname(const char *szNickname)
 {
 	TRACEFUNC("CIrcSettings::SetAlternativeNickname");
 
-	if (strlen(szNickname) > MAX_NICKNAME_LEN)
-	{
-		return false;
-	}
+	m_strAlternativeNickname = szNickname;
+	return true;
+}
 
-	strcpy(m_szAlternativeNickname, szNickname);
+bool CIrcSettings::SetQuitMessage(const char *szMessage)
+{
+	TRACEFUNC("CIrcSettings::SetQuitMessage");
+
+	m_strQuitMessage = szMessage;
 	return true;
 }
 
@@ -104,26 +97,33 @@ const char *CIrcSettings::GetNickname()
 {
 	TRACEFUNC("CIrcSettings::GetNickname");
 
-	return m_szNickname;
+	return m_strNickname.c_str();
 }
 
 const char *CIrcSettings::GetIdent()
 {
 	TRACEFUNC("CIrcSettings::GetIdent");
 
-	return m_szIdent;
+	return m_strIdent.c_str();
 }
 
 const char *CIrcSettings::GetRealname()
 {
 	TRACEFUNC("CIrcSettings::GetRealname");
 
-	return m_szRealname;
+	return m_strRealname.c_str();
 }
 
 const char *CIrcSettings::GetAlternativeNickname()
 {
 	TRACEFUNC("CIrcSettings::GetAlternativeNickname");
 
-	return m_szAlternativeNickname;
+	return m_strAlternativeNickname.c_str();
+}
+
+const char *CIrcSettings::GetQuitMessage()
+{
+	TRACEFUNC("CIrcSettings::GetQuitMessage");
+
+	return m_strQuitMessage.c_str();
 }

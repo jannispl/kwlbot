@@ -87,6 +87,19 @@ FuncReturn CScriptFunctions::CancelEvent(const Arguments &args)
 	return v8::True();
 }
 
+FuncReturn CScriptFunctions::Bot__GetNickname(const Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::Bot__GetNickname");
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::Bot)
+	{
+		return v8::False();
+	}
+
+	return v8::String::New(((CBot *)pObject)->GetSocket()->GetCurrentNickname());
+}
+
 FuncReturn CScriptFunctions::Bot__SendRaw(const Arguments &args)
 {
 	TRACEFUNC("CScriptFunctions::Bot__SendRaw");

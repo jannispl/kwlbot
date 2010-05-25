@@ -169,3 +169,10 @@ void CIrcSocket::HandleData(const char *szData)
 		return;
 	}
 }
+
+const char *CIrcSocket::GetCurrentNickname()
+{
+	TRACEFUNC("CIrcSocket::GetCurrentNickname");
+
+	return m_strCurrentNickname.c_str();
+}

@@ -12,6 +12,7 @@ class CIrcSettings;
 #ifndef _CIRCSETTINGS_H
 #define _CIRCSETTINGS_H
 
+#include <string>
 #include "Config.h"
 
 class DLLEXPORT CIrcSettings
@@ -32,11 +33,11 @@ public:
 	const char *GetQuitMessage();
 
 private:
-	char m_szNickname[MAX_NICKNAME_LEN + 1];
-	char m_szIdent[MAX_IDENT_LEN + 1];
-	char m_szRealname[MAX_REALNAME_LEN + 1];
-	char m_szAlternativeNickname[MAX_NICKNAME_LEN + 1];
-	char m_szQuitMessage[512];
+	std::string m_strNickname;
+	std::string m_strIdent;
+	std::string m_strRealname;
+	std::string m_strAlternativeNickname;
+	std::string m_strQuitMessage;
 };
 
 #endif
