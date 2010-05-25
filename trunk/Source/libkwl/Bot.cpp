@@ -10,12 +10,22 @@ Purpose:	Class which represents an IRC bot
 #include "StdInc.h"
 #include "Bot.h"
 
-CBot::CBot(CCore *pParentCore, const CIrcSettings &ircSettings)
+CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 {
 	TRACEFUNC("CBot::CBot");
 
 	m_pParentCore = pParentCore;
-	m_IrcSettings = ircSettings;
+	m_IrcSettings.LoadFromConfig(pConfig);
+
+	if (pConfig->StartValueList("scripts"))
+	{
+		std::string strValue;
+		while (pConfig->GetNextValue(&strValue))
+		{
+			printf("[%s] BOT SCRIPT %s\n", m_IrcSettings.GetNickname(), strValue.c_str());
+			CScript *pScript = CreateScript(("scripts/" + strValue).c_str());
+		}
+	}
 
 	m_pIrcSocket = new CIrcSocket(this);
 	m_pIrcChannelQueue = new CPool<CIrcChannel *>();
@@ -809,6 +819,39 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 		}
 		return;
 	}
+}
+
+CScript *CBot::CreateScript(const char *szFilename)
+{
+	TRACEFUNC("CCore::CreateScript");
+
+	CScript *pScript = new CScript(m_pParentCore);
+	if (!pScript->Load(szFilename))
+	{
+		return NULL;
+	}
+
+	m_plScripts.push_back(pScript);
+	return pScript;
+}
+
+bool CBot::DeleteScript(CScript *pScript)
+{
+	TRACEFUNC("CCore::DeleteScript");
+
+	if (pScript == NULL)
+	{
+		return false;
+	}
+
+	m_plScripts.remove(pScript);
+	delete pScript;
+	return true;
+}
+
+CPool<CScript *> *CBot::GetScripts()
+{
+	return &m_plScripts;
 }
 
 void CBot::JoinChannel(const char *szChannel)

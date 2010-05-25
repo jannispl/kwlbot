@@ -21,6 +21,7 @@ CIrcSocket::~CIrcSocket()
 {
 	TRACEFUNC("CIrcSocket::~CIrcSocket");
 
+	SendRawFormat("QUIT :%s", m_pParentBot->GetSettings()->GetQuitMessage());
 	m_TcpSocket.Close();
 }
 

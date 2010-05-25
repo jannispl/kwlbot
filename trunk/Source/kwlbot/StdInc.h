@@ -27,13 +27,14 @@ Purpose:	Precompiled header file
   #include <windows.h>
 
   //#pragma warning(disable:4251)
+  #define DLLEXPORT __declspec(dllimport)
 #else
   #include <unistd.h>
+  #define DLLEXPORT __attribute__ ((visibility("default")))
 #endif
 
 #include <stdarg.h>
 
-#define DLLEXPORT __attribute__ ((visibility("default")))
 
 #include "../libkwl/Definitions.h"
 
