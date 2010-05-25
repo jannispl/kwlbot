@@ -33,7 +33,9 @@ public:
 
 	CScriptObject::eScriptType GetType();
 
+#ifdef WIN32
 	template class DLLEXPORT CPool<CIrcUser *>;
+#endif
 	CPool<CIrcUser *> m_plIrcUsers;
 
 private:

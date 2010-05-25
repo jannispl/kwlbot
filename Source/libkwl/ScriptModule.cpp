@@ -13,6 +13,9 @@ Purpose:	Class which represents a script module
 #ifdef WIN32
   #define GetLibraryProc(pLibrary, szProc) GetProcAddress(pLibrary, szProc)
 #else
+  #include <dlfcn.h>
+  #define GetLibraryProc(pLibrary, szProc) dlsym(pLibrary, szProc)
+  #define FreeLibrary(pLibrary) dlclose(pLibrary)
 #endif
 
 CScriptModule::CScriptModule(const char *szPath)
@@ -24,6 +27,7 @@ CScriptModule::CScriptModule(const char *szPath)
 #ifdef WIN32
 	m_pLibrary = LoadLibrary(szFullPath);
 #else
+	m_pLibrary = dlopen(szFullPath, RTLD_LAZY);
 #endif
 
 	delete[] szFullPath;
@@ -63,10 +67,7 @@ CScriptModule::~CScriptModule()
 			m_Functions.pfnExitModule();
 		}
 
-#ifdef WIN32
 		FreeLibrary(m_pLibrary);
-#else
-#endif
 	}
 }
 

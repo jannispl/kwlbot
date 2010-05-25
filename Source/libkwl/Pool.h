@@ -12,6 +12,8 @@ Purpose:	Template class which represents a pool for elements
 #ifndef _POOL_H
 #define _POOL_H
 
+#include <malloc.h>
+
 template <typename T> class CPool
 {
 public:

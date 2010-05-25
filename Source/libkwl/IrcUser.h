@@ -35,7 +35,9 @@ public:
 
 	CScriptObject::eScriptType GetType();
 
+#ifdef WIN32
 	template class DLLEXPORT CPool<CIrcChannel *>;
+#endif
 	CPool<CIrcChannel *> m_plIrcChannels;
 
 private:

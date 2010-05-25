@@ -1,14 +1,16 @@
 GCC = g++
-CFLAGS = 
-LDFLAGS = ./v8/libv8.a -lpthread
+CFLAGS = -m32 -shared
+LDFLAGS = libv8.so -lpthread -ldl
 
-OBJ = Main.o Core.o Bot.o IrcUser.o IrcChannel.o IrcSettings.o IrcSocket.o EventManager.o Script.o ScriptFunctions.o StdInc.o
+OUTFILE = libkwl.so
+OBJ = Bot.o GlobalModule.o IrcSocket.o ScriptEventManager.o Core.o IrcChannel.o IrcUser.o ScriptFunctions.o IrcSettings.o Script.o ScriptModule.o
 
 kwlbot: $(OBJ)
-	$(GCC) -o kwlbot $(OBJ) $(LDFLAGS)
+	$(GCC) $(CFLAGS) -o $(OUTFILE) $(OBJ) $(LDFLAGS)
+	strip --strip-unneeded $(OUTFILE)
 
 %.o: %.c
-	$(GCC) -c $<
+	$(GCC) $(CFLAGS) -Wall -fPIC -c $<
 
 clean:
 	rm -f $(OBJ)

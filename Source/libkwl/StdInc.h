@@ -29,6 +29,7 @@ Purpose:	Precompiled header file
   #pragma warning(disable:4251)
 #else
   #include <unistd.h>
+  #include <string.h>
 #endif
 
 #include <stdarg.h>
@@ -46,4 +47,8 @@ Purpose:	Precompiled header file
   #define dbgprintf
 #endif
 
-#define DLLEXPORT __declspec(dllexport)
+#ifdef WIN32
+  #define DLLEXPORT __declspec(dllexport)
+#else
+  #define DLLEXPORT __attribute__ ((visibility("default")))
+#endif

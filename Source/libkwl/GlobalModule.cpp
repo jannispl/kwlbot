@@ -13,6 +13,9 @@ Purpose:	Class which represents a global module
 #ifdef WIN32
   #define GetLibraryProc(pLibrary, szProc) GetProcAddress(pLibrary, szProc)
 #else
+  #include <dlfcn.h>
+  #define GetLibraryProc(pLibrary, szProc) dlsym(pLibrary, szProc)
+  #define FreeLibrary(pLibrary) dlclose(pLibrary)
 #endif
 
 CGlobalModule::CGlobalModule(CCore *pCore, const char *szPath)
@@ -20,6 +23,7 @@ CGlobalModule::CGlobalModule(CCore *pCore, const char *szPath)
 #ifdef WIN32
 	m_pLibrary = LoadLibrary(szPath);
 #else
+	m_pLibrary = dlopen(szPath, RTLD_LAZY);
 #endif
 
 	if (m_pLibrary == NULL)
@@ -63,10 +67,7 @@ CGlobalModule::~CGlobalModule()
 			m_Functions.pfnExitModule();
 		}
 
-#ifdef WIN32
 		FreeLibrary(m_pLibrary);
-#else
-#endif
 	}
 }
 

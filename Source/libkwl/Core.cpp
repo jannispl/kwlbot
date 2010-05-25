@@ -277,8 +277,9 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 				{
 					CConfig Config((std::string(szDirectory) + pEntry->d_name));
 
-					CBot *pBot = CreateBot();
-					pBot->GetSettings()->LoadFromConfig(&Config);
+					CIrcSettings ircSettings;
+					ircSettings.LoadFromConfig(&Config);
+					CBot *pBot = CreateBot(ircSettings);
 
 					std::string strTemp;
 					if (Config.GetSingleValue("server", &strTemp))
