@@ -43,6 +43,7 @@ bool CScript::Load(const char *szFilename)
 		m_ClassTemplates.Bot->SetClassName(v8::String::New("Bot"));
 		m_ClassTemplates.Bot->InstanceTemplate()->SetInternalFieldCount(1);
 		v8::Handle<v8::ObjectTemplate> botProto = m_ClassTemplates.Bot->PrototypeTemplate();
+		botProto->Set(v8::String::New("getNickname"), v8::FunctionTemplate::New(CScriptFunctions::Bot__GetNickname));
 		botProto->Set(v8::String::New("sendRaw"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendRaw));
 		botProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendMessage));
 		botProto->Set(v8::String::New("sendNotice"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendNotice));
@@ -149,7 +150,7 @@ bool CScript::Load(const char *szFilename)
 
 	if (script.IsEmpty())
 	{
-		//ReportException(&try_catch);
+		ReportException(&try_catch);
 		return false;
 	}
 
@@ -157,12 +158,12 @@ bool CScript::Load(const char *szFilename)
 	v8::Handle<v8::Value> result = script->Run();
 	CScriptFunctions::m_pCallingScript = NULL;
 
-#if 0
 	if (result.IsEmpty())
 	{
 		// Print errors that happened during execution.
-		//ReportException(&try_catch);
+		ReportException(&try_catch);
 	}
+#if 0
 	else
 	{
 		/*if (print_result && !result->IsUndefined()) {
@@ -206,6 +207,50 @@ bool CScript::CallEvent(const char *szEventName, int iArgCount, v8::Handle<v8::V
 	m_bCurrentEventCancelled = false;
 	return !bCancelled;
 }
+
+void CScript::ReportException(v8::TryCatch *pTryCatch)
+{
+	v8::String::Utf8Value exception(pTryCatch->Exception());
+	const char* exception_string = *exception != NULL ? *exception : "(null)";
+	v8::Handle<v8::Message> message = pTryCatch->Message();
+	if (message.IsEmpty())
+	{
+		// V8 didn't provide any extra information about this error; just
+		// print the exception.
+		printf("%s\n", exception_string);
+	}
+	else
+	{
+		// Print (filename):(line number): (message).
+		v8::String::Utf8Value filename(message->GetScriptResourceName());
+		const char* filename_string = *filename != NULL ? *filename : "(null)";
+		int linenum = message->GetLineNumber();
+		printf("%s:%i: %s\n", filename_string, linenum, exception_string);
+		// Print line of source code.
+		v8::String::Utf8Value sourceline(message->GetSourceLine());
+		const char* sourceline_string = *sourceline != NULL ? *sourceline : "(null)";
+		printf("%s\n", sourceline_string);
+		// Print wavy underline (GetUnderline is deprecated).
+		int start = message->GetStartColumn();
+		for (int i = 0; i < start; i++)
+		{
+			printf(" ");
+		}
+		int end = message->GetEndColumn();
+		for (int i = start; i < end; i++)
+		{
+			printf("^");
+		}
+		printf("\n");
+		v8::String::Utf8Value stack_trace(pTryCatch->StackTrace());
+		if (stack_trace.length() > 0)
+		{
+			const char* stack_trace_string = *stack_trace != NULL ? *stack_trace : "(null)";
+			printf("%s\n", stack_trace_string);
+		}
+	}
+}
+
 
 void CScript::EnterContext()
 {

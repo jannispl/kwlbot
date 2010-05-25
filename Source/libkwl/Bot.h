@@ -62,18 +62,14 @@ private:
 
 #ifdef WIN32
 	template class DLLEXPORT CPool<CIrcChannel *>;
+	template class DLLEXPORT CPool<CIrcUser *>;
+	template class DLLEXPORT CPool<CScript *>;
 #endif
+
 	CPool<CIrcChannel *> m_plIrcChannels;
 	CPool<CIrcChannel *> *m_pIrcChannelQueue;
 
-#ifdef WIN32
-	template class DLLEXPORT CPool<CIrcUser *>;
-#endif
 	CPool<CIrcUser *> m_plGlobalUsers;
-
-#ifdef WIN32
-	template class DLLEXPORT CPool<CScript *>;
-#endif
 	CPool<CScript *> m_plScripts;
 
 	struct
@@ -81,6 +77,8 @@ private:
 		std::string strChanmodes[4];
 		std::string strPrefixes[2];
 	} m_SupportSettings;
+
+	std::string m_strAutoMode;
 };
 
 #endif

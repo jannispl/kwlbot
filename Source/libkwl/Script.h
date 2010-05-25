@@ -29,6 +29,8 @@ public:
 	bool Load(const char *szFilename);
 	bool CallEvent(const char *szEventName, int iArgCount = 0, v8::Handle<v8::Value> *pArgValues = NULL);
 
+	void ReportException(v8::TryCatch *pTryCatch);
+
 	void EnterContext();
 	void ExitContext();
 

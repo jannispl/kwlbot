@@ -27,7 +27,7 @@ CCore::CCore()
 
 	m_pScriptEventManager = new CScriptEventManager(this);
 
-	CConfig cfg("core.cfg");
+	CConfig cfg("kwlbot.conf");
 	if (cfg.StartValueList("modules"))
 	{
 		std::string strValue;
@@ -42,7 +42,6 @@ CCore::CCore()
 		while (cfg.GetNextValue(&strValue))
 		{
 			CScript *pScript = CreateScript(("scripts/" + strValue).c_str());
-			printf("  GLOBAL SCRIPT %s\n", strValue.c_str());
 		}
 	}
 
@@ -84,8 +83,7 @@ CCore::~CCore()
 
 	for (CPool<CEventManager *>::iterator i = m_plEventManagers.begin(); i != m_plEventManagers.end(); ++i)
 	{
-		delete *i;
-		m_plEventManagers.erase(i);
+		//delete *i; /* FIXME */
 		if ((i = m_plEventManagers.erase(i)) == m_plEventManagers.end())
 		{
 			break;

@@ -18,6 +18,8 @@ class CIrcSocket;
 
 class DLLEXPORT CIrcSocket
 {
+	friend class CBot;
+
 public:
 	CIrcSocket(CBot *pParentBot);
 	~CIrcSocket();

@@ -22,9 +22,13 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 		std::string strValue;
 		while (pConfig->GetNextValue(&strValue))
 		{
-			printf("[%s] BOT SCRIPT %s\n", m_IrcSettings.GetNickname(), strValue.c_str());
 			CScript *pScript = CreateScript(("scripts/" + strValue).c_str());
 		}
+	}
+	
+	if (!pConfig->GetSingleValue("automode", &m_strAutoMode))
+	{
+		m_strAutoMode.clear();
 	}
 
 	m_pIrcSocket = new CIrcSocket(this);
@@ -207,6 +211,12 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 
 			m_bGotMotd = true;
 
+			if (!m_strAutoMode.empty())
+			{
+				printf("automode '%s'\n", m_strAutoMode.c_str());
+				SendRawFormat("MODE %s %s", m_pIrcSocket->GetCurrentNickname(), m_strAutoMode.c_str());
+			}
+
 			m_pParentCore->GetScriptEventManager()->OnBotConnected(this);
 			for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 			{
@@ -285,7 +295,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 							strName = strName.substr(iOffset);
 						}
 
-						if (strName != GetSettings()->GetNickname())
+						if (strName != m_pIrcSocket->GetCurrentNickname())
 						{
 							CIrcUser *pUser = FindUser(strName.c_str());
 							if (pUser == NULL)
@@ -326,7 +336,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			strNickname = strNickname.substr(0, iSeparator);
 			CIrcChannel *pChannel = NULL;
 			bool bSelf = false;
-			if (strNickname == GetSettings()->GetNickname())
+			if (strNickname == m_pIrcSocket->GetCurrentNickname())
 			{
 				pChannel = new CIrcChannel(this, strChannel.c_str());
 				m_plIrcChannels.push_back(pChannel);
@@ -402,7 +412,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
 			if (pChannel != NULL)
 			{
-				if (strNickname == GetSettings()->GetNickname())
+				if (strNickname == m_pIrcSocket->GetCurrentNickname())
 				{
 					dbgprintf("WE LEFT %s.\n", pChannel->GetName());
 
@@ -556,21 +566,28 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			strNickname = strNickname.substr(0, iSeparator);
 
 			std::string strNewNick = vecParts[2];
-			if (*(strNewNick.begin()) == '!')
+			if (*(strNewNick.begin()) == ':')
 			{
 				strNewNick = strNewNick.substr(1);
 			}
 
-			CIrcUser *pUser = FindUser(strNickname.c_str());
-			if (pUser != NULL)
+			if (strNickname == m_pIrcSocket->GetCurrentNickname())
 			{
-				dbgprintf("Renaming %s to %s.\n", pUser->GetName(), strNewNick.c_str());
-				pUser->SetName(strNewNick.c_str());
-
-				m_pParentCore->GetScriptEventManager()->OnUserChangedNickname(this, pUser, strNickname.c_str());
-				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+				m_pIrcSocket->m_strCurrentNickname = strNewNick;
+			}
+			else
+			{
+				CIrcUser *pUser = FindUser(strNickname.c_str());
+				if (pUser != NULL)
 				{
-					(*i)->OnUserChangedNickname(this, pUser, strNickname.c_str());
+					dbgprintf("Renaming %s to %s.\n", pUser->GetName(), strNewNick.c_str());
+					pUser->SetName(strNewNick.c_str());
+
+					m_pParentCore->GetScriptEventManager()->OnUserChangedNickname(this, pUser, strNickname.c_str());
+					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+					{
+						(*i)->OnUserChangedNickname(this, pUser, strNickname.c_str());
+					}
 				}
 			}
 		}
@@ -595,7 +612,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			CIrcUser *pUser = FindUser(strNickname.c_str());
 			if (pUser != NULL)
 			{
-				if (strTarget == GetSettings()->GetNickname())
+				if (strTarget == m_pIrcSocket->GetCurrentNickname())
 				{
 					// privmsg to bot
 					dbgprintf("[priv] <%s> %s\n", strNickname.c_str(), strMessage.c_str());

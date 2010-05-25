@@ -1,3 +1,12 @@
+/*
+kwlbot IRC bot
+
+
+File:		ArgumentList.h
+Purpose:	Utility class for a list of arguments
+
+*/
+
 #ifndef _ARGUMENTLIST_H
 #define _ARGUMENTLIST_H
 
