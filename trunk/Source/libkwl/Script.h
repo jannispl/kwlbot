@@ -51,10 +51,14 @@ private:
 
 	bool m_bLoaded;
 
+#ifdef WIN32
 	template class DLLEXPORT v8::Persistent<v8::Context>;
+#endif
 	v8::Persistent<v8::Context> m_ScriptContext;
 
+#ifdef WIN32
 	template class DLLEXPORT v8::Persistent<v8::ObjectTemplate>;
+#endif
 	static v8::Persistent<v8::ObjectTemplate> m_GlobalTemplate;
 
 	typedef struct
@@ -62,7 +66,10 @@ private:
 		std::string strEvent;
 		v8::Persistent<v8::Function> handlerFunction;
 	} EventHandler;
+
+#ifdef WIN32
 	template class DLLEXPORT CPool<EventHandler *>;
+#endif
 	CPool<EventHandler *> m_lstEventHandlers;
 };
 

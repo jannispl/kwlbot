@@ -57,7 +57,7 @@ private:
 	HMODULE GetLibrary();
 #else
 	void *m_pLibrary;
-	voud *GetLibrary();
+	void *GetLibrary();
 #endif
 
 };

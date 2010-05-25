@@ -33,7 +33,7 @@ Purpose:	Precompiled header file
 
 #include <stdarg.h>
 
-#define DLLEXPORT __declspec(dllimport)
+#define DLLEXPORT __attribute__ ((visibility("default")))
 
 #include "../libkwl/Definitions.h"
 

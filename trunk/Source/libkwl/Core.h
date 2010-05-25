@@ -48,14 +48,22 @@ public:
 
 private:
 	CEventManager *m_pScriptEventManager;
+#ifdef WIN32
 	template class DLLEXPORT CPool<CEventManager *>;
+#endif
 	CPool<CEventManager *> m_plEventManagers;
 
+#ifdef WIN32
 	template class DLLEXPORT CPool<CBot *>;
+#endif
 	CPool<CBot *> m_plBots;
+#ifdef WIN32
 	template class DLLEXPORT CPool<CScript *>;
+#endif
 	CPool<CScript *> m_plScripts;
+#ifdef WIN32
 	template class DLLEXPORT CPool<CGlobalModule *>;
+#endif
 	CPool<CGlobalModule *> m_plGlobalModules;
 };
 
