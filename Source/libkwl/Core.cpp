@@ -11,7 +11,6 @@ Purpose:	Core container which manages all bot instances
 #include <iostream>
 #include <stdlib.h>
 #include "Core.h"
-#include "Config.h"
 #include "ScriptEventManager.h"
 
 #ifndef WIN32
@@ -43,10 +42,13 @@ CCore::CCore()
 		while (cfg.GetNextValue(&strValue))
 		{
 			CScript *pScript = CreateScript(("scripts/" + strValue).c_str());
+			printf("  GLOBAL SCRIPT %s\n", strValue.c_str());
 		}
 	}
 
 	ScanDirectoryForBots("bots/");
+
+	m_bRunning = true;
 }
 
 CCore::~CCore()
@@ -93,11 +95,21 @@ CCore::~CCore()
 	delete m_pScriptEventManager;
 }
 
-CBot *CCore::CreateBot(const CIrcSettings &ircSettings)
+bool CCore::IsRunning()
+{
+	return m_bRunning;
+}
+
+void CCore::Shutdown()
+{
+	m_bRunning = false;
+}
+
+CBot *CCore::CreateBot(CConfig *pConfig)
 {
 	TRACEFUNC("CCore::CreateBot");
 
-	CBot *pBot = new CBot(this, ircSettings);
+	CBot *pBot = new CBot(this, pConfig);
 	m_plBots.push_back(pBot);
 	return pBot;
 }
@@ -225,9 +237,7 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 			{
 				CConfig Config((std::string(szDirectory) + fd.cFileName));
 
-				CIrcSettings ircSettings;
-				ircSettings.LoadFromConfig(&Config);
-				CBot *pBot = CreateBot(ircSettings);
+				CBot *pBot = CreateBot(&Config);
 
 				std::string strTemp;
 				if (Config.GetSingleValue("server", &strTemp))

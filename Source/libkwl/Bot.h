@@ -26,7 +26,7 @@ class CBot;
 class DLLEXPORT CBot : public CScriptObject
 {
 public:
-	CBot(CCore *pParentCore, const CIrcSettings &ircSettings);
+	CBot(CCore *pParentCore, CConfig *pConfig);
 	~CBot();
 
 	CIrcSettings *GetSettings();
@@ -42,6 +42,10 @@ public:
 	bool IsPrefixMode(char cMode);
 	char GetModeGroup(char cMode);
 	void HandleData(const std::vector<std::string> &vecParts);
+
+	CScript *CreateScript(const char *szFilename);
+	bool DeleteScript(CScript *pScript);
+	CPool<CScript *> *GetScripts();
 
 	void JoinChannel(const char *szChannel);
 	bool LeaveChannel(CIrcChannel *pChannel, const char *szReason = NULL);
@@ -66,6 +70,11 @@ private:
 	template class DLLEXPORT CPool<CIrcUser *>;
 #endif
 	CPool<CIrcUser *> m_plGlobalUsers;
+
+#ifdef WIN32
+	template class DLLEXPORT CPool<CScript *>;
+#endif
+	CPool<CScript *> m_plScripts;
 
 	struct
 	{

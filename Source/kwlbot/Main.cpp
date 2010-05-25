@@ -16,11 +16,36 @@ CCore *g_pCore = NULL;
 #define Sleep(ms) usleep(ms * 1000)
 #endif
 
+#ifdef WIN32
+BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
+{
+	if (g_pCore == NULL)
+	{
+		return FALSE;
+	}
+
+	g_pCore->Shutdown();
+	delete g_pCore;
+
+	ExitProcess(0);
+	while (true)
+	{
+		Sleep(20);
+	}
+
+	return TRUE;
+}
+#endif
+
 int main(int iArgCount, char *szArgs[])
 {
 	TRACEFUNC("main");
 
 	g_pCore = new CCore();
+
+#ifdef WIN32
+	SetConsoleCtrlHandler(CtrlHandler, TRUE);
+#endif
 
 	while (true)
 	{
