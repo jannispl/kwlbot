@@ -223,13 +223,15 @@ void CScript::ReportException(v8::TryCatch *pTryCatch)
 	{
 		// Print (filename):(line number): (message).
 		v8::String::Utf8Value filename(message->GetScriptResourceName());
-		const char* filename_string = *filename != NULL ? *filename : "(null)";
+		const char *filename_string = *filename != NULL ? *filename : "(null)";
 		int linenum = message->GetLineNumber();
 		printf("%s:%i: %s\n", filename_string, linenum, exception_string);
 		// Print line of source code.
 		v8::String::Utf8Value sourceline(message->GetSourceLine());
-		const char* sourceline_string = *sourceline != NULL ? *sourceline : "(null)";
+		const char *sourceline_string = *sourceline != NULL ? *sourceline : "(null)";
 		printf("%s\n", sourceline_string);
+
+		/*
 		// Print wavy underline (GetUnderline is deprecated).
 		int start = message->GetStartColumn();
 		for (int i = 0; i < start; i++)
@@ -242,12 +244,15 @@ void CScript::ReportException(v8::TryCatch *pTryCatch)
 			printf("^");
 		}
 		printf("\n");
+		*/
+
 		v8::String::Utf8Value stack_trace(pTryCatch->StackTrace());
 		if (stack_trace.length() > 0)
 		{
-			const char* stack_trace_string = *stack_trace != NULL ? *stack_trace : "(null)";
+			const char *stack_trace_string = *stack_trace != NULL ? *stack_trace : "(null)";
 			printf("%s\n", stack_trace_string);
 		}
+		printf("\n");
 	}
 }
 
