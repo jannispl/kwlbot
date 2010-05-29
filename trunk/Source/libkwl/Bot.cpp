@@ -11,18 +11,30 @@ Purpose:	Class which represents an IRC bot
 #include "Bot.h"
 
 CBot::CBot(CCore *pParentCore, CConfig *pConfig)
+	: m_bGotMotd(false)
 {
 	TRACEFUNC("CBot::CBot");
 
 	m_pParentCore = pParentCore;
 	m_IrcSettings.LoadFromConfig(pConfig);
 
+	m_pIrcSocket = new CIrcSocket(this);
+	m_pIrcChannelQueue = new CPool<CIrcChannel *>();
+
+	std::string strTemp;
+	if (pConfig->StartValueList("channels"))
+	{
+		while (pConfig->GetNextValue(&strTemp))
+		{
+			JoinChannel(strTemp.c_str());
+		}
+	}
+
 	if (pConfig->StartValueList("scripts"))
 	{
-		std::string strValue;
-		while (pConfig->GetNextValue(&strValue))
+		while (pConfig->GetNextValue(&strTemp))
 		{
-			CScript *pScript = CreateScript(("scripts/" + strValue).c_str());
+			CScript *pScript = CreateScript(("scripts/" + strTemp).c_str());
 		}
 	}
 	
@@ -30,9 +42,6 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 	{
 		m_strAutoMode.clear();
 	}
-
-	m_pIrcSocket = new CIrcSocket(this);
-	m_pIrcChannelQueue = new CPool<CIrcChannel *>();
 
 	m_bGotMotd = false;
 
@@ -90,6 +99,7 @@ int CBot::SendRaw(const char *szData)
 {
 	TRACEFUNC("CBot::SendRaw");
 
+	printf("[out] %s\n", szData);
 	return m_pIrcSocket->SendRaw(szData);
 }
 
@@ -201,19 +211,10 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 	{
 		if (strCommand == "376" || strCommand == "422")
 		{
-			for (CPool<CIrcChannel *>::iterator i = m_pIrcChannelQueue->begin(); i != m_pIrcChannelQueue->end(); ++i)
-			{
-				SendRawFormat("JOIN %s", (*i)->GetName());
-				delete *i;
-			}
-			delete m_pIrcChannelQueue;
-			m_pIrcChannelQueue = NULL;
-
 			m_bGotMotd = true;
 
 			if (!m_strAutoMode.empty())
 			{
-				printf("automode '%s'\n", m_strAutoMode.c_str());
 				SendRawFormat("MODE %s %s", m_pIrcSocket->GetCurrentNickname(), m_strAutoMode.c_str());
 			}
 
@@ -222,6 +223,15 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 			{
 				(*i)->OnBotConnected(this);
 			}
+
+			for (CPool<CIrcChannel *>::iterator i = m_pIrcChannelQueue->begin(); i != m_pIrcChannelQueue->end(); ++i)
+			{
+				SendRawFormat("JOIN %s", (*i)->GetName());
+				delete *i;
+			}
+			delete m_pIrcChannelQueue;
+			m_pIrcChannelQueue = NULL;
+
 			return;
 		}
 	}

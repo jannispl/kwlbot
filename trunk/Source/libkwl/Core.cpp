@@ -250,14 +250,6 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 						pBot->GetSocket()->Connect(strTemp.substr(0, iPortSep).c_str(), atoi(strTemp.substr(iPortSep + 1).c_str()));
 					}
 				}
-
-				if (Config.StartValueList("channels"))
-				{
-					while (Config.GetNextValue(&strTemp))
-					{
-						pBot->JoinChannel(strTemp.c_str());
-					}
-				}
 			}
 		}
 	}
@@ -285,9 +277,7 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 				{
 					CConfig Config((std::string(szDirectory) + pEntry->d_name));
 
-					CIrcSettings ircSettings;
-					ircSettings.LoadFromConfig(&Config);
-					CBot *pBot = CreateBot(ircSettings);
+					CBot *pBot = CreateBot(&Config);
 
 					std::string strTemp;
 					if (Config.GetSingleValue("server", &strTemp))
@@ -302,15 +292,6 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 							pBot->GetSocket()->Connect(strTemp.substr(0, iPortSep).c_str(), atoi(strTemp.substr(iPortSep + 1).c_str()));
 						}
 					}
-					
-					if (Config.StartValueList("channels"))
-					{
-						while (Config.GetNextValue(&strTemp))
-						{
-							pBot->JoinChannel(strTemp.c_str());
-						}
-					}
-
 				}
 			}
 		}
