@@ -787,30 +787,33 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 							{
 								CIrcUser *pUser = FindUser(strParam.c_str());
 
-								char cNewMode = 0;
-								char cPrefix = ModeToPrefix(cMode);
-								switch (cPrefix)
+								if (pUser != NULL)
 								{
-								case '~':
-									cNewMode = 32;
-									break;
-								case '&':
-									cNewMode = 16;
-									break;
-								case '@':
-									cNewMode = 8;
-									break;
-								case '%':
-									cNewMode = 4;
-									break;
-								case '+':
-									cNewMode = 2;
-									break;
+									char cNewMode = 0;
+									char cPrefix = ModeToPrefix(cMode);
+									switch (cPrefix)
+									{
+									case '~':
+										cNewMode = 32;
+										break;
+									case '&':
+										cNewMode = 16;
+										break;
+									case '@':
+										cNewMode = 8;
+										break;
+									case '%':
+										cNewMode = 4;
+										break;
+									case '+':
+										cNewMode = 2;
+										break;
+									}
+									if (iSet == 1)
+										pUser->m_mapChannelModes[pChannel] |= cNewMode;
+									else
+										pUser->m_mapChannelModes[pChannel] &= ~cNewMode;
 								}
-								if (iSet == 1)
-									pUser->m_mapChannelModes[pChannel] |= cNewMode;
-								else
-									pUser->m_mapChannelModes[pChannel] &= ~cNewMode;
 							}
 
 							iLastPos = strParams.find_first_not_of(' ', iPos);
