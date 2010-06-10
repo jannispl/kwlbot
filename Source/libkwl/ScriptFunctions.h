@@ -39,6 +39,10 @@ public:
 	static FuncReturn IrcUser__GetNickname(const Arguments &args);
 	static FuncReturn IrcUser__HasChannel(const Arguments &args);
 	static FuncReturn IrcUser__SendMessage(const Arguments &args);
+	static FuncReturn IrcUser__GetIdent(const Arguments &args);
+	static FuncReturn IrcUser__GetHost(const Arguments &args);
+	static FuncReturn IrcUser__TestAccessLevel(const Arguments &args);
+	static FuncReturn IrcUser__IsTemporary(const Arguments &args);
 
 	static FuncReturn IrcChannel__GetName(const Arguments &args);
 	static FuncReturn IrcChannel__HasUser(const Arguments &args);

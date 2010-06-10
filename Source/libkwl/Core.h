@@ -60,6 +60,7 @@ private:
 	template class DLLEXPORT CPool<CScript *>;
 	template class DLLEXPORT CPool<CGlobalModule *>;
 #endif
+
 	CPool<CEventManager *> m_plEventManagers;
 	CPool<CBot *> m_plBots;
 	CPool<CScript *> m_plScripts;

@@ -36,6 +36,9 @@ CCore::CCore()
 			CGlobalModule *pGlobalModule = CreateGlobalModule(("modules/" + strValue).c_str());
 		}
 	}
+
+	printf("\n");
+
 	if (cfg.StartValueList("scripts"))
 	{
 		std::string strValue;

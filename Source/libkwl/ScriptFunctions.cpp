@@ -164,7 +164,7 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 			{
 				return v8::False();
 			}
-			strTarget = ((CIrcUser *)pTarget)->GetName();
+			strTarget = ((CIrcUser *)pTarget)->GetNickname();
 			break;
 
 		case CScriptObject::IrcChannel:
@@ -229,7 +229,7 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 			{
 				return v8::False();
 			}
-			strTarget = ((CIrcUser *)pTarget)->GetName();
+			strTarget = ((CIrcUser *)pTarget)->GetNickname();
 			break;
 
 		case CScriptObject::IrcChannel:
@@ -433,7 +433,7 @@ FuncReturn CScriptFunctions::IrcUser__GetNickname(const Arguments &args)
 		return v8::False();
 	}
 
-	return v8::String::New(((CIrcUser *)pObject)->GetName());
+	return v8::String::New(((CIrcUser *)pObject)->GetNickname());
 }
 
 FuncReturn CScriptFunctions::IrcUser__HasChannel(const Arguments &args)
@@ -496,9 +496,73 @@ FuncReturn CScriptFunctions::IrcUser__SendMessage(const Arguments &args)
 		return v8::False();
 	}
 
-	((CIrcUser *)pObject)->GetParentBot()->SendMessage(((CIrcUser *)pObject)->GetName(), *strMessage);
+	((CIrcUser *)pObject)->GetParentBot()->SendMessage(((CIrcUser *)pObject)->GetNickname(), *strMessage);
 
 	return v8::True();
+}
+
+FuncReturn CScriptFunctions::IrcUser__GetIdent(const v8::Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::IrcUser__GetIdent");
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::IrcUser)
+	{
+		return v8::False();
+	}
+
+	return v8::String::New(((CIrcUser *)pObject)->GetIdent());
+}
+
+FuncReturn CScriptFunctions::IrcUser__GetHost(const v8::Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::IrcUser__GetHost");
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::IrcUser)
+	{
+		return v8::False();
+	}
+
+	return v8::String::New(((CIrcUser *)pObject)->GetHost());
+}
+
+FuncReturn CScriptFunctions::IrcUser__TestAccessLevel(const v8::Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::IrcUser__TestAccessLevel");
+
+	if (args.Length() < 1)
+	{
+		return v8::False();
+	}
+
+	if (!args[0]->IsInt32())
+	{
+		return v8::False();
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::IrcUser)
+	{
+		return v8::False();
+	}
+
+	int iLevel = (int)args[0]->ToInt32()->NumberValue();
+
+	return v8::Boolean::New(((CIrcUser *)pObject)->GetParentBot()->TestAccessLevel((CIrcUser *)pObject, iLevel));
+}
+
+FuncReturn CScriptFunctions::IrcUser__IsTemporary(const v8::Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::IrcUser__IsTemporary");
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::IrcUser)
+	{
+		return v8::False();
+	}
+
+	return v8::Boolean::New(((CIrcUser *)pObject)->IsTemporary());
 }
 
 FuncReturn CScriptFunctions::IrcChannel__GetName(const Arguments &args)

@@ -43,6 +43,8 @@ public:
 	char GetModeGroup(char cMode);
 	void HandleData(const std::vector<std::string> &vecParts);
 
+	bool TestAccessLevel(CIrcUser *pUser, int iLevel);
+
 	CScript *CreateScript(const char *szFilename);
 	bool DeleteScript(CScript *pScript);
 	CPool<CScript *> *GetScripts();
@@ -79,6 +81,14 @@ private:
 	} m_SupportSettings;
 
 	std::string m_strAutoMode;
+
+	typedef struct
+	{
+		std::string strRequireHost;
+		std::string strRequireNickname;
+		std::string strRequireIdent;
+	} AccessRules;
+	std::vector<AccessRules> m_vecAccessRules;
 };
 
 #endif
