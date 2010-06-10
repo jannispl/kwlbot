@@ -60,6 +60,10 @@ bool CScript::Load(const char *szFilename)
 		userProto->Set(v8::String::New("getNickname"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetNickname));
 		userProto->Set(v8::String::New("hasChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__HasChannel));
 		userProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__SendMessage));
+		userProto->Set(v8::String::New("getIdent"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetIdent));
+		userProto->Set(v8::String::New("getHost"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetHost));
+		userProto->Set(v8::String::New("testAccessLevel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__TestAccessLevel));
+		userProto->Set(v8::String::New("isTemporary"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__IsTemporary));
 
 		// CIrcChannel
 		m_ClassTemplates.IrcChannel = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());

@@ -23,11 +23,18 @@ class DLLEXPORT CIrcUser : public CScriptObject
 	friend class CBot;
 
 public:
-	CIrcUser(CBot *pParentBot, const char *szName);
+	CIrcUser(CBot *pParentBot, const char *szNickname, bool bTemporary = false);
 	~CIrcUser();
 
-	void SetName(const char *szName);
-	const char *GetName();
+	void SetNickname(const char *szNickname);
+	const char *GetNickname();
+	void SetHost(const char *szHost);
+	const char *GetHost();
+	void SetIdent(const char *szIdent);
+	const char *GetIdent();
+
+	bool IsTemporary();
+
 	bool HasChannel(CIrcChannel *pChannel);
 	char GetModeOnChannel(CIrcChannel *pChannel);
 
@@ -42,8 +49,11 @@ public:
 
 private:
 	CBot *m_pParentBot;
-	char *m_szName;
+	std::string m_strNickname;
+	std::string m_strHost;
+	std::string m_strIdent;
 	std::map<CIrcChannel *, char> m_mapChannelModes;
+	bool m_bTemporary;
 };
 
 #endif

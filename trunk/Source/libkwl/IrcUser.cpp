@@ -11,46 +11,65 @@ Purpose:	Class which represents a remote IRC user
 #include "IrcUser.h"
 #include <cstdlib>
 
-CIrcUser::CIrcUser(CBot *pParentBot, const char *szName)
-	: m_szName(NULL)
+CIrcUser::CIrcUser(CBot *pParentBot, const char *szNickname, bool bTemporary)
 {
 	TRACEFUNC("CIrcUser::CIrcUser");
 
 	m_pParentBot = pParentBot;
+	m_bTemporary = bTemporary;
 
-	SetName(szName);
+	SetNickname(szNickname);
 }
 
 CIrcUser::~CIrcUser()
 {
-	if (m_szName != NULL)
-	{
-		free(m_szName);
-	}
 }
 
-void CIrcUser::SetName(const char *szName)
+void CIrcUser::SetNickname(const char *szNickname)
 {
-	TRACEFUNC("CIrcUser::SetName");
+	TRACEFUNC("CIrcUser::SetNickname");
 
-	size_t iLen = strlen(szName);
-	if (m_szName == NULL)
-	{
-		m_szName = (char *)malloc(iLen + 1);
-	}
-	else
-	{
-		m_szName = (char *)realloc(m_szName, iLen + 1);
-	}
-
-	strcpy(m_szName, szName);
+	m_strNickname = szNickname;
 }
 
-const char *CIrcUser::GetName()
+const char *CIrcUser::GetNickname()
 {
-	TRACEFUNC("CIrcUser::GetName");
+	TRACEFUNC("CIrcUser::GetNickname");
 
-	return m_szName;
+	return m_strNickname.c_str();
+}
+
+void CIrcUser::SetIdent(const char *szIdent)
+{
+	TRACEFUNC("CIrcUser::SetIdent");
+
+	m_strIdent = szIdent;
+}
+
+const char *CIrcUser::GetIdent()
+{
+	TRACEFUNC("CIrcUser::GetIdent");
+
+	return m_strIdent.c_str();
+}
+
+bool CIrcUser::IsTemporary()
+{
+	return m_bTemporary;
+}
+
+void CIrcUser::SetHost(const char *szHost)
+{
+	TRACEFUNC("CIrcUser::SetHost");
+
+	m_strHost = szHost;
+}
+
+const char *CIrcUser::GetHost()
+{
+	TRACEFUNC("CIrcUser::GetHost");
+
+	return m_strHost.c_str();
 }
 
 bool CIrcUser::HasChannel(CIrcChannel *pChannel)
