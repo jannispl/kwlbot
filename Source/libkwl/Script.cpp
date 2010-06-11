@@ -75,30 +75,19 @@ bool CScript::Load(const char *szFilename)
 		channelProto->Set(v8::String::New("setTopic"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SetTopic));
 		channelProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SendMessage));
 
-		// CFile
-		m_ClassTemplates.File = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
-		m_ClassTemplates.File->SetClassName(v8::String::New("File"));
-		m_ClassTemplates.File->InstanceTemplate()->SetInternalFieldCount(1);
-		v8::Handle<v8::ObjectTemplate> fileProto = m_ClassTemplates.File->PrototypeTemplate();
-		fileProto->Set(v8::String::New("destroy"), v8::FunctionTemplate::New(CScriptFunctions::File__Destroy));
-		fileProto->Set(v8::String::New("isValid"), v8::FunctionTemplate::New(CScriptFunctions::File__IsValid));
-		fileProto->Set(v8::String::New("read"), v8::FunctionTemplate::New(CScriptFunctions::File__Read));
-		fileProto->Set(v8::String::New("write"), v8::FunctionTemplate::New(CScriptFunctions::File__Write));
-		fileProto->Set(v8::String::New("eof"), v8::FunctionTemplate::New(CScriptFunctions::File__Eof));
-
 		// CScriptModule
 		m_ClassTemplates.ScriptModule = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
 		m_ClassTemplates.ScriptModule->SetClassName(v8::String::New("ScriptModule"));
 		m_ClassTemplates.ScriptModule->InstanceTemplate()->SetInternalFieldCount(1);
 		v8::Handle<v8::ObjectTemplate> scriptModuleProto = m_ClassTemplates.ScriptModule->PrototypeTemplate();
-		scriptModuleProto->Set(v8::String::New("GetProcedure"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__GetProcedure));
+		scriptModuleProto->Set(v8::String::New("getProcedure"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__GetProcedure));
 
 		// CScriptModule::Procedure
 		m_ClassTemplates.ScriptModuleProcedure = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
 		m_ClassTemplates.ScriptModuleProcedure->SetClassName(v8::String::New("ScriptModuleProcedure"));
 		m_ClassTemplates.ScriptModuleProcedure->InstanceTemplate()->SetInternalFieldCount(1);
 		v8::Handle<v8::ObjectTemplate> scriptModuleProcedureProto = m_ClassTemplates.ScriptModuleProcedure->PrototypeTemplate();
-		scriptModuleProcedureProto->Set(v8::String::New("Call"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModuleProcedure__Call));
+		scriptModuleProcedureProto->Set(v8::String::New("call"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModuleProcedure__Call));
 
 		// global
 		m_GlobalTemplate = v8::Persistent<v8::ObjectTemplate>::New(v8::ObjectTemplate::New());
@@ -106,7 +95,6 @@ bool CScript::Load(const char *szFilename)
 		m_GlobalTemplate->Set(v8::String::New("addEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::AddEventHandler));
 		m_GlobalTemplate->Set(v8::String::New("cancelEvent"), v8::FunctionTemplate::New(CScriptFunctions::CancelEvent));
 
-		m_GlobalTemplate->Set(v8::String::New("File"), v8::FunctionTemplate::New(CScriptFunctions::File__constructor));
 		m_GlobalTemplate->Set(v8::String::New("ScriptModule"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__constructor));
 
 		// Ask the global modules if they have something
@@ -128,6 +116,7 @@ bool CScript::Load(const char *szFilename)
 	{
 		return false;
 	}
+
 	fseek(pFile, 0, SEEK_END);
 	size_t iSize = (size_t)ftell(pFile);
 	rewind(pFile);

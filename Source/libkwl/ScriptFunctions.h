@@ -52,13 +52,6 @@ public:
 	static void WeakCallbackUsingDelete(v8::Persistent<v8::Value> pv, void *nobj);
 	static void WeakCallbackUsingFree(v8::Persistent<v8::Value> pv, void *nobj);
 
-	static FuncReturn File__constructor(const Arguments &args);
-	static FuncReturn File__Destroy(const Arguments &args);
-	static FuncReturn File__IsValid(const Arguments &args);
-	static FuncReturn File__Read(const Arguments &args);
-	static FuncReturn File__Write(const Arguments &args);
-	static FuncReturn File__Eof(const Arguments &args);
-
 	static FuncReturn ScriptModule__constructor(const Arguments &args);
 	static FuncReturn ScriptModule__GetProcedure(const Arguments &args);
 
