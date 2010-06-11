@@ -249,6 +249,10 @@
 				RelativePath=".\TcpSocket.h"
 				>
 			</File>
+			<File
+				RelativePath=".\WildcardMatch.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Scripting"
