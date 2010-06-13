@@ -17,6 +17,13 @@ Purpose:	Template class which represents a pool for elements
 template <typename T> class CPool
 {
 public:
+	typedef struct
+	{
+		void *pPrevious;
+		T This;
+		void *pNext;
+	} _elem;
+
 	class iterator
 	{
 	public:
@@ -25,24 +32,29 @@ public:
 		{
 		}
 
-		iterator(T *it)
+		iterator(_elem *it)
 			: m_pCurr(it)
 		{
 		}
 
-		inline T *ptr() const
+		inline _elem *ptr() const
 		{
 			return m_pCurr;
 		}
 
 		inline void operator ++()
 		{
-			++m_pCurr;
+			m_pCurr = (_elem *)m_pCurr->pNext;
 		}
 
 		T operator *() const
 		{
-			return *m_pCurr;
+			return m_pCurr->This;
+		}
+
+		bool last()
+		{
+			return m_pCurr->pNext == NULL;
 		}
 
 		bool operator !=(const iterator &it)
@@ -56,37 +68,79 @@ public:
 		}
 
 	private:
-		T *m_pCurr;
+		_elem *m_pCurr;
 	};
 
 	CPool()
-		: m_pElements(NULL), m_iNumElements(0)
+		: m_pFirst(NULL), m_pLast(NULL), m_iNumElements(0)
 	{
 	}
 
 	~CPool()
 	{
-		if (m_pElements != NULL)
+	}
+
+	void push_front(T elem)
+	{
+		_elem *pElem = new _elem;
+		pElem->This = elem;
+
+		if (m_iNumElements == 0)
 		{
-			free(m_pElements);
+			m_pLast = new _elem;
+			m_pLast->pPrevious = pElem;
+			m_pLast->pNext = NULL;
 		}
+		else
+		{
+			m_pFirst->pPrevious = pElem;
+		}
+
+		pElem->pPrevious = NULL;
+		pElem->pNext = m_pFirst != NULL ? m_pFirst : m_pLast;
+		m_pFirst = pElem;
+
+		++m_iNumElements;
 	}
 
 	void push_back(T elem)
 	{
-		alloc_element();
-		m_pElements[m_iNumElements] = elem;
+		_elem *pElem = new _elem;
+		pElem->This = elem;
+
+		if (m_iNumElements == 0)
+		{
+			m_pLast = new _elem;
+			m_pLast->pNext = NULL;
+
+			pElem->pPrevious = NULL;
+			pElem->pNext = m_pLast;
+			m_pLast->pPrevious = pElem;
+			m_pFirst = pElem;
+		}
+		else
+		{
+			pElem->pPrevious = m_pLast->pPrevious;
+			m_pLast->pPrevious = pElem;
+			((_elem *)pElem->pPrevious)->pNext = pElem;
+			pElem->pNext = m_pLast;
+		}
+
 		++m_iNumElements;
 	}
 
 	iterator begin() const
 	{
-		return iterator(m_pElements);
+		if (m_pFirst == NULL)
+		{
+			return end();
+		}
+		return iterator(m_pFirst);
 	}
 
 	iterator end() const
 	{
-		return iterator(m_pElements + m_iNumElements);
+		return iterator(m_pLast);
 	}
 
 	inline size_t size() const
@@ -96,12 +150,12 @@ public:
 
 	T front() const
 	{
-		return *m_pElements;
+		return m_pFirst->This;
 	}
 
-	T back()
+	T back() const
 	{
-		return *(T *)(end().ptr() - 1);
+		return ((_elem *)m_pLast->pPrevious)->This;
 	}
 
 	iterator erase(iterator it)
@@ -112,24 +166,29 @@ public:
 		}
 
 		--m_iNumElements;
-		if (m_iNumElements != 0)
-		{
-			T *last = (T *)end().ptr();
-			if (it.ptr() != last)
-			{
-				memcpy(it.ptr(), last, sizeof(T));
-			}
+		_elem *pToDelete = (_elem *)it.ptr();
+		_elem *pPrevious = (_elem *)pToDelete->pPrevious;
 
-			m_pElements = (T *)realloc(m_pElements, m_iNumElements * sizeof(T));
-
-			return iterator(last);
-		}
-		else
+		if (pPrevious != NULL)
 		{
-			free(m_pElements);
-			m_pElements = NULL;
+			pPrevious->pNext = pToDelete->pNext;
 		}
-		return end();
+		((_elem *)pToDelete->pNext)->pPrevious = pPrevious;
+
+		if (pToDelete == m_pFirst)
+		{
+			printf("is first\n");
+			m_pFirst = (_elem *)pToDelete->pNext;
+		}
+
+		delete pToDelete;
+
+		if (m_iNumElements == 0 || pPrevious == NULL)
+		{
+			//m_pFirst = NULL;
+			return end();
+		}
+		return iterator(pPrevious);
 	}
 
 	bool remove(T elem)
@@ -147,29 +206,19 @@ public:
 
 	void clear()
 	{
-		if (m_pElements != NULL)
+		_elem *tmp = m_pLast;
+		while (tmp != NULL)
 		{
-			free(m_pElements);
-			m_pElements = 0;
-			m_iNumElements = 0;
+			_elem *pNext = (_elem *)tmp->pNext;
+			delete tmp;
+			tmp = pNext;
 		}
 	}
 
 private:
 	size_t m_iNumElements;
-	T *m_pElements;
-
-	void alloc_element()
-	{
-		if (m_pElements == NULL)
-		{
-			m_pElements = (T *)malloc(sizeof(T));
-		}
-		else
-		{
-			m_pElements = (T *)realloc(m_pElements, (m_iNumElements + 1) * sizeof(T));
-		}
-	}
+	_elem *m_pFirst;
+	_elem *m_pLast;
 };
 
 #endif

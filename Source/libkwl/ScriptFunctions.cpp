@@ -63,7 +63,52 @@ FuncReturn CScriptFunctions::AddEventHandler(const Arguments &args)
 	CScript::EventHandler *pEventHandler = new CScript::EventHandler;
 	pEventHandler->strEvent = *strEvent;
 	pEventHandler->handlerFunction = v8::Persistent<v8::Function>::New(function);
-	m_pCallingScript->m_lstEventHandlers.push_back(pEventHandler);
+	m_pCallingScript->m_lstEventHandlers.push_front(pEventHandler);
+
+	return v8::True();
+}
+
+FuncReturn CScriptFunctions::RemoveEventHandler(const Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::RemoveEventHandler");
+
+	if (args.Length() < 1 || m_pCallingScript == NULL)
+	{
+		return v8::False();
+	}
+
+	if (!args[0]->IsString())
+	{
+		return v8::False();
+	}
+
+	v8::String::Utf8Value strEvent(args[0]);
+
+	for (CPool<CScript::EventHandler *>::iterator i = m_pCallingScript->m_lstEventHandlers.begin(); i != m_pCallingScript->m_lstEventHandlers.end(); ++i)
+	{
+		if ((*i)->strEvent == *strEvent)
+		{
+			if (args.Length() >= 2 && args[1]->IsFunction())
+			{
+				if ((*i)->handlerFunction->Equals(v8::Handle<v8::Function>::Cast(args[1])))
+				{
+					delete *i;
+					if ((i = m_pCallingScript->m_lstEventHandlers.erase(i)) == m_pCallingScript->m_lstEventHandlers.end())
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				delete *i;
+				if ((i = m_pCallingScript->m_lstEventHandlers.erase(i)) == m_pCallingScript->m_lstEventHandlers.end())
+				{
+					break;
+				}
+			}
+		}
+	}
 
 	return v8::True();
 }

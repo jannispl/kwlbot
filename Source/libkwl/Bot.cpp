@@ -134,6 +134,11 @@ CBot::~CBot()
 	}
 }
 
+CCore *CBot::GetParentCore()
+{
+	return m_pParentCore;
+}
+
 CIrcSettings *CBot::GetSettings()
 {
 	return &m_IrcSettings;

@@ -93,6 +93,7 @@ bool CScript::Load(const char *szFilename)
 		m_GlobalTemplate = v8::Persistent<v8::ObjectTemplate>::New(v8::ObjectTemplate::New());
 		m_GlobalTemplate->Set(v8::String::New("print"), v8::FunctionTemplate::New(CScriptFunctions::Print));
 		m_GlobalTemplate->Set(v8::String::New("addEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::AddEventHandler));
+		m_GlobalTemplate->Set(v8::String::New("removeEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::RemoveEventHandler));
 		m_GlobalTemplate->Set(v8::String::New("cancelEvent"), v8::FunctionTemplate::New(CScriptFunctions::CancelEvent));
 
 		m_GlobalTemplate->Set(v8::String::New("ScriptModule"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__constructor));
@@ -187,6 +188,7 @@ bool CScript::CallEvent(const char *szEventName, int iArgCount, v8::Handle<v8::V
 	CScriptFunctions::m_pCallingScript = this;
 	for (CPool<EventHandler *>::iterator i = m_lstEventHandlers.begin(); i != m_lstEventHandlers.end(); ++i)
 	{
+		printf("has event '%s'\n", (*i)->strEvent.c_str());
 		if ((*i)->strEvent == szEventName && (*i)->handlerFunction->IsFunction())
 		{
 			(*i)->handlerFunction->Call((*i)->handlerFunction, iArgCount, pArgValues);

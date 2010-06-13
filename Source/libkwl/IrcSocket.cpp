@@ -156,6 +156,12 @@ void CIrcSocket::HandleData(const char *szData)
 
 	m_pParentBot->HandleData(vecParts);
 
+	m_pParentBot->GetParentCore()->GetScriptEventManager()->OnBotReceivedRaw(m_pParentBot, szData);
+	for (CPool<CEventManager *>::iterator i = m_pParentBot->GetParentCore()->GetEventManagers()->begin(); i != m_pParentBot->GetParentCore()->GetEventManagers()->end(); ++i)
+	{
+		(*i)->OnBotReceivedRaw(m_pParentBot, szData);
+	}
+
 	if (vecParts[0] == "PING")
 	{
 		SendRawFormat("PONG %s", vecParts[1].c_str());
