@@ -563,3 +563,39 @@ void CScriptEventManager::OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIr
 		(*i)->ExitContext();
 	}
 }
+
+void CScriptEventManager::OnBotReceivedRaw(CBot *pBot, const char *szRaw)
+{
+	TRACEFUNC("CScriptEventManager::OnBotReceivedRaw");
+
+	v8::HandleScope handleScope;
+	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
+	{
+		(*i)->EnterContext();
+
+		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
+
+		v8::Local<v8::Object> bot = ctor1->NewInstance();
+		bot->SetInternalField(0, v8::External::New(pBot));
+
+		v8::Handle<v8::Value> argValues[2] = { bot, v8::String::New(szRaw) };
+		(*i)->CallEvent("onBotReceivedRaw", 2, argValues);
+
+		(*i)->ExitContext();
+	}
+
+	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
+	{
+		(*i)->EnterContext();
+
+		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
+
+		v8::Local<v8::Object> bot = ctor1->NewInstance();
+		bot->SetInternalField(0, v8::External::New(pBot));
+
+		v8::Handle<v8::Value> argValues[2] = { bot, v8::String::New(szRaw) };
+		(*i)->CallEvent("onBotReceivedRaw", 2, argValues);
+
+		(*i)->ExitContext();
+	}
+}

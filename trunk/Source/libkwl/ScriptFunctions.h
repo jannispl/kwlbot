@@ -25,6 +25,7 @@ public:
 
 	static FuncReturn Print(const Arguments &args);
 	static FuncReturn AddEventHandler(const Arguments &args);
+	static FuncReturn RemoveEventHandler(const Arguments &args);
 	static FuncReturn CancelEvent(const Arguments &args);
 
 	static FuncReturn Bot__GetNickname(const Arguments &args);

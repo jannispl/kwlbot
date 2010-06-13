@@ -29,8 +29,10 @@ public:
 	CBot(CCore *pParentCore, CConfig *pConfig);
 	~CBot();
 
+	CCore *GetParentCore();
 	CIrcSettings *GetSettings();
 	CIrcSocket *GetSocket();
+
 	int SendRaw(const char *szData);
 	int SendRawFormat(const char *szFormat, ...);
 	int ReadRaw(char *pDest, size_t iSize);

@@ -9,8 +9,8 @@ Purpose:	Class which manages a connection to an IRC server
 
 class CIrcSocket;
 
-#ifndef _CIRCSOCKET_H
-#define _CIRCSOCKET_H
+#ifndef _IRCSOCKET_H
+#define _IRCSOCKET_H
 
 #include "TcpSocket.h"
 #include "IrcSettings.h"

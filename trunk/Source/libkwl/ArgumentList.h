@@ -10,7 +10,7 @@ Purpose:	Utility class for a list of arguments
 #ifndef _ARGUMENTLIST_H
 #define _ARGUMENTLIST_H
 
-#include "Pool.h"
+#include <vector>
 
 class CArgumentList
 {
@@ -48,7 +48,7 @@ public:
 		Argument arg;
 		arg.cType = 1;
 		arg.argValue.iValue = iValue;
-		m_plArguments.push_back(arg);
+		m_vecArguments.push_back(arg);
 	}
 
 	void Add(float fValue)
@@ -56,7 +56,7 @@ public:
 		Argument arg;
 		arg.cType = 2;
 		arg.argValue.fValue = fValue;
-		m_plArguments.push_back(arg);
+		m_vecArguments.push_back(arg);
 	}
 
 	void Add(bool bValue)
@@ -64,7 +64,7 @@ public:
 		Argument arg;
 		arg.cType = 3;
 		arg.argValue.bValue = bValue;
-		m_plArguments.push_back(arg);
+		m_vecArguments.push_back(arg);
 	}
 
 	void Add(void *pPointer)
@@ -72,26 +72,21 @@ public:
 		Argument arg;
 		arg.cType = 4;
 		arg.argValue.pPointer = pPointer;
-		m_plArguments.push_back(arg);
-	}
-
-	CPool<Argument> *Get()
-	{
-		return &m_plArguments;
+		m_vecArguments.push_back(arg);
 	}
 
 	const Argument &operator [](size_t iIndex) const
 	{
-		return *(m_plArguments.begin().ptr() + iIndex);
+		return m_vecArguments[iIndex];
 	}
 
 	size_t Size() const
 	{
-		return m_plArguments.size();
+		return m_vecArguments.size();
 	}
 
 private:
-	CPool<Argument> m_plArguments;
+	std::vector<Argument> m_vecArguments;
 };
 
 #endif

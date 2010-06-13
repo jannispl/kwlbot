@@ -20,6 +20,7 @@ Purpose:	Core container which manages all bot instances
 CCore::CCore()
 {
 	TRACEFUNC("CCore::CCore");
+
 	printf("Initializing kwlbot\n");
 	printf("Version %s\n", VERSION_STRING);
 
