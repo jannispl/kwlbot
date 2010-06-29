@@ -72,17 +72,15 @@ public:
 		return connect(m_Socket, name, namelen) != SOCKET_ERROR;
 	}
 
-	static bool ResolveHostname(const char *szHostname, sockaddr_in *dest)
+	static bool ResolveHostname(const char *szHostname, sockaddr_in *pDest = NULL)
 	{
-		if (dest == NULL)
-		{
-			return false;
-		}
-
 		unsigned int uiIP = inet_addr(szHostname);
 		if (uiIP != INADDR_NONE)
 		{
-			dest->sin_addr.s_addr = uiIP;
+			if (pDest != NULL)
+			{
+				pDest->sin_addr.s_addr = uiIP;
+			}
 			return true;
 		}
 
@@ -91,7 +89,11 @@ public:
 		{
 			return false;
 		}
-		memcpy(&(dest->sin_addr), pHostent->h_addr_list[0], 4);
+
+		if (pDest != NULL)
+		{
+			memcpy(&(pDest->sin_addr), pHostent->h_addr_list[0], 4);
+		}
 		return true;
 	}
 
