@@ -64,6 +64,7 @@ bool CScript::Load(const char *szFilename)
 		userProto->Set(v8::String::New("getHost"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetHost));
 		userProto->Set(v8::String::New("testAccessLevel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__TestAccessLevel));
 		userProto->Set(v8::String::New("isTemporary"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__IsTemporary));
+		userProto->Set(v8::String::New("getModeOnChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetModeOnChannel));
 
 		// CIrcChannel
 		m_ClassTemplates.IrcChannel = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
@@ -188,7 +189,6 @@ bool CScript::CallEvent(const char *szEventName, int iArgCount, v8::Handle<v8::V
 	CScriptFunctions::m_pCallingScript = this;
 	for (CPool<EventHandler *>::iterator i = m_lstEventHandlers.begin(); i != m_lstEventHandlers.end(); ++i)
 	{
-		printf("has event '%s'\n", (*i)->strEvent.c_str());
 		if ((*i)->strEvent == szEventName && (*i)->handlerFunction->IsFunction())
 		{
 			(*i)->handlerFunction->Call((*i)->handlerFunction, iArgCount, pArgValues);
