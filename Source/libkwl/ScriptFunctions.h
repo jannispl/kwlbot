@@ -44,6 +44,7 @@ public:
 	static FuncReturn IrcUser__GetHost(const Arguments &args);
 	static FuncReturn IrcUser__TestAccessLevel(const Arguments &args);
 	static FuncReturn IrcUser__IsTemporary(const Arguments &args);
+	static FuncReturn IrcUser__GetModeOnChannel(const Arguments &args);
 
 	static FuncReturn IrcChannel__GetName(const Arguments &args);
 	static FuncReturn IrcChannel__HasUser(const Arguments &args);

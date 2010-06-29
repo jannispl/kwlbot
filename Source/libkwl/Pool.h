@@ -78,6 +78,7 @@ public:
 
 	~CPool()
 	{
+		clear();
 	}
 
 	void push_front(T elem)
@@ -177,7 +178,6 @@ public:
 
 		if (pToDelete == m_pFirst)
 		{
-			printf("is first\n");
 			m_pFirst = (_elem *)pToDelete->pNext;
 		}
 

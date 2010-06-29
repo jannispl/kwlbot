@@ -610,6 +610,40 @@ FuncReturn CScriptFunctions::IrcUser__IsTemporary(const v8::Arguments &args)
 	return v8::Boolean::New(((CIrcUser *)pObject)->IsTemporary());
 }
 
+FuncReturn CScriptFunctions::IrcUser__GetModeOnChannel(const v8::Arguments &args)
+{
+	TRACEFUNC("CScriptFunctions::IrcUser__GetModeOnChannel");
+
+	if (args.Length() < 1)
+	{
+		return v8::False();
+	}
+
+	if (!args[0]->IsObject())
+	{
+		return v8::False();
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::IrcUser)
+	{
+		return v8::False();
+	}
+
+	CScriptObject *pChannel = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
+	if (pChannel->GetType() != CScriptObject::IrcChannel)
+	{
+		return v8::False();
+	}
+
+	if (((CIrcChannel *)pChannel)->GetParentBot() != ((CIrcUser *)pObject)->GetParentBot())
+	{
+		return v8::False();
+	}
+
+	return v8::Integer::New((int)((CIrcUser *)pObject)->GetModeOnChannel((CIrcChannel *)pChannel));
+}
+
 FuncReturn CScriptFunctions::IrcChannel__GetName(const Arguments &args)
 {
 	TRACEFUNC("CScriptFunctions::IrcChannel__GetName");
