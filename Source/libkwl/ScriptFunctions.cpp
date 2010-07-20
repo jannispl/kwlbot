@@ -16,11 +16,10 @@ Purpose:	Contains definitions for scripting functions
 #include "ArgumentList.h"
 
 CScript *CScriptFunctions::m_pCallingScript = NULL;
+bool CScriptFunctions::m_bAllowInternalConstructions = false;
 
 FuncReturn CScriptFunctions::Print(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::Print");
-
 	int iParams = args.Length();
 	if (iParams < 1)
 	{
@@ -45,8 +44,6 @@ FuncReturn CScriptFunctions::Print(const Arguments &args)
 
 FuncReturn CScriptFunctions::AddEventHandler(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::AddEventHandler");
-
 	if (args.Length() < 2 || m_pCallingScript == NULL)
 	{
 		return v8::False();
@@ -70,8 +67,6 @@ FuncReturn CScriptFunctions::AddEventHandler(const Arguments &args)
 
 FuncReturn CScriptFunctions::RemoveEventHandler(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::RemoveEventHandler");
-
 	if (args.Length() < 1 || m_pCallingScript == NULL)
 	{
 		return v8::False();
@@ -115,8 +110,6 @@ FuncReturn CScriptFunctions::RemoveEventHandler(const Arguments &args)
 
 FuncReturn CScriptFunctions::CancelEvent(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::CancelEvent");
-
 	if (m_pCallingScript == NULL)
 	{
 		return v8::False();
@@ -134,8 +127,6 @@ FuncReturn CScriptFunctions::CancelEvent(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__GetNickname(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::Bot__GetNickname");
-
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::Bot)
 	{
@@ -147,8 +138,6 @@ FuncReturn CScriptFunctions::Bot__GetNickname(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__SendRaw(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::Bot__SendRaw");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -178,8 +167,6 @@ FuncReturn CScriptFunctions::Bot__SendRaw(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::Bot__SendMessage");
-
 	if (args.Length() < 2)
 	{
 		return v8::False();
@@ -243,8 +230,6 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::Bot__SendNotice");
-
 	if (args.Length() < 2)
 	{
 		return v8::False();
@@ -308,8 +293,6 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__FindUser(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::Bot__FindUser");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -332,21 +315,24 @@ FuncReturn CScriptFunctions::Bot__FindUser(const Arguments &args)
 		return v8::False();
 	}
 
-	CIrcUser *pUser = ((CBot *)pObject)->FindUser(*strUser);
+	bool bCaseSensitive = args.Length() >= 2 && args[0]->IsBoolean() ? args[0]->ToBoolean()->BooleanValue() : true;
+
+	CIrcUser *pUser = ((CBot *)pObject)->FindUser(*strUser, bCaseSensitive);
 	if (pUser == NULL)
 	{
 		return v8::False();
 	}
 
+	m_bAllowInternalConstructions = true;
 	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.IrcUser->GetFunction()->NewInstance();
+	m_bAllowInternalConstructions = false;
+
 	obj->SetInternalField(0, v8::External::New(pUser));
 	return obj;
 }
 
 FuncReturn CScriptFunctions::Bot__FindChannel(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::Bot__FindChannel");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -375,15 +361,15 @@ FuncReturn CScriptFunctions::Bot__FindChannel(const Arguments &args)
 		return v8::False();
 	}
 
+	m_bAllowInternalConstructions = true;
 	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.IrcChannel->GetFunction()->NewInstance();
+	m_bAllowInternalConstructions = false;
 	obj->SetInternalField(0, v8::External::New(pChannel));
 	return obj;
 }
 
 FuncReturn CScriptFunctions::Bot__JoinChannel(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::Bot__JoinChannel");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -413,8 +399,6 @@ FuncReturn CScriptFunctions::Bot__JoinChannel(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::Bot__LeaveChannel");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -470,8 +454,6 @@ FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
 
 FuncReturn CScriptFunctions::IrcUser__GetNickname(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcUser__GetNickname");
-
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcUser)
 	{
@@ -483,8 +465,6 @@ FuncReturn CScriptFunctions::IrcUser__GetNickname(const Arguments &args)
 
 FuncReturn CScriptFunctions::IrcUser__HasChannel(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcUser__HasChannel");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -517,8 +497,6 @@ FuncReturn CScriptFunctions::IrcUser__HasChannel(const Arguments &args)
 
 FuncReturn CScriptFunctions::IrcUser__SendMessage(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcUser__SendMessage");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -548,8 +526,6 @@ FuncReturn CScriptFunctions::IrcUser__SendMessage(const Arguments &args)
 
 FuncReturn CScriptFunctions::IrcUser__GetIdent(const v8::Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcUser__GetIdent");
-
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcUser)
 	{
@@ -561,8 +537,6 @@ FuncReturn CScriptFunctions::IrcUser__GetIdent(const v8::Arguments &args)
 
 FuncReturn CScriptFunctions::IrcUser__GetHost(const v8::Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcUser__GetHost");
-
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcUser)
 	{
@@ -574,8 +548,6 @@ FuncReturn CScriptFunctions::IrcUser__GetHost(const v8::Arguments &args)
 
 FuncReturn CScriptFunctions::IrcUser__TestAccessLevel(const v8::Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcUser__TestAccessLevel");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -599,8 +571,6 @@ FuncReturn CScriptFunctions::IrcUser__TestAccessLevel(const v8::Arguments &args)
 
 FuncReturn CScriptFunctions::IrcUser__IsTemporary(const v8::Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcUser__IsTemporary");
-
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcUser)
 	{
@@ -612,8 +582,6 @@ FuncReturn CScriptFunctions::IrcUser__IsTemporary(const v8::Arguments &args)
 
 FuncReturn CScriptFunctions::IrcUser__GetModeOnChannel(const v8::Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcUser__GetModeOnChannel");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -646,8 +614,6 @@ FuncReturn CScriptFunctions::IrcUser__GetModeOnChannel(const v8::Arguments &args
 
 FuncReturn CScriptFunctions::IrcChannel__GetName(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcChannel__GetName");
-
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 	if (pObject->GetType() != CScriptObject::IrcChannel)
 	{
@@ -657,10 +623,48 @@ FuncReturn CScriptFunctions::IrcChannel__GetName(const Arguments &args)
 	return v8::String::New(((CIrcChannel *)pObject)->GetName());
 }
 
+FuncReturn CScriptFunctions::IrcChannel__FindUser(const Arguments &args)
+{
+	if (args.Length() < 1)
+	{
+		return v8::False();
+	}
+
+	if (!args[0]->IsString())
+	{
+		return v8::False();
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	if (pObject->GetType() != CScriptObject::IrcChannel)
+	{
+		return v8::False();
+	}
+
+	v8::String::Utf8Value strUser(args[0]);
+	if (*strUser == NULL)
+	{
+		return v8::False();
+	}
+
+	bool bCaseSensitive = args.Length() >= 2 && args[0]->IsBoolean() ? args[0]->ToBoolean()->BooleanValue() : true;
+
+	CIrcUser *pUser = ((CIrcChannel *)pObject)->FindUser(*strUser, bCaseSensitive);
+	if (pUser == NULL)
+	{
+		return v8::False();
+	}
+
+	m_bAllowInternalConstructions = true;
+	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.IrcUser->GetFunction()->NewInstance();
+	m_bAllowInternalConstructions = false;
+
+	obj->SetInternalField(0, v8::External::New(pUser));
+	return obj;
+}
+
 FuncReturn CScriptFunctions::IrcChannel__HasUser(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcChannel__HasUser");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -694,8 +698,6 @@ FuncReturn CScriptFunctions::IrcChannel__HasUser(const Arguments &args)
 
 FuncReturn CScriptFunctions::IrcChannel__SetTopic(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcChannel__SetTopic");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -725,8 +727,6 @@ FuncReturn CScriptFunctions::IrcChannel__SetTopic(const Arguments &args)
 
 FuncReturn CScriptFunctions::IrcChannel__SendMessage(const Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::IrcChannel__SendMessage");
-
 	if (args.Length() < 1)
 	{
 		return v8::False();
@@ -798,8 +798,6 @@ void CScriptFunctions::WeakCallbackUsingFree(v8::Persistent<v8::Value> pv, void 
 
 FuncReturn CScriptFunctions::ScriptModule__constructor(const v8::Arguments &args)
 {
-	TRACEFUNC("CScriptFunctions::ScriptModule__constructor");
-
 	if (!args.IsConstructCall() || args.Length() < 1)
 	{
 		return v8::False();
@@ -821,7 +819,9 @@ FuncReturn CScriptFunctions::ScriptModule__constructor(const v8::Arguments &args
 	v8::V8::AdjustAmountOfExternalAllocatedMemory(5000);
 
 	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.ScriptModule->GetFunction();
+	m_bAllowInternalConstructions = true;
 	v8::Persistent<v8::Object> obj = v8::Persistent<v8::Object>::New(ctor->NewInstance());
+	m_bAllowInternalConstructions = false;
 	obj.MakeWeak(pScriptModule, WeakCallbackUsingDelete);
 	obj->SetInternalField(0, v8::External::New(pScriptModule));
 	return obj;
@@ -854,7 +854,9 @@ FuncReturn CScriptFunctions::ScriptModule__GetProcedure(const v8::Arguments &arg
 	CScriptModule::Procedure *pProcedure = ((CScriptModule *)pObject)->AllocateProcedure(*strName);
 
 	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.ScriptModuleProcedure->GetFunction();
+	m_bAllowInternalConstructions = true;
 	v8::Persistent<v8::Object> obj = v8::Persistent<v8::Object>::New(ctor->NewInstance());
+	m_bAllowInternalConstructions = false;
 	obj.MakeWeak(pProcedure, WeakCallbackUsingDelete);
 	obj->SetInternalField(0, v8::External::New(pProcedure));
 
@@ -897,4 +899,14 @@ FuncReturn CScriptFunctions::ScriptModuleProcedure__Call(const v8::Arguments &ar
 	}
 
 	return v8::Integer::New(((CScriptModule::Procedure *)pObject)->Call(list));
+}
+
+FuncReturn CScriptFunctions::InternalConstructor(const Arguments &args)
+{
+	if (!m_bAllowInternalConstructions)
+	{
+		return v8::ThrowException(v8::Exception::Error(v8::String::New("Internal object")));
+	}
+
+	return v8::Undefined();
 }

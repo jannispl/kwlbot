@@ -38,7 +38,7 @@ public:
 	int ReadRaw(char *pDest, size_t iSize);
 	void Pulse();
 	CIrcChannel *FindChannel(const char *szName);
-	CIrcUser *FindUser(const char *szName);
+	CIrcUser *FindUser(const char *szName, bool bCaseSensitive = true);
 	char ModeToPrefix(char cMode);
 	char PrefixToMode(char cPrefix);
 	bool IsPrefixMode(char cMode);

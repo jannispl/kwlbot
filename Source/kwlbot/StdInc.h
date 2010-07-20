@@ -26,7 +26,7 @@ Purpose:	Precompiled header file
 
   #include <windows.h>
 
-  //#pragma warning(disable:4251)
+  #pragma warning(disable:4251)
   #define DLLEXPORT __declspec(dllimport)
 #else
   #include <unistd.h>
@@ -35,15 +35,10 @@ Purpose:	Precompiled header file
 
 #include <stdarg.h>
 
-
 #include "../libkwl/Definitions.h"
 
 #ifdef _DEBUG
-  #include "../libkwl/Debug.h"
-  extern CDebug *g_pDebug;
-  #define TRACEFUNC(func) g_pDebug->SetLastFunction(func)
   #define dbgprintf printf
 #else
-  #define TRACEFUNC(func)
   #define dbgprintf
 #endif

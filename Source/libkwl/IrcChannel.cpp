@@ -14,8 +14,6 @@ Purpose:	Class which represents a remote IRC channel
 CIrcChannel::CIrcChannel(CBot *pParentBot, const char *szName)
 	: m_szName(NULL)
 {
-	TRACEFUNC("CIrcChannel::CIrcChannel");
-
 	m_pParentBot = pParentBot;
 
 	SetName(szName);
@@ -23,8 +21,6 @@ CIrcChannel::CIrcChannel(CBot *pParentBot, const char *szName)
 
 CIrcChannel::~CIrcChannel()
 {
-	TRACEFUNC("CIrcChannel::~CIrcChannel");
-
 	if (m_szName != NULL)
 	{
 		free(m_szName);
@@ -33,8 +29,6 @@ CIrcChannel::~CIrcChannel()
 
 void CIrcChannel::SetName(const char *szName)
 {
-	TRACEFUNC("CIrcChannel::SetName");
-
 	size_t iLen = strlen(szName);
 	if (m_szName == NULL)
 	{
@@ -50,15 +44,27 @@ void CIrcChannel::SetName(const char *szName)
 
 const char *CIrcChannel::GetName()
 {
-	TRACEFUNC("CIrcChannel::GetName");
-
 	return m_szName;
+}
+
+CIrcUser *CIrcChannel::FindUser(const char *szNickname, bool bCaseSensitive)
+{
+	typedef int (* Compare_t)(const char *, const char *);
+	Compare_t pfnCompare = bCaseSensitive ? strcmp : stricmp;
+
+	for (CPool<CIrcUser *>::iterator i = m_plIrcUsers.begin(); i != m_plIrcUsers.end(); ++i)
+	{
+		if (pfnCompare(szNickname, (*i)->GetNickname()) == 0)
+		{
+			return *i;
+		}
+	}
+
+	return NULL;
 }
 
 bool CIrcChannel::HasUser(CIrcUser *pUser)
 {
-	TRACEFUNC("CIrcChannel::HasUser");
-
 	for (CPool<CIrcUser *>::iterator i = m_plIrcUsers.begin(); i != m_plIrcUsers.end(); ++i)
 	{
 		if (*i == pUser)
@@ -71,8 +77,6 @@ bool CIrcChannel::HasUser(CIrcUser *pUser)
 
 void CIrcChannel::SetTopic(const char *szTopic)
 {
-	TRACEFUNC("CIrcChannel::SetTopic");
-
 	m_pParentBot->SendRawFormat("TOPIC %s :%s", GetName(), szTopic);
 }
 

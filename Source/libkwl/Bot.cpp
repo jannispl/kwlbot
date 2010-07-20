@@ -14,8 +14,6 @@ Purpose:	Class which represents an IRC bot
 CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 	: m_bGotMotd(false)
 {
-	TRACEFUNC("CBot::CBot");
-
 	m_pParentCore = pParentCore;
 	m_IrcSettings.LoadFromConfig(pConfig);
 
@@ -103,8 +101,6 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 
 CBot::~CBot()
 {
-	TRACEFUNC("CBot::~CBot");
-
 	m_pParentCore->GetScriptEventManager()->OnBotDestroyed(this);
 	for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 	{
@@ -151,16 +147,12 @@ CIrcSocket *CBot::GetSocket()
 
 int CBot::SendRaw(const char *szData)
 {
-	TRACEFUNC("CBot::SendRaw");
-
 	printf("[out] %s\n", szData);
 	return m_pIrcSocket->SendRaw(szData);
 }
 
 int CBot::SendRawFormat(const char *szFormat, ...)
 {
-	TRACEFUNC("CBot::SendRawFormat");
-
 	char szBuffer[IRC_MAX_LEN + 1];
 	va_list vaArgs;
 	va_start(vaArgs, szFormat);
@@ -172,15 +164,11 @@ int CBot::SendRawFormat(const char *szFormat, ...)
 
 void CBot::Pulse()
 {
-	TRACEFUNC("CBot::Pulse");
-
 	m_pIrcSocket->Pulse();
 }
 
 CIrcChannel *CBot::FindChannel(const char *szName)
 {
-	TRACEFUNC("CBot::FindChannel");
-
 	for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
 	{
 		if (strcmp(szName, (*i)->GetName()) == 0)
@@ -191,13 +179,14 @@ CIrcChannel *CBot::FindChannel(const char *szName)
 	return NULL;
 }
 
-CIrcUser *CBot::FindUser(const char *szName)
+CIrcUser *CBot::FindUser(const char *szName, bool bCaseSensitive)
 {
-	TRACEFUNC("CBot::FindUser");
+	typedef int (* Compare_t)(const char *, const char *);
+	Compare_t pfnCompare = bCaseSensitive ? strcmp : stricmp;
 
 	for (CPool<CIrcUser *>::iterator i = m_plGlobalUsers.begin(); i != m_plGlobalUsers.end(); ++i)
 	{
-		if (strcmp(szName, (*i)->GetNickname()) == 0)
+		if (pfnCompare(szName, (*i)->GetNickname()) == 0)
 		{
 			return *i;
 		}
@@ -207,8 +196,6 @@ CIrcUser *CBot::FindUser(const char *szName)
 
 char CBot::ModeToPrefix(char cMode)
 {
-	TRACEFUNC("CBot::ModeToPrefix");
-
 	std::string::size_type iIndex = m_SupportSettings.strPrefixes[0].find(cMode);
 	if (iIndex == std::string::npos)
 	{
@@ -219,8 +206,6 @@ char CBot::ModeToPrefix(char cMode)
 
 char CBot::PrefixToMode(char cPrefix)
 {
-	TRACEFUNC("CBot::PrefixToMode");
-
 	std::string::size_type iIndex = m_SupportSettings.strPrefixes[1].find(cPrefix);
 	if (iIndex == std::string::npos)
 	{
@@ -231,15 +216,11 @@ char CBot::PrefixToMode(char cPrefix)
 
 bool CBot::IsPrefixMode(char cMode)
 {
-	TRACEFUNC("CBot::IsPrefixMode");
-
 	return ModeToPrefix(cMode) != 0;
 }
 
 char CBot::GetModeGroup(char cMode)
 {
-	TRACEFUNC("CBot::GetModeGroup");
-
 	for (int i = 0; i < 4; ++i)
 	{
 		std::string::size_type iPos = m_SupportSettings.strChanmodes[i].find(cMode);
@@ -253,8 +234,6 @@ char CBot::GetModeGroup(char cMode)
 
 void CBot::HandleData(const std::vector<std::string> &vecParts)
 {
-	TRACEFUNC("CBot::HandleData");
-
 	bool bPrefix = *(vecParts[0].begin()) == ':';
 	
 	std::string strPrefix;
@@ -1047,8 +1026,6 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 
 bool CBot::TestAccessLevel(CIrcUser *pUser, int iLevel)
 {
-	TRACEFUNC("CBot::TestAccessLevel");
-
 	if (iLevel < 1 || iLevel > (int)m_vecAccessRules.size())
 	{
 		return false;
@@ -1076,8 +1053,6 @@ bool CBot::TestAccessLevel(CIrcUser *pUser, int iLevel)
 
 CScript *CBot::CreateScript(const char *szFilename)
 {
-	TRACEFUNC("CBot::CreateScript");
-
 	CScript *pScript = new CScript(m_pParentCore);
 	if (!pScript->Load(szFilename))
 	{
@@ -1090,8 +1065,6 @@ CScript *CBot::CreateScript(const char *szFilename)
 
 bool CBot::DeleteScript(CScript *pScript)
 {
-	TRACEFUNC("CBot::DeleteScript");
-
 	if (pScript == NULL)
 	{
 		return false;
@@ -1109,8 +1082,6 @@ CPool<CScript *> *CBot::GetScripts()
 
 void CBot::JoinChannel(const char *szChannel)
 {
-	TRACEFUNC("CBot::JoinChannel");
-
 	CIrcChannel *pChannel = new CIrcChannel(this, szChannel);
 	if (m_bGotMotd)
 	{
@@ -1124,8 +1095,6 @@ void CBot::JoinChannel(const char *szChannel)
 
 bool CBot::LeaveChannel(CIrcChannel *pChannel, const char *szReason)
 {
-	TRACEFUNC("CBot::LeaveChannel");
-
 	bool bFound = false;
 	for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
 	{
@@ -1155,15 +1124,11 @@ bool CBot::LeaveChannel(CIrcChannel *pChannel, const char *szReason)
 
 void CBot::SendMessage(const char *szTarget, const char *szMessage)
 {
-	TRACEFUNC("CBot::SendMessage");
-
 	SendRawFormat("PRIVMSG %s :%s", szTarget, szMessage);
 }
 
 void CBot::SendNotice(const char *szTarget, const char *szMessage)
 {
-	TRACEFUNC("CBot::SendNotice");
-
 	SendRawFormat("NOTICE %s :%s", szTarget, szMessage);
 }
 

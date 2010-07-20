@@ -26,6 +26,7 @@ public:
 
 	void SetName(const char *szName);
 	const char *GetName();
+	CIrcUser *FindUser(const char *szNickname, bool bCaseSensitive = true);
 	bool HasUser(CIrcUser *pUser);
 	void SetTopic(const char *szTopic);
 

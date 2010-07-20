@@ -19,8 +19,6 @@ Purpose:	Core container which manages all bot instances
 
 CCore::CCore()
 {
-	TRACEFUNC("CCore::CCore");
-
 	printf("Initializing kwlbot\n");
 	printf("Version %s\n", VERSION_STRING);
 
@@ -40,15 +38,6 @@ CCore::CCore()
 
 	printf("\n");
 
-	if (cfg.StartValueList("scripts"))
-	{
-		std::string strValue;
-		while (cfg.GetNextValue(&strValue))
-		{
-			CScript *pScript = CreateScript(("scripts/" + strValue).c_str());
-		}
-	}
-
 	ScanDirectoryForBots("bots/");
 
 	m_bRunning = true;
@@ -56,21 +45,11 @@ CCore::CCore()
 
 CCore::~CCore()
 {
-	TRACEFUNC("CCore::~CCore");
-
-	for (CPool<CScript *>::iterator i = m_plScripts.begin(); i != m_plScripts.end(); ++i)
-	{
-		delete *i;
-		if ((i = m_plScripts.erase(i)) == m_plScripts.end())
-		{
-			break;
-		}
-	}
-
 	for (CPool<CBot *>::iterator i = m_plBots.begin(); i != m_plBots.end(); ++i)
 	{
 		delete *i;
-		if ((i = m_plBots.erase(i)) == m_plBots.end())
+		i = m_plBots.erase(i);
+		if (i == m_plBots.end())
 		{
 			break;
 		}
@@ -79,7 +58,8 @@ CCore::~CCore()
 	for (CPool<CGlobalModule *>::iterator i = m_plGlobalModules.begin(); i != m_plGlobalModules.end(); ++i)
 	{
 		delete *i;
-		if ((i = m_plGlobalModules.erase(i)) == m_plGlobalModules.end())
+		i = m_plGlobalModules.erase(i);
+		if (i == m_plGlobalModules.end())
 		{
 			break;
 		}
@@ -88,7 +68,8 @@ CCore::~CCore()
 	for (CPool<CEventManager *>::iterator i = m_plEventManagers.begin(); i != m_plEventManagers.end(); ++i)
 	{
 		//delete *i; /* FIXME */
-		if ((i = m_plEventManagers.erase(i)) == m_plEventManagers.end())
+		i = m_plEventManagers.erase(i);
+		if (i == m_plEventManagers.end())
 		{
 			break;
 		}
@@ -109,8 +90,6 @@ void CCore::Shutdown()
 
 CBot *CCore::CreateBot(CConfig *pConfig)
 {
-	TRACEFUNC("CCore::CreateBot");
-
 	CBot *pBot = new CBot(this, pConfig);
 	m_plBots.push_back(pBot);
 	return pBot;
@@ -118,8 +97,6 @@ CBot *CCore::CreateBot(CConfig *pConfig)
 
 bool CCore::DeleteBot(CBot *pBot)
 {
-	TRACEFUNC("CCore::DeleteBot");
-
 	if (pBot == NULL)
 	{
 		return false;
@@ -130,38 +107,8 @@ bool CCore::DeleteBot(CBot *pBot)
 	return true;
 }
 
-CScript *CCore::CreateScript(const char *szFilename)
-{
-	TRACEFUNC("CCore::CreateScript");
-
-	CScript *pScript = new CScript(this);
-	if (!pScript->Load(szFilename))
-	{
-		return NULL;
-	}
-
-	m_plScripts.push_back(pScript);
-	return pScript;
-}
-
-bool CCore::DeleteScript(CScript *pScript)
-{
-	TRACEFUNC("CCore::DeleteScript");
-
-	if (pScript == NULL)
-	{
-		return false;
-	}
-
-	m_plScripts.remove(pScript);
-	delete pScript;
-	return true;
-}
-
 CGlobalModule *CCore::CreateGlobalModule(const char *szPath)
 {
-	TRACEFUNC("CCore::CreateGlobalModule");
-
 	CGlobalModule *pGlobalModule = new CGlobalModule(this, szPath);
 
 	m_plGlobalModules.push_back(pGlobalModule);
@@ -170,8 +117,6 @@ CGlobalModule *CCore::CreateGlobalModule(const char *szPath)
 
 bool CCore::DeleteGlobalModule(CGlobalModule *pGlobalModule)
 {
-	TRACEFUNC("CCore::DeleteGlobalModule");
-
 	if (pGlobalModule == NULL)
 	{
 		return false;
@@ -187,11 +132,6 @@ CPool<CBot *> *CCore::GetBots()
 	return &m_plBots;
 }
 
-CPool<CScript *> *CCore::GetScripts()
-{
-	return &m_plScripts;
-}
-
 CPool<CGlobalModule *> *CCore::GetGlobalModules()
 {
 	return &m_plGlobalModules;
@@ -199,8 +139,6 @@ CPool<CGlobalModule *> *CCore::GetGlobalModules()
 
 void CCore::Pulse()
 {
-	TRACEFUNC("CCore::Pulse");
-
 	for (CPool<CBot *>::iterator i = m_plBots.begin(); i != m_plBots.end(); ++i)
 	{
 		(*i)->Pulse();
@@ -214,8 +152,6 @@ void CCore::Pulse()
 
 void CCore::ScanDirectoryForBots(const char *szDirectory)
 {
-	TRACEFUNC("CCore::ScanDirectoryForBots");
-
 #ifdef WIN32
 	WIN32_FIND_DATAA fd;
 

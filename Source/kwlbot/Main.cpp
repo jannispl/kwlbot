@@ -39,8 +39,6 @@ BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
 
 int main(int iArgCount, char *szArgs[])
 {
-	TRACEFUNC("main");
-
 	g_pCore = new CCore();
 
 #ifdef WIN32
