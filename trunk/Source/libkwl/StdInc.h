@@ -38,12 +38,8 @@ Purpose:	Precompiled header file
 #include "Pool.h"
 
 #ifdef _DEBUG
-  #include "Debug.h"
-  extern CDebug *g_pDebug;
-  #define TRACEFUNC(func) g_pDebug->SetLastFunction(func)
   #define dbgprintf printf
 #else
-  #define TRACEFUNC(func)
   #define dbgprintf
 #endif
 

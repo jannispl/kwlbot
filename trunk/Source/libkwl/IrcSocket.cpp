@@ -12,23 +12,17 @@ Purpose:	Class which manages a connection to an IRC server
 
 CIrcSocket::CIrcSocket(CBot *pParentBot)
 {
-	TRACEFUNC("CIrcSocket::CIrcSocket");
-
 	m_pParentBot = pParentBot;
 }
 
 CIrcSocket::~CIrcSocket()
 {
-	TRACEFUNC("CIrcSocket::~CIrcSocket");
-
 	SendRawFormat("QUIT :%s", m_pParentBot->GetSettings()->GetQuitMessage());
 	m_TcpSocket.Close();
 }
 
 bool CIrcSocket::Connect(const char *szHostname, int iPort)
 {
-	TRACEFUNC("CIrcSocket::Connect");
-
 	if (!m_TcpSocket.Connect(szHostname, iPort))
 	{
 		return false;
@@ -46,8 +40,6 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort)
 
 int CIrcSocket::SendRaw(const char *szData)
 {
-	TRACEFUNC("CIrcSocket::SendRaw");
-
 	int ret = m_TcpSocket.Write(szData);
 	m_TcpSocket.Write(IRC_EOL, sizeof(IRC_EOL) - 1);
 	return ret;
@@ -55,8 +47,6 @@ int CIrcSocket::SendRaw(const char *szData)
 
 int CIrcSocket::SendRawFormat(const char *szFormat, ...)
 {
-	TRACEFUNC("CIrcSocket::SendRawFormat");
-
 	char szBuffer[IRC_MAX_LEN + 1];
 
 	va_list vaArgs;
@@ -69,15 +59,11 @@ int CIrcSocket::SendRawFormat(const char *szFormat, ...)
 
 int CIrcSocket::ReadRaw(char *pDest, size_t iSize)
 {
-	TRACEFUNC("CIrcSocket::ReadRaw");
-
 	return m_TcpSocket.Read(pDest, iSize);
 }
 
 void CIrcSocket::Pulse()
 {
-	TRACEFUNC("CIrcSocket::Pulse");
-
 	char szBuffer[256];
 	int iSize = ReadRaw(szBuffer, 255);
 	if (iSize == 0)
@@ -126,8 +112,6 @@ void CIrcSocket::Pulse()
 
 void CIrcSocket::HandleData(const char *szData)
 {
-	TRACEFUNC("CIrcSocket::HandleData");
-
 	printf("[in] %s\n", szData);
 
 	std::string strData(szData);
@@ -178,7 +162,5 @@ void CIrcSocket::HandleData(const char *szData)
 
 const char *CIrcSocket::GetCurrentNickname()
 {
-	TRACEFUNC("CIrcSocket::GetCurrentNickname");
-
 	return m_strCurrentNickname.c_str();
 }

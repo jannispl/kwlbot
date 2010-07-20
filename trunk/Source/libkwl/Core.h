@@ -31,14 +31,10 @@ public:
 	CBot *CreateBot(CConfig *pConfig);
 	bool DeleteBot(CBot *pBot);
 
-	CScript *CreateScript(const char *szFilename);
-	bool DeleteScript(CScript *pScript);
-
 	CGlobalModule *CreateGlobalModule(const char *szPath);
 	bool DeleteGlobalModule(CGlobalModule *pGlobalModule);
 
 	CPool<CBot *> *GetBots();
-	CPool<CScript *> *GetScripts();
 	CPool<CGlobalModule *> *GetGlobalModules();
 
 	void Pulse();

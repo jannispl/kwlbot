@@ -22,6 +22,7 @@ class CScriptFunctions
 {
 public:
 	static CScript *m_pCallingScript;
+	static bool m_bAllowInternalConstructions;
 
 	static FuncReturn Print(const Arguments &args);
 	static FuncReturn AddEventHandler(const Arguments &args);
@@ -47,6 +48,7 @@ public:
 	static FuncReturn IrcUser__GetModeOnChannel(const Arguments &args);
 
 	static FuncReturn IrcChannel__GetName(const Arguments &args);
+	static FuncReturn IrcChannel__FindUser(const Arguments &args);
 	static FuncReturn IrcChannel__HasUser(const Arguments &args);
 	static FuncReturn IrcChannel__SetTopic(const Arguments &args);
 	static FuncReturn IrcChannel__SendMessage(const Arguments &args);
@@ -58,6 +60,8 @@ public:
 	static FuncReturn ScriptModule__GetProcedure(const Arguments &args);
 
 	static FuncReturn ScriptModuleProcedure__Call(const Arguments &args);
+
+	static FuncReturn InternalConstructor(const Arguments &args);
 };
 
 #endif

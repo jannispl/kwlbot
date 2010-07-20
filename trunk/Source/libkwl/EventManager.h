@@ -21,9 +21,6 @@ class CEventManager;
 class CEventManager
 {
 public:
-	//CEventManager(CCore *pParentCore);
-	//~CEventManager();
-
 	virtual void OnBotCreated(CBot *pBot) = 0;
 	virtual void OnBotDestroyed(CBot *pBot) = 0;
 	virtual void OnBotConnected(CBot *pBot) = 0;
@@ -37,9 +34,6 @@ public:
 	virtual void OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szMessage) = 0;
 	virtual void OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szModes, const char *szParams) = 0;
 	virtual void OnBotReceivedRaw(CBot *pBot, const char *szRaw) = 0;
-
-//private:
-//	CCore *m_pParentCore;
 };
 
 #endif

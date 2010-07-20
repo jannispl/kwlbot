@@ -21,30 +21,18 @@ CScriptEventManager::~CScriptEventManager()
 
 void CScriptEventManager::OnBotCreated(CBot *pBot)
 {
-	TRACEFUNC("CScriptEventManager::OnBotCreated");
-
 	v8::HandleScope handleScope;
-
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Handle<v8::Value> argValues[1] = { bot };
-		(*i)->CallEvent("onBotCreated", 1, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
 		(*i)->EnterContext();
 
 		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
+
+		CScriptFunctions::m_bAllowInternalConstructions = true;
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
+		CScriptFunctions::m_bAllowInternalConstructions = false;
+
 		bot->SetInternalField(0, v8::External::New(pBot));
 
 		v8::Handle<v8::Value> argValues[1] = { bot };
@@ -56,29 +44,18 @@ void CScriptEventManager::OnBotCreated(CBot *pBot)
 
 void CScriptEventManager::OnBotDestroyed(CBot *pBot)
 {
-	TRACEFUNC("CScriptEventManager::OnBotDestroyed");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Handle<v8::Value> argValues[1] = { bot };
-		(*i)->CallEvent("onBotDestroyed", 1, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
 		(*i)->EnterContext();
 
 		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
+
+		CScriptFunctions::m_bAllowInternalConstructions = true;
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
+		CScriptFunctions::m_bAllowInternalConstructions = false;
+
 		bot->SetInternalField(0, v8::External::New(pBot));
 
 		v8::Handle<v8::Value> argValues[1] = { bot };
@@ -90,29 +67,18 @@ void CScriptEventManager::OnBotDestroyed(CBot *pBot)
 
 void CScriptEventManager::OnBotConnected(CBot *pBot)
 {
-	TRACEFUNC("CScriptEventManager::OnBotConnected");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Handle<v8::Value> argValues[1] = { bot };
-		(*i)->CallEvent("onBotConnected", 1, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
 		(*i)->EnterContext();
 
 		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
+
+		CScriptFunctions::m_bAllowInternalConstructions = true;
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
+		CScriptFunctions::m_bAllowInternalConstructions = false;
+
 		bot->SetInternalField(0, v8::External::New(pBot));
 
 		v8::Handle<v8::Value> argValues[1] = { bot };
@@ -124,27 +90,7 @@ void CScriptEventManager::OnBotConnected(CBot *pBot)
 
 void CScriptEventManager::OnBotJoinedChannel(CBot *pBot, CIrcChannel *pChannel)
 {
-	TRACEFUNC("CScriptEventManager::OnBotJoinedChannel");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
-
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Local<v8::Object> channel = ctor2->NewInstance();
-		channel->SetInternalField(0, v8::External::New(pChannel));
-
-		v8::Handle<v8::Value> argValues[2] = { bot, channel };
-		(*i)->CallEvent("onBotJoinedChannel", 2, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
@@ -153,11 +99,15 @@ void CScriptEventManager::OnBotJoinedChannel(CBot *pBot, CIrcChannel *pChannel)
 		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
 		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
 
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
 		bot->SetInternalField(0, v8::External::New(pBot));
 
 		v8::Local<v8::Object> channel = ctor2->NewInstance();
 		channel->SetInternalField(0, v8::External::New(pChannel));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
 
 		v8::Handle<v8::Value> argValues[2] = { bot, channel };
 		(*i)->CallEvent("onBotJoinedChannel", 2, argValues);
@@ -168,31 +118,7 @@ void CScriptEventManager::OnBotJoinedChannel(CBot *pBot, CIrcChannel *pChannel)
 
 void CScriptEventManager::OnUserJoinedChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel)
 {
-	TRACEFUNC("CScriptEventManager::OnUserJoinedChannel");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-		v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
-
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Local<v8::Object> user = ctor2->NewInstance();
-		user->SetInternalField(0, v8::External::New(pUser));
-
-		v8::Local<v8::Object> channel = ctor3->NewInstance();
-		channel->SetInternalField(0, v8::External::New(pChannel));
-
-		v8::Handle<v8::Value> argValues[3] = { bot, user, channel };
-		(*i)->CallEvent("onUserJoinedChannel", 3, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
@@ -202,6 +128,8 @@ void CScriptEventManager::OnUserJoinedChannel(CBot *pBot, CIrcUser *pUser, CIrcC
 		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
 		v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
 
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
 		bot->SetInternalField(0, v8::External::New(pBot));
 
@@ -210,6 +138,8 @@ void CScriptEventManager::OnUserJoinedChannel(CBot *pBot, CIrcUser *pUser, CIrcC
 
 		v8::Local<v8::Object> channel = ctor3->NewInstance();
 		channel->SetInternalField(0, v8::External::New(pChannel));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
 
 		v8::Handle<v8::Value> argValues[3] = { bot, user, channel };
 		(*i)->CallEvent("onUserJoinedChannel", 3, argValues);
@@ -220,31 +150,7 @@ void CScriptEventManager::OnUserJoinedChannel(CBot *pBot, CIrcUser *pUser, CIrcC
 
 void CScriptEventManager::OnUserLeftChannel(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szReason)
 {
-	TRACEFUNC("CScriptEventManager::OnUserLeftChannel");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-		v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
-
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Local<v8::Object> user = ctor2->NewInstance();
-		user->SetInternalField(0, v8::External::New(pUser));
-
-		v8::Local<v8::Object> channel = ctor3->NewInstance();
-		channel->SetInternalField(0, v8::External::New(pChannel));
-
-		v8::Handle<v8::Value> argValues[4] = { bot, user, channel, v8::String::New(szReason) };
-		(*i)->CallEvent("onUserLeftChannel", 4, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
@@ -254,6 +160,8 @@ void CScriptEventManager::OnUserLeftChannel(CBot *pBot, CIrcUser *pUser, CIrcCha
 		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
 		v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
 
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
 		bot->SetInternalField(0, v8::External::New(pBot));
 
@@ -262,6 +170,8 @@ void CScriptEventManager::OnUserLeftChannel(CBot *pBot, CIrcUser *pUser, CIrcCha
 
 		v8::Local<v8::Object> channel = ctor3->NewInstance();
 		channel->SetInternalField(0, v8::External::New(pChannel));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
 
 		v8::Handle<v8::Value> argValues[4] = { bot, user, channel, v8::String::New(szReason) };
 		(*i)->CallEvent("onUserLeftChannel", 4, argValues);
@@ -272,34 +182,7 @@ void CScriptEventManager::OnUserLeftChannel(CBot *pBot, CIrcUser *pUser, CIrcCha
 
 void CScriptEventManager::OnUserKickedUser(CBot *pBot, CIrcUser *pUser, CIrcUser *pVictim, CIrcChannel *pChannel, const char *szReason)
 {
-	TRACEFUNC("CScriptEventManager::OnUserKickedUser");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-		v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
-
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Local<v8::Object> user = ctor2->NewInstance();
-		user->SetInternalField(0, v8::External::New(pUser));
-
-		v8::Local<v8::Object> victim = ctor2->NewInstance();
-		victim->SetInternalField(0, v8::External::New(pVictim));
-
-		v8::Local<v8::Object> channel = ctor3->NewInstance();
-		channel->SetInternalField(0, v8::External::New(pChannel));
-
-		v8::Handle<v8::Value> argValues[5] = { bot, user, victim, channel, v8::String::New(szReason) };
-		(*i)->CallEvent("onUserKickedUser", 5, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
@@ -309,6 +192,8 @@ void CScriptEventManager::OnUserKickedUser(CBot *pBot, CIrcUser *pUser, CIrcUser
 		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
 		v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
 
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
 		bot->SetInternalField(0, v8::External::New(pBot));
 
@@ -320,6 +205,8 @@ void CScriptEventManager::OnUserKickedUser(CBot *pBot, CIrcUser *pUser, CIrcUser
 
 		v8::Local<v8::Object> channel = ctor3->NewInstance();
 		channel->SetInternalField(0, v8::External::New(pChannel));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
 
 		v8::Handle<v8::Value> argValues[5] = { bot, user, victim, channel, v8::String::New(szReason) };
 		(*i)->CallEvent("onUserKickedUser", 5, argValues);
@@ -330,27 +217,7 @@ void CScriptEventManager::OnUserKickedUser(CBot *pBot, CIrcUser *pUser, CIrcUser
 
 void CScriptEventManager::OnUserQuit(CBot *pBot, CIrcUser *pUser, const char *szReason)
 {
-	TRACEFUNC("CScriptEventManager::OnUserQuit");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Local<v8::Object> user = ctor2->NewInstance();
-		user->SetInternalField(0, v8::External::New(pUser));
-
-		v8::Handle<v8::Value> argValues[3] = { bot, user, v8::String::New(szReason) };
-		(*i)->CallEvent("onUserQuit", 3, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
@@ -359,11 +226,15 @@ void CScriptEventManager::OnUserQuit(CBot *pBot, CIrcUser *pUser, const char *sz
 		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
 		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
 
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
 		bot->SetInternalField(0, v8::External::New(pBot));
 
 		v8::Local<v8::Object> user = ctor2->NewInstance();
 		user->SetInternalField(0, v8::External::New(pUser));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
 
 		v8::Handle<v8::Value> argValues[3] = { bot, user, v8::String::New(szReason) };
 		(*i)->CallEvent("onUserQuit", 3, argValues);
@@ -374,27 +245,7 @@ void CScriptEventManager::OnUserQuit(CBot *pBot, CIrcUser *pUser, const char *sz
 
 void CScriptEventManager::OnUserChangedNickname(CBot *pBot, CIrcUser *pUser, const char *szOldNickname)
 {
-	TRACEFUNC("CScriptEventManager::OnUserChangedNickname");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Local<v8::Object> user = ctor2->NewInstance();
-		user->SetInternalField(0, v8::External::New(pUser));
-
-		v8::Handle<v8::Value> argValues[3] = { bot, user, v8::String::New(szOldNickname) };
-		(*i)->CallEvent("onUserChangedNickname", 3, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
@@ -403,11 +254,15 @@ void CScriptEventManager::OnUserChangedNickname(CBot *pBot, CIrcUser *pUser, con
 		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
 		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
 
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
 		bot->SetInternalField(0, v8::External::New(pBot));
 
 		v8::Local<v8::Object> user = ctor2->NewInstance();
 		user->SetInternalField(0, v8::External::New(pUser));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
 
 		v8::Handle<v8::Value> argValues[3] = { bot, user, v8::String::New(szOldNickname) };
 		(*i)->CallEvent("onUserChangedNickname", 3, argValues);
@@ -418,27 +273,7 @@ void CScriptEventManager::OnUserChangedNickname(CBot *pBot, CIrcUser *pUser, con
 
 void CScriptEventManager::OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, const char *szMessage)
 {
-	TRACEFUNC("CScriptEventManager::OnUserPrivateMessage");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Local<v8::Object> user = ctor2->NewInstance();
-		user->SetInternalField(0, v8::External::New(pUser));
-
-		v8::Handle<v8::Value> argValues[3] = { bot, user, v8::String::New(szMessage) };
-		(*i)->CallEvent("onUserPrivateMessage", 3, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
@@ -447,11 +282,15 @@ void CScriptEventManager::OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, cons
 		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
 		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
 
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
 		bot->SetInternalField(0, v8::External::New(pBot));
 
 		v8::Local<v8::Object> user = ctor2->NewInstance();
 		user->SetInternalField(0, v8::External::New(pUser));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
 
 		v8::Handle<v8::Value> argValues[3] = { bot, user, v8::String::New(szMessage) };
 		(*i)->CallEvent("onUserPrivateMessage", 3, argValues);
@@ -462,31 +301,7 @@ void CScriptEventManager::OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, cons
 
 void CScriptEventManager::OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szMessage)
 {
-	TRACEFUNC("CScriptEventManager::OnUserChannelMessage");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-		v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
-
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Local<v8::Object> user = ctor2->NewInstance();
-		user->SetInternalField(0, v8::External::New(pUser));
-
-		v8::Local<v8::Object> channel = ctor3->NewInstance();
-		channel->SetInternalField(0, v8::External::New(pChannel));
-
-		v8::Handle<v8::Value> argValues[4] = { bot, user, channel, v8::String::New(szMessage) };
-		(*i)->CallEvent("onUserChannelMessage", 4, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
@@ -496,6 +311,8 @@ void CScriptEventManager::OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrc
 		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
 		v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
 
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
 		bot->SetInternalField(0, v8::External::New(pBot));
 
@@ -504,6 +321,8 @@ void CScriptEventManager::OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrc
 
 		v8::Local<v8::Object> channel = ctor3->NewInstance();
 		channel->SetInternalField(0, v8::External::New(pChannel));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
 
 		v8::Handle<v8::Value> argValues[4] = { bot, user, channel, v8::String::New(szMessage) };
 		(*i)->CallEvent("onUserChannelMessage", 4, argValues);
@@ -514,31 +333,7 @@ void CScriptEventManager::OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrc
 
 void CScriptEventManager::OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szModes, const char *szParams)
 {
-	TRACEFUNC("CScriptEventManager::OnUserSetChannelModes");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-		v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
-
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Local<v8::Object> user = ctor2->NewInstance();
-		user->SetInternalField(0, v8::External::New(pUser));
-
-		v8::Local<v8::Object> channel = ctor3->NewInstance();
-		channel->SetInternalField(0, v8::External::New(pChannel));
-
-		v8::Handle<v8::Value> argValues[5] = { bot, user, channel, v8::String::New(szModes), v8::String::New(szParams) };
-		(*i)->CallEvent("onUserSetChannelModes", 5, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
@@ -548,6 +343,8 @@ void CScriptEventManager::OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIr
 		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcUser->GetFunction();
 		v8::Local<v8::Function> ctor3 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
 
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
 		bot->SetInternalField(0, v8::External::New(pBot));
 
@@ -556,6 +353,8 @@ void CScriptEventManager::OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIr
 
 		v8::Local<v8::Object> channel = ctor3->NewInstance();
 		channel->SetInternalField(0, v8::External::New(pChannel));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
 
 		v8::Handle<v8::Value> argValues[5] = { bot, user, channel, v8::String::New(szModes), v8::String::New(szParams) };
 		(*i)->CallEvent("onUserSetChannelModes", 5, argValues);
@@ -566,23 +365,7 @@ void CScriptEventManager::OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIr
 
 void CScriptEventManager::OnBotReceivedRaw(CBot *pBot, const char *szRaw)
 {
-	TRACEFUNC("CScriptEventManager::OnBotReceivedRaw");
-
 	v8::HandleScope handleScope;
-	for (CPool<CScript *>::iterator i = m_pParentCore->GetScripts()->begin(); i != m_pParentCore->GetScripts()->end(); ++i)
-	{
-		(*i)->EnterContext();
-
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
-
-		v8::Local<v8::Object> bot = ctor1->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		v8::Handle<v8::Value> argValues[2] = { bot, v8::String::New(szRaw) };
-		(*i)->CallEvent("onBotReceivedRaw", 2, argValues);
-
-		(*i)->ExitContext();
-	}
 
 	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
 	{
@@ -590,8 +373,12 @@ void CScriptEventManager::OnBotReceivedRaw(CBot *pBot, const char *szRaw)
 
 		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.Bot->GetFunction();
 
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
 		v8::Local<v8::Object> bot = ctor1->NewInstance();
 		bot->SetInternalField(0, v8::External::New(pBot));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
 
 		v8::Handle<v8::Value> argValues[2] = { bot, v8::String::New(szRaw) };
 		(*i)->CallEvent("onBotReceivedRaw", 2, argValues);
