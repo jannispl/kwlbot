@@ -147,7 +147,9 @@ CIrcSocket *CBot::GetSocket()
 
 int CBot::SendRaw(const char *szData)
 {
+#ifdef _DEBUG
 	printf("[out] %s\n", szData);
+#endif
 	return m_pIrcSocket->SendRaw(szData);
 }
 
@@ -1054,7 +1056,7 @@ bool CBot::TestAccessLevel(CIrcUser *pUser, int iLevel)
 CScript *CBot::CreateScript(const char *szFilename)
 {
 	CScript *pScript = new CScript(m_pParentCore);
-	if (!pScript->Load(szFilename))
+	if (!pScript->Load(this, szFilename))
 	{
 		return NULL;
 	}

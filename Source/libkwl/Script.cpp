@@ -23,7 +23,7 @@ CScript::~CScript()
 {
 }
 
-bool CScript::Load(const char *szFilename)
+bool CScript::Load(CBot *pBot, const char *szFilename)
 {
 	if (m_bLoaded)
 	{
@@ -110,6 +110,14 @@ bool CScript::Load(const char *szFilename)
 	m_ScriptContext = v8::Context::New(NULL, m_GlobalTemplate);
 
 	v8::Context::Scope contextScope(m_ScriptContext);
+
+	// create the bot object
+	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.Bot->GetFunction();
+	CScriptFunctions::m_bAllowInternalConstructions = true;
+	v8::Local<v8::Object> bot = ctor->NewInstance();
+	CScriptFunctions::m_bAllowInternalConstructions = false;
+	bot->SetInternalField(0, v8::External::New(pBot));
+	m_ScriptContext->Global()->Set(v8::String::New("bot"), bot);
 
 	v8::Handle<v8::String> strFilename = v8::String::New(szFilename);
 

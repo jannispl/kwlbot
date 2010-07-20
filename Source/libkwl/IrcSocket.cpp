@@ -112,7 +112,9 @@ void CIrcSocket::Pulse()
 
 void CIrcSocket::HandleData(const char *szData)
 {
+#ifdef _DEBUG
 	printf("[in] %s\n", szData);
+#endif
 
 	std::string strData(szData);
 
