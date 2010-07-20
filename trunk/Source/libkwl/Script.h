@@ -26,7 +26,7 @@ public:
 	CScript(CCore *pParentCore);
 	~CScript();
 
-	bool Load(const char *szFilename);
+	bool Load(CBot *pBot, const char *szFilename);
 	bool CallEvent(const char *szEventName, int iArgCount = 0, v8::Handle<v8::Value> *pArgValues = NULL);
 
 	void ReportException(v8::TryCatch *pTryCatch);
