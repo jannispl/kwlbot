@@ -30,6 +30,8 @@ Purpose:	Precompiled header file
 #else
   #include <unistd.h>
   #include <string.h>
+
+  #define stricmp strcasecmp
 #endif
 
 #include <stdarg.h>
