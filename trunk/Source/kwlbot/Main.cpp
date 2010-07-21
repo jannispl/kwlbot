@@ -14,6 +14,7 @@ CCore *g_pCore = NULL;
 
 #ifndef WIN32
 #define Sleep(ms) usleep(ms * 1000)
+#include <signal.h>
 #endif
 
 #ifdef WIN32
@@ -35,6 +36,24 @@ BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
 
 	return TRUE;
 }
+#else
+void CtrlHandler(int)
+{
+	if (g_pCore == NULL)
+	{
+		return;
+	}
+
+	g_pCore->Shutdown();
+	delete g_pCore;
+
+	puts("\n");
+	_exit(0);
+	while (true)
+	{
+		Sleep(20);
+	}
+}
 #endif
 
 int main(int iArgCount, char *szArgs[])
@@ -43,6 +62,8 @@ int main(int iArgCount, char *szArgs[])
 
 #ifdef WIN32
 	SetConsoleCtrlHandler(CtrlHandler, TRUE);
+#else
+	signal(SIGINT, CtrlHandler);
 #endif
 
 	while (true)
