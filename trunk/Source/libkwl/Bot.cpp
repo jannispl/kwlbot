@@ -578,7 +578,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 						}
 
 						dbgprintf("Removing %s from %s.\n", pVictim->GetNickname(), pChannel->GetName());
-						pUser->m_plIrcChannels.remove(pChannel);
+						pVictim->m_plIrcChannels.remove(pChannel);
 						pChannel->m_plIrcUsers.remove(pVictim);
 						if (pVictim->m_plIrcChannels.size() == 0)
 						{
