@@ -14,8 +14,8 @@ Purpose:	Class which represents a script
 v8::Persistent<v8::ObjectTemplate> CScript::m_GlobalTemplate;
 CScript::ClassTemplates_t CScript::m_ClassTemplates;
 
-CScript::CScript(CCore *pParentCore)
-	: m_pParentCore(pParentCore), m_bLoaded(false), m_bCurrentEventCancelled(false), m_bCallingEvent(false)
+CScript::CScript(CBot *pParentBot)
+	: m_pParentBot(pParentBot), m_bLoaded(false), m_bCurrentEventCancelled(false), m_bCallingEvent(false)
 {
 }
 
@@ -23,7 +23,7 @@ CScript::~CScript()
 {
 }
 
-bool CScript::Load(CBot *pBot, const char *szFilename)
+bool CScript::Load(CCore *pCore, const char *szFilename)
 {
 	if (m_bLoaded)
 	{
@@ -87,36 +87,39 @@ bool CScript::Load(CBot *pBot, const char *szFilename)
 		v8::Handle<v8::ObjectTemplate> scriptModuleProcedureProto = m_ClassTemplates.ScriptModuleProcedure->PrototypeTemplate();
 		scriptModuleProcedureProto->Set(v8::String::New("call"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModuleProcedure__Call));
 
-		// global
+		// Global
 		m_GlobalTemplate = v8::Persistent<v8::ObjectTemplate>::New(v8::ObjectTemplate::New());
 		m_GlobalTemplate->Set(v8::String::New("print"), v8::FunctionTemplate::New(CScriptFunctions::Print));
 		m_GlobalTemplate->Set(v8::String::New("addEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::AddEventHandler));
 		m_GlobalTemplate->Set(v8::String::New("removeEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::RemoveEventHandler));
+		m_GlobalTemplate->Set(v8::String::New("getEventHandlers"), v8::FunctionTemplate::New(CScriptFunctions::GetEventHandlers));
 		m_GlobalTemplate->Set(v8::String::New("cancelEvent"), v8::FunctionTemplate::New(CScriptFunctions::CancelEvent));
+
+		m_GlobalTemplate->SetAccessor(v8::String::New("memusage"), CScriptFunctions::getterMemoryUsage);
 
 		m_GlobalTemplate->Set(v8::String::New("Bot"), m_ClassTemplates.Bot);
 		m_GlobalTemplate->Set(v8::String::New("IrcUser"), m_ClassTemplates.IrcUser);
 		m_GlobalTemplate->Set(v8::String::New("IrcChannel"), m_ClassTemplates.IrcChannel);
 		m_GlobalTemplate->Set(v8::String::New("ScriptModule"), m_ClassTemplates.ScriptModule);
 
-		// Ask the global modules if they have something
-		for (CPool<CGlobalModule *>::iterator i = m_pParentCore->GetGlobalModules()->begin(); i != m_pParentCore->GetGlobalModules()->end(); ++i)
+		// Ask the global modules if they have anything
+		for (CPool<CGlobalModule *>::iterator i = pCore->GetGlobalModules()->begin(); i != pCore->GetGlobalModules()->end(); ++i)
 		{
 			(*i)->TemplateRequest(m_GlobalTemplate);
 		}
 	}
 
-	// create a new context
+	// Create a new context
 	m_ScriptContext = v8::Context::New(NULL, m_GlobalTemplate);
 
 	v8::Context::Scope contextScope(m_ScriptContext);
 
-	// create the bot object
+	// Create the bot object
 	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.Bot->GetFunction();
 	CScriptFunctions::m_bAllowInternalConstructions = true;
 	v8::Local<v8::Object> bot = ctor->NewInstance();
 	CScriptFunctions::m_bAllowInternalConstructions = false;
-	bot->SetInternalField(0, v8::External::New(pBot));
+	bot->SetInternalField(0, v8::External::New(m_pParentBot));
 	m_ScriptContext->Global()->Set(v8::String::New("bot"), bot);
 
 	v8::Handle<v8::String> strFilename = v8::String::New(szFilename);

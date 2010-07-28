@@ -27,7 +27,10 @@ public:
 	static FuncReturn Print(const Arguments &args);
 	static FuncReturn AddEventHandler(const Arguments &args);
 	static FuncReturn RemoveEventHandler(const Arguments &args);
+	static FuncReturn GetEventHandlers(const Arguments &args);
 	static FuncReturn CancelEvent(const Arguments &args);
+
+	static FuncReturn getterMemoryUsage(v8::Local<v8::String> strProperty, const v8::AccessorInfo& accessorInfo);
 
 	static FuncReturn Bot__GetNickname(const Arguments &args);
 	static FuncReturn Bot__SendRaw(const Arguments &args);

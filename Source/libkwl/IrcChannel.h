@@ -37,7 +37,9 @@ public:
 #ifdef WIN32
 	template class DLLEXPORT CPool<CIrcUser *>;
 #endif
+
 	CPool<CIrcUser *> m_plIrcUsers;
+	bool m_bHasDetailedUsers;
 
 private:
 	CBot *m_pParentBot;
