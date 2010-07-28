@@ -23,10 +23,10 @@ class DLLEXPORT CScript
 	friend class CScriptFunctions;
 
 public:
-	CScript(CCore *pParentCore);
+	CScript(CBot *pParentBot);
 	~CScript();
 
-	bool Load(CBot *pBot, const char *szFilename);
+	bool Load(CCore *pCore, const char *szFilename);
 	bool CallEvent(const char *szEventName, int iArgCount = 0, v8::Handle<v8::Value> *pArgValues = NULL);
 
 	void ReportException(v8::TryCatch *pTryCatch);
@@ -49,7 +49,7 @@ public:
 	bool m_bCurrentEventCancelled;
 
 private:
-	CCore *m_pParentCore;
+	CBot *m_pParentBot;
 
 	bool m_bLoaded;
 

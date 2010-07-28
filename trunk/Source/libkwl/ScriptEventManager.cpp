@@ -303,6 +303,30 @@ void CScriptEventManager::OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIr
 	}
 }
 
+void CScriptEventManager::OnBotGotChannelUserList(CBot *pBot, CIrcChannel *pChannel)
+{
+	v8::HandleScope handleScope;
+
+	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
+	{
+		(*i)->EnterContext();
+
+		v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.IrcChannel->GetFunction();
+
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
+		v8::Local<v8::Object> channel = ctor->NewInstance();
+		channel->SetInternalField(0, v8::External::New(pChannel));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
+
+		v8::Handle<v8::Value> argValues[1] = { channel };
+		(*i)->CallEvent("onBotGotChannelUserList", 1, argValues);
+
+		(*i)->ExitContext();
+	}
+}
+
 void CScriptEventManager::OnBotReceivedRaw(CBot *pBot, const char *szRaw)
 {
 	v8::HandleScope handleScope;

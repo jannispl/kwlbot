@@ -33,6 +33,7 @@ public:
 	virtual void OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, const char *szMessage) = 0;
 	virtual void OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szMessage) = 0;
 	virtual void OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szModes, const char *szParams) = 0;
+	virtual void OnBotGotChannelUserList(CBot *pBot, CIrcChannel *pChannel) = 0;
 	virtual void OnBotReceivedRaw(CBot *pBot, const char *szRaw) = 0;
 };
 

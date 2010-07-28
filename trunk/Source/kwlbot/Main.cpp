@@ -31,7 +31,7 @@ BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
 	ExitProcess(0);
 	while (true)
 	{
-		Sleep(20);
+		Sleep(SLEEP_MS);
 	}
 
 	return TRUE;

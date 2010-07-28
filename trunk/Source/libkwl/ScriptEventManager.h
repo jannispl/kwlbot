@@ -33,6 +33,7 @@ public:
 	void OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, const char *szMessage);
 	void OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szMessage);
 	void OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szModes, const char *szParams);
+	void OnBotGotChannelUserList(CBot *pBot, CIrcChannel *pChannel);
 	void OnBotReceivedRaw(CBot *pBot, const char *szRaw);
 
 private:

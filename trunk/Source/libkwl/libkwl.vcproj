@@ -135,7 +135,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib winmm.lib .\v8\v8.lib"
+				AdditionalDependencies="ws2_32.lib winmm.lib psapi.lib .\v8\v8.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="false"
 				SubSystem="2"
@@ -310,14 +310,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\Debug.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\Debug.h"
-			>
-		</File>
 		<File
 			RelativePath=".\Definitions.h"
 			>

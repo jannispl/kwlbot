@@ -72,6 +72,7 @@ private:
 
 	CPool<CIrcChannel *> m_plIrcChannels;
 	CPool<CIrcChannel *> *m_pIrcChannelQueue;
+	CPool<CIrcChannel *> m_plIncompleteChannels;
 
 	CPool<CIrcUser *> m_plGlobalUsers;
 	CPool<CScript *> m_plScripts;

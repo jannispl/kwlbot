@@ -40,9 +40,21 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort)
 
 int CIrcSocket::SendRaw(const char *szData)
 {
-	int ret = m_TcpSocket.Write(szData);
-	m_TcpSocket.Write(IRC_EOL, sizeof(IRC_EOL) - 1);
-	return ret;
+	int iRet;
+	do
+	{
+		iRet = m_TcpSocket.Write(szData);
+	}
+	while (iRet == -1);
+
+	int iRet2;
+	do
+	{
+		iRet2 = m_TcpSocket.Write(IRC_EOL, sizeof(IRC_EOL) - 1);
+	}
+	while (iRet2 == -1);
+
+	return iRet + iRet2;
 }
 
 int CIrcSocket::SendRawFormat(const char *szFormat, ...)
@@ -68,7 +80,7 @@ void CIrcSocket::Pulse()
 	int iSize = ReadRaw(szBuffer, 255);
 	if (iSize == 0)
 	{
-		// connection closed
+		// Connection closed
 		printf("[%s] Connection closed\n", m_pParentBot->GetSettings()->GetNickname());
 	}
 	else if (iSize != -1)
@@ -116,6 +128,8 @@ void CIrcSocket::HandleData(const char *szData)
 	printf("[in] %s\n", szData);
 #endif
 
+	// TODO: Parse prefix/command/params better
+
 	std::string strData(szData);
 
 	std::string::size_type iLastPos = strData.find_first_not_of(' ', 0);
@@ -142,7 +156,6 @@ void CIrcSocket::HandleData(const char *szData)
 
 	m_pParentBot->HandleData(vecParts);
 
-	m_pParentBot->GetParentCore()->GetScriptEventManager()->OnBotReceivedRaw(m_pParentBot, szData);
 	for (CPool<CEventManager *>::iterator i = m_pParentBot->GetParentCore()->GetEventManagers()->begin(); i != m_pParentBot->GetParentCore()->GetEventManagers()->end(); ++i)
 	{
 		(*i)->OnBotReceivedRaw(m_pParentBot, szData);
