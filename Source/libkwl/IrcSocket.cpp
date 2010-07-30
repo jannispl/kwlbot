@@ -132,55 +132,62 @@ void CIrcSocket::HandleData(const char *szData)
 
 	std::string strData(szData);
 
-	std::string::size_type iSeparator = strData.find(' ');
-	if (iSeparator == std::string::npos)
-	{
-		// TODO: Support messages without a space
-		return;
-	}
-
 	std::string strOrigin;
 	std::string strCommand;
 	std::string strParams;
+	std::vector<std::string> vecParams;
 
-	if (bPrefix)
+	std::string::size_type iSeparator = strData.find(' ');
+	if (iSeparator == std::string::npos)
 	{
-		strData = strData.substr(1);
-		--iSeparator;
-
-		strOrigin = strData.substr(0, iSeparator);
-		strCommand = strData.substr(iSeparator + 1);
-		if ((iSeparator = strCommand.find(' ')) == std::string::npos)
+		if (bPrefix)
 		{
+			// There is no space in the message, and the messages starts with ':' and thus only consists of an origin.
+			// We reject messages without any command.
 			return;
 		}
-		strCommand = strCommand.substr(0, iSeparator);
-		strParams = strData.substr(strOrigin.length() + strCommand.length() + 2);
+
+		strCommand = strData;
 	}
 	else
 	{
-		strCommand = strData.substr(0, iSeparator);
-		strParams = strData.substr(iSeparator + 1);
-	}
-
-	std::string::size_type iLastPos = strParams.find_first_not_of(' ', 0);
-	std::string::size_type iPos = strParams.find_first_of(' ', iLastPos);
-	std::vector<std::string> vecParams;
-	while (iPos != std::string::npos || iLastPos != std::string::npos)
-	{
-		if (strParams[iLastPos != std::string::npos ? iLastPos : 0] == ':')
+		if (bPrefix)
 		{
-			vecParams.push_back(strParams.substr(iLastPos + 1));
+			strData = strData.substr(1);
+			--iSeparator;
+
+			strOrigin = strData.substr(0, iSeparator);
+			strCommand = strData.substr(iSeparator + 1);
+			if ((iSeparator = strCommand.find(' ')) != std::string::npos)
+			{
+				strCommand = strCommand.substr(0, iSeparator);
+				strParams = strData.substr(strOrigin.length() + strCommand.length() + 2);
+			}
+		}
+		else
+		{
+			strCommand = strData.substr(0, iSeparator);
+			strParams = strData.substr(iSeparator + 1);
+		}
+
+		std::string::size_type iLastPos = strParams.find_first_not_of(' ', 0);
+		std::string::size_type iPos = strParams.find_first_of(' ', iLastPos);
+		while (iPos != std::string::npos || iLastPos != std::string::npos)
+		{
+			if (strParams[iLastPos != std::string::npos ? iLastPos : 0] == ':')
+			{
+				vecParams.push_back(strParams.substr(iLastPos + 1));
+
+				iLastPos = strParams.find_first_not_of(' ', iPos);
+				iPos = strParams.find_first_of(' ', iLastPos);
+				break;
+			}
+
+			vecParams.push_back(strParams.substr(iLastPos, iPos - iLastPos));
 
 			iLastPos = strParams.find_first_not_of(' ', iPos);
 			iPos = strParams.find_first_of(' ', iLastPos);
-			break;
 		}
-
-		vecParams.push_back(strParams.substr(iLastPos, iPos - iLastPos));
-
-		iLastPos = strParams.find_first_not_of(' ', iPos);
-		iPos = strParams.find_first_of(' ', iLastPos);
 	}
 
 	m_pParentBot->HandleData(strOrigin, strCommand, vecParams);
