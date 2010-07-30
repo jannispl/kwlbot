@@ -24,7 +24,7 @@ public:
 	CIrcSocket(CBot *pParentBot);
 	~CIrcSocket();
 
-	bool Connect(const char *szHostname, int iPort = 6667);
+	bool Connect(const char *szHostname, int iPort = 6667, const char *szPassword = NULL);
 
 	int SendRaw(const char *szData);
 	int SendRawFormat(const char *szFormat, ...);

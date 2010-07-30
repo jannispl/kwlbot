@@ -21,7 +21,7 @@ CIrcSocket::~CIrcSocket()
 	m_TcpSocket.Close();
 }
 
-bool CIrcSocket::Connect(const char *szHostname, int iPort)
+bool CIrcSocket::Connect(const char *szHostname, int iPort, const char *szPassword)
 {
 	if (!m_TcpSocket.Connect(szHostname, iPort))
 	{
@@ -31,6 +31,10 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort)
 	m_TcpSocket.SetBlocking(false);
 
 	CIrcSettings *pSettings = m_pParentBot->GetSettings();
+	if (szPassword != NULL && szPassword[0] != '\0')
+	{
+		SendRawFormat("PASS %s", szPassword);
+	}
 	SendRawFormat("NICK %s", pSettings->GetNickname());
 	SendRawFormat("USER %s \"\" \"%s\" :%s", pSettings->GetIdent(), szHostname, pSettings->GetRealname());
 	m_strCurrentNickname = pSettings->GetNickname();

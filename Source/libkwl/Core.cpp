@@ -180,14 +180,17 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 				std::string strTemp;
 				if (Config.GetSingleValue("server", &strTemp))
 				{
+					std::string strPassword;
+					Config.GetSingleValue("password", &strPassword); // strPassword will remain empty if there is no such config entry
+
 					std::string::size_type iPortSep = strTemp.find(':');
 					if (iPortSep == std::string::npos)
 					{
-						pBot->GetSocket()->Connect(strTemp.c_str());
+						pBot->GetSocket()->Connect(strTemp.c_str(), 6667, strPassword.c_str());
 					}
 					else
 					{
-						pBot->GetSocket()->Connect(strTemp.substr(0, iPortSep).c_str(), atoi(strTemp.substr(iPortSep + 1).c_str()));
+						pBot->GetSocket()->Connect(strTemp.substr(0, iPortSep).c_str(), atoi(strTemp.substr(iPortSep + 1).c_str()), strPassword.c_str());
 					}
 				}
 			}
