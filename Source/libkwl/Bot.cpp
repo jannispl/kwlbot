@@ -234,17 +234,33 @@ char CBot::GetModeGroup(char cMode)
 	return 0;
 }
 
-void CBot::HandleData(const std::vector<std::string> &vecParts)
+void CBot::HandleData(const std::string &strOrigin, const std::string &strCommand, const std::vector<std::string> &vecParams)
 {
-	bool bPrefix = *(vecParts[0].begin()) == ':';
-	
-	std::string strPrefix;
-	if (bPrefix)
-	{
-		strPrefix = vecParts[0].substr(1);
-	}
+	int iParamCount = vecParams.size();
 
-	std::string strCommand = vecParts[bPrefix ? 1 : 0];
+	std::string strNickname, strIdent, strHostname;
+	if (!strOrigin.empty())
+	{
+		std::string::size_type iSeparator = strOrigin.find('!');
+		if (iSeparator == std::string::npos)
+		{
+			strNickname = strOrigin;
+		}
+		else
+		{
+			strNickname = strOrigin.substr(0, iSeparator);
+			std::string::size_type iSeparator2 = strOrigin.find('@', iSeparator);
+			if (iSeparator2 == std::string::npos)
+			{
+				strIdent = strOrigin.substr(iSeparator + 1);
+			}
+			else
+			{
+				strIdent = strOrigin.substr(iSeparator, iSeparator2 - iSeparator + 1);
+				strHostname = strOrigin.substr(iSeparator2 + 1);
+			}
+		}
+	}
 
 	if (!m_bGotMotd)
 	{
@@ -279,138 +295,7 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 	send a NAMES reply afterwards. We urgently need a channel's user list before
 	calling the onBotJoinedChannel event */
 
-	if (strCommand == "353")
-	{
-		std::string strChannel = vecParts[3];
-		std::string::size_type iTempSpace = strChannel.find(' ');
-		if (iTempSpace != std::string::npos)
-		{
-			strChannel = strChannel.substr(iTempSpace + 1);
-			iTempSpace = strChannel.find(' ');
-			if (iTempSpace != std::string::npos)
-			{
-				strChannel = strChannel.substr(0, iTempSpace);
-
-				CIrcChannel *pChannel = FindChannel(strChannel.c_str());
-				if (pChannel != NULL)
-				{
-					std::string strNames = vecParts[3].substr(3 + strChannel.length());
-					if (*(strNames.begin()) == ':')
-					{
-						strNames = strNames.substr(1);
-					}
-
-					std::string::size_type iLastPos = strNames.find_first_not_of(' ', 0);
-					std::string::size_type iPos = strNames.find_first_of(' ', iLastPos);
-					while (iPos != std::string::npos || iLastPos != std::string::npos)
-					{
-						std::string strName = strNames.substr(iLastPos, iPos - iLastPos);
-						
-						char cMode = 0;
-						bool bBreak = false;
-						std::string::size_type iOffset = 0;
-						for (std::string::iterator i = strName.begin(); i != strName.end(); ++i)
-						{
-							switch (*i)
-							{
-							case '~':
-								cMode |= 32;
-								++iOffset;
-								break;
-							case '&':
-								cMode |= 16;
-								++iOffset;
-								break;
-							case '@':
-								cMode |= 8;
-								++iOffset;
-								break;
-							case '%':
-								cMode |= 4;
-								++iOffset;
-								break;
-							case '+':
-								cMode |= 2;
-								++iOffset;
-								break;
-							default:
-								bBreak = true;
-								break;
-							}
-							if (bBreak)
-							{
-								break;
-							}
-						}
-						
-						if (iOffset != 0)
-						{
-							strName = strName.substr(iOffset);
-						}
-
-						if (strName != m_pIrcSocket->GetCurrentNickname())
-						{
-							CIrcUser *pUser = FindUser(strName.c_str());
-							if (pUser == NULL)
-							{
-								dbgprintf("We don't know %s yet, adding him (1).\n", strName.c_str());
-								pUser = new CIrcUser(this, strName.c_str());
-								m_plGlobalUsers.push_back(pUser);
-							}
-							else
-							{
-								dbgprintf("We already know %s.\n", pUser->GetNickname());
-							}
-							pUser->m_plIrcChannels.push_back(pChannel);
-							pUser->m_mapChannelModes[pChannel] = cMode;
-
-							pChannel->m_plIrcUsers.push_back(pUser);
-						}
-
-						iLastPos = strNames.find_first_not_of(' ', iPos);
-						iPos = strNames.find_first_of(' ', iLastPos);
-					}
-				}
-			}
-		}
-		return;
-	}
-
-	if (strCommand == "366")
-	{
-		std::string strChannel = vecParts[3];
-		std::string::size_type iTempSpace = strChannel.find(' ');
-		if (iTempSpace != std::string::npos)
-		{
-			strChannel = strChannel.substr(iTempSpace + 1);
-			iTempSpace = strChannel.find(' ');
-			if (iTempSpace != std::string::npos)
-			{
-				strChannel = strChannel.substr(0, iTempSpace);
-
-				CIrcChannel *pChannel = FindChannel(strChannel.c_str());
-				if (pChannel != NULL)
-				{		
-					for (CPool<CIrcChannel *>::iterator i = m_plIncompleteChannels.begin(); i != m_plIncompleteChannels.end(); ++i)
-					{
-						if (*i == pChannel)
-						{
-							m_pParentCore->GetScriptEventManager()->OnBotJoinedChannel(this, pChannel);
-							for (CPool<CEventManager *>::iterator j = m_pParentCore->GetEventManagers()->begin(); j != m_pParentCore->GetEventManagers()->end(); ++j)
-							{
-								(*j)->OnBotJoinedChannel(this, pChannel);
-							}
-
-							i = m_plIncompleteChannels.erase(i);
-							break;
-						}
-					}
-				}
-			}
-		}
-		return;
-	}
-	else if (strCommand != "332" /* Topic */ && strCommand != "333" /* Topic Timestamp */ && m_plIncompleteChannels.size() != 0) // If we did not get a NAMES reply right after the JOIN message
+	if (strCommand != "366" /* End of NAMES */ && strCommand != "332" /* Topic */ && strCommand != "333" /* Topic Timestamp */ && m_plIncompleteChannels.size() != 0) // If we did not get a NAMES reply right after the JOIN message
 	{
 		for (CPool<CIrcChannel *>::iterator i = m_plIncompleteChannels.begin(); i != m_plIncompleteChannels.end(); ++i)
 		{
@@ -428,489 +313,696 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 		}
 	}
 
-	if (strCommand == "JOIN")
+	if (iParamCount == 8)
 	{
-		std::string strChannel = vecParts[2];
-		if (*(strChannel.begin()) == ':')
+		// WHO reply
+		//:ircd 352 #channel ident host ircd nickname IDK :hopcount realname
+		if (strCommand == "352")
 		{
-			strChannel = strChannel.substr(1);
-		}
+			std::string strChannel = vecParams[0];
+			std::string strIdent = vecParams[1];
+			std::string strHost = vecParams[2];
 
-		std::string strNickname = vecParts[0].substr(1);
-		std::string::size_type iSeparator = strNickname.find('!');
-		if (iSeparator != std::string::npos)
-		{
-			strNickname = strNickname.substr(0, iSeparator);
-			std::string strIdent = vecParts[0].substr(iSeparator + 2);
-			if ((iSeparator = strIdent.find('@')) != std::string::npos)
+			CIrcUser *pUser = FindUser(strNickname.c_str());
+			if (pUser != NULL)
 			{
-				std::string strHost = strIdent.substr(iSeparator + 1);
-				strIdent = strIdent.substr(0, iSeparator);
+				pUser->UpdateIfNecessary(strIdent.c_str(), strHost.c_str());
+			}
 
-				CIrcChannel *pChannel = NULL;
-				bool bSelf = false;
-				if (strNickname == m_pIrcSocket->GetCurrentNickname())
+			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+			if (pChannel != NULL && !pChannel->m_bHasDetailedUsers)
+			{
+				pChannel->m_bHasDetailedUsers = true;
+
+				m_pParentCore->GetScriptEventManager()->OnBotGotChannelUserList(this, pChannel);
+				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 				{
-					pChannel = new CIrcChannel(this, strChannel.c_str());
-					m_plIrcChannels.push_back(pChannel);
-					dbgprintf("WE JOINED '%s'\n", pChannel->GetName());
+					(*i)->OnBotGotChannelUserList(this, pChannel);
+				}
+			}
 
-					SendRawFormat("WHO %s", pChannel->GetName());
+			return;
+		}
+	}
+	else if (iParamCount == 3)
+	{
+		if (strCommand == "KICK")
+		{
+			std::string strChannel = vecParams[0];
+			std::string strVictim = vecParams[1];
+			std::string strReason = vecParams[2];
 
-					bSelf = true;
+			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+			if (pChannel != NULL)
+			{
+				CIrcUser *pUser = FindUser(strNickname.c_str());
+				if (strVictim == m_pIrcSocket->GetCurrentNickname())
+				{
+					dbgprintf("WE WERE KICKED FROM %s.\n", pChannel->GetName());
+
+					for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
+					{
+						if ((*i)->m_plIrcChannels.size() == 1)
+						{
+							dbgprintf("We lost %s.\n", (*i)->GetNickname());
+							m_plGlobalUsers.remove(*i);
+							delete *i;
+						}
+						i = pChannel->m_plIrcUsers.erase(i);
+						if (i == pChannel->m_plIrcUsers.end())
+						{
+							break;
+						}
+					}
+
+					m_plIrcChannels.remove(pChannel);
+					delete pChannel;
 				}
 				else
 				{
-					pChannel = FindChannel(strChannel.c_str());
-					if (pChannel != NULL)
-					{
-						dbgprintf("'%s' JOINED '%s'\n", strNickname.c_str(), pChannel->GetName());
-					}
-				}
-				if (pChannel != NULL)
-				{
-					CIrcUser *pUser = FindUser(strNickname.c_str());
-					if (pUser == NULL)
-					{
-						dbgprintf("We don't know %s yet, adding him (2).\n", strNickname.c_str());
-						pUser = new CIrcUser(this, strNickname.c_str());
-						m_plGlobalUsers.push_back(pUser);
-					}
-					else
-					{
-						dbgprintf("We already know %s.\n", strNickname.c_str());
-					}
-					pUser->SetIdent(strIdent.c_str());
-					pUser->SetHost(strHost.c_str());
-					pUser->m_plIrcChannels.push_back(pChannel);
-					pChannel->m_plIrcUsers.push_back(pUser);
+					CIrcUser *pVictim = FindUser(strVictim.c_str());
 
-					if (bSelf)
+					if (pVictim != NULL)
 					{
-						// Add this channel to our list of channels with an incomplete list of users
-						m_plIncompleteChannels.push_back(pChannel);
-					}
-					else
-					{
-						m_pParentCore->GetScriptEventManager()->OnUserJoinedChannel(this, pUser, pChannel);
-						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
-						{
-							(*i)->OnUserJoinedChannel(this, pUser, pChannel);
-						}
-					}
-				}
-			}
-		}
-		return;
-	}
-
-	if (strCommand == "PART")
-	{
-		std::string strChannel = vecParts[2];
-		if (*(strChannel.begin()) == ':')
-		{
-			strChannel = strChannel.substr(1);
-		}
-
-		std::string strNickname = vecParts[0].substr(1);
-		std::string::size_type iSeparator = strNickname.find('!');
-		if (iSeparator != std::string::npos)
-		{
-			strNickname = strNickname.substr(0, iSeparator);
-			std::string strIdent = vecParts[0].substr(iSeparator + 2);
-			if ((iSeparator = strIdent.find('@')) != std::string::npos)
-			{
-				std::string strHost = strIdent.substr(iSeparator + 1);
-				strIdent = strIdent.substr(0, iSeparator);
-
-				std::string strReason = vecParts[3];
-				if (!strReason.empty() && *(strReason.begin()) == ':')
-				{
-					strReason = strReason.substr(1);
-				}
-
-				CIrcChannel *pChannel = FindChannel(strChannel.c_str());
-				if (pChannel != NULL)
-				{
-					if (strNickname == m_pIrcSocket->GetCurrentNickname())
-					{
-						dbgprintf("WE LEFT %s.\n", pChannel->GetName());
-
-						for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
-						{
-							if ((*i)->m_plIrcChannels.size() == 1)
-							{
-								dbgprintf("We lost %s.\n", (*i)->GetNickname());
-								m_plGlobalUsers.remove(*i);
-								delete *i;
-							}
-							i = pChannel->m_plIrcUsers.erase(i);
-							if (i == pChannel->m_plIrcUsers.end())
-							{
-								break;
-							}
-						}
-
-						m_plIrcChannels.remove(pChannel);
-						delete pChannel;
-					}
-					else
-					{
-						CIrcUser *pUser = FindUser(strNickname.c_str());
 						if (pUser != NULL)
 						{
-							pUser->SetIdent(strIdent.c_str());
-							pUser->SetHost(strHost.c_str());
+							pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
 
-							m_pParentCore->GetScriptEventManager()->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
+							m_pParentCore->GetScriptEventManager()->OnUserKickedUser(this, pUser, pVictim, pChannel, strReason.c_str());
 							for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 							{
-								(*i)->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
-							}
-
-							dbgprintf("Removing %s from %s.\n", pUser->GetNickname(), pChannel->GetName());
-							pUser->m_plIrcChannels.remove(pChannel);
-							pChannel->m_plIrcUsers.remove(pUser);
-							if (pUser->m_plIrcChannels.size() == 0)
-							{
-								dbgprintf("We don't know %s anymore.\n", pUser->GetNickname());
-								m_plGlobalUsers.remove(pUser);
-								delete pUser;
+								(*i)->OnUserKickedUser(this, pUser, pVictim, pChannel, strReason.c_str());
 							}
 						}
 						else
 						{
 							CIrcUser tempUser(this, strNickname.c_str(), true);
-							tempUser.SetIdent(strIdent.c_str());
-							tempUser.SetHost(strHost.c_str());
+							tempUser.UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
 
-							m_pParentCore->GetScriptEventManager()->OnUserLeftChannel(this, &tempUser, pChannel, strReason.c_str());
+							m_pParentCore->GetScriptEventManager()->OnUserKickedUser(this, &tempUser, pVictim, pChannel, strReason.c_str());
 							for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 							{
-								(*i)->OnUserLeftChannel(this, &tempUser, pChannel, strReason.c_str());
+								(*i)->OnUserKickedUser(this, &tempUser, pVictim, pChannel, strReason.c_str());
 							}
 						}
-					}
-				}
-			}
-		}
-		return;
-	}
 
-	if (strCommand == "KICK")
-	{
-		std::string strChannel = vecParts[2];
-		if (*(strChannel.begin()) == ':')
-		{
-			strChannel = strChannel.substr(1);
-		}
-
-		std::string strNickname = vecParts[0].substr(1);
-		std::string::size_type iSeparator = strNickname.find('!');
-		if (iSeparator != std::string::npos)
-		{
-			strNickname = strNickname.substr(0, iSeparator);
-			std::string strIdent = vecParts[0].substr(iSeparator + 2);
-			if ((iSeparator = strIdent.find('@')) != std::string::npos)
-			{
-				std::string strHost = strIdent.substr(iSeparator + 1);
-				strIdent = strIdent.substr(0, iSeparator);
-
-				std::string::size_type iTempSpace = vecParts[3].find(' ');
-
-				std::string strVictim = vecParts[3].substr(0, iTempSpace);
-				std::string strReason = iTempSpace != std::string::npos ? vecParts[3].substr(iTempSpace + 1) : vecParts[3];
-
-				CIrcChannel *pChannel = FindChannel(strChannel.c_str());
-				if (pChannel != NULL)
-				{
-					CIrcUser *pUser = FindUser(strNickname.c_str());
-					if (strVictim == m_pIrcSocket->GetCurrentNickname())
-					{
-						dbgprintf("WE WERE KICKED FROM %s.\n", pChannel->GetName());
-
-						for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
+						dbgprintf("Removing %s from %s.\n", pVictim->GetNickname(), pChannel->GetName());
+						pVictim->m_plIrcChannels.remove(pChannel);
+						pChannel->m_plIrcUsers.remove(pVictim);
+						if (pVictim->m_plIrcChannels.size() == 0)
 						{
-							if ((*i)->m_plIrcChannels.size() == 1)
-							{
-								dbgprintf("We lost %s.\n", (*i)->GetNickname());
-								m_plGlobalUsers.remove(*i);
-								delete *i;
-							}
-							i = pChannel->m_plIrcUsers.erase(i);
-							if (i == pChannel->m_plIrcUsers.end())
-							{
-								break;
-							}
+							dbgprintf("We don't know %s anymore.\n", pVictim->GetNickname());
+							m_plGlobalUsers.remove(pVictim);
+							delete pVictim;
 						}
-
-						m_plIrcChannels.remove(pChannel);
-						delete pChannel;
 					}
+					/* (The victim *must* be on the channel to be kicked, so we'll not handle this)
 					else
 					{
-						CIrcUser *pVictim = FindUser(strVictim.c_str());
+					}
+					*/
+				}
+			}
+			return;
+		}
+	}
+	else if (iParamCount == 2)
+	{
+		if (strCommand == "353")
+		{
+			std::string strChannel = vecParams[0];
 
-						if (pVictim != NULL)
+			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+			if (pChannel != NULL)
+			{
+				std::string strNames = vecParams[1];
+
+				std::string::size_type iLastPos = strNames.find_first_not_of(' ', 0);
+				std::string::size_type iPos = strNames.find_first_of(' ', iLastPos);
+				while (iPos != std::string::npos || iLastPos != std::string::npos)
+				{
+					std::string strName = strNames.substr(iLastPos, iPos - iLastPos);
+					
+					char cMode = 0;
+					bool bBreak = false;
+					std::string::size_type iOffset = 0;
+					for (std::string::iterator i = strName.begin(); i != strName.end(); ++i)
+					{
+						switch (*i)
 						{
-							if (pUser != NULL)
-							{
-								pUser->SetIdent(strIdent.c_str());
-								pUser->SetHost(strHost.c_str());
-
-								m_pParentCore->GetScriptEventManager()->OnUserKickedUser(this, pUser, pVictim, pChannel, strReason.c_str());
-								for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
-								{
-									(*i)->OnUserKickedUser(this, pUser, pVictim, pChannel, strReason.c_str());
-								}
-							}
-							else
-							{
-								CIrcUser tempUser(this, strNickname.c_str(), true);
-								tempUser.SetIdent(strIdent.c_str());
-								tempUser.SetIdent(strHost.c_str());
-
-								m_pParentCore->GetScriptEventManager()->OnUserKickedUser(this, &tempUser, pVictim, pChannel, strReason.c_str());
-								for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
-								{
-									(*i)->OnUserKickedUser(this, &tempUser, pVictim, pChannel, strReason.c_str());
-								}
-							}
-
-							dbgprintf("Removing %s from %s.\n", pVictim->GetNickname(), pChannel->GetName());
-							pVictim->m_plIrcChannels.remove(pChannel);
-							pChannel->m_plIrcUsers.remove(pVictim);
-							if (pVictim->m_plIrcChannels.size() == 0)
-							{
-								dbgprintf("We don't know %s anymore.\n", pVictim->GetNickname());
-								m_plGlobalUsers.remove(pVictim);
-								delete pVictim;
-							}
+						case '~':
+							cMode |= 32;
+							++iOffset;
+							break;
+						case '&':
+							cMode |= 16;
+							++iOffset;
+							break;
+						case '@':
+							cMode |= 8;
+							++iOffset;
+							break;
+						case '%':
+							cMode |= 4;
+							++iOffset;
+							break;
+						case '+':
+							cMode |= 2;
+							++iOffset;
+							break;
+						default:
+							bBreak = true;
+							break;
 						}
-						/* (The victim *must* be on the channel to be kicked, so we'll not handle this)
+						if (bBreak)
+						{
+							break;
+						}
+					}
+					
+					if (iOffset != 0)
+					{
+						strName = strName.substr(iOffset);
+					}
+
+					if (strName != m_pIrcSocket->GetCurrentNickname())
+					{
+						CIrcUser *pUser = FindUser(strName.c_str());
+						if (pUser == NULL)
+						{
+							dbgprintf("We don't know %s yet, adding him (1).\n", strName.c_str());
+							pUser = new CIrcUser(this, strName.c_str());
+							m_plGlobalUsers.push_back(pUser);
+						}
 						else
 						{
+							dbgprintf("We already know %s.\n", pUser->GetNickname());
 						}
-						*/
+						pUser->m_plIrcChannels.push_back(pChannel);
+						pUser->m_mapChannelModes[pChannel] = cMode;
+
+						pChannel->m_plIrcUsers.push_back(pUser);
+					}
+
+					iLastPos = strNames.find_first_not_of(' ', iPos);
+					iPos = strNames.find_first_of(' ', iLastPos);
+				}
+			}
+			return;
+		}
+
+		if (strCommand == "366")
+		{
+			std::string strChannel = vecParams[0];
+
+			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+			if (pChannel != NULL)
+			{		
+				for (CPool<CIrcChannel *>::iterator i = m_plIncompleteChannels.begin(); i != m_plIncompleteChannels.end(); ++i)
+				{
+					if (*i == pChannel)
+					{
+						m_pParentCore->GetScriptEventManager()->OnBotJoinedChannel(this, pChannel);
+						for (CPool<CEventManager *>::iterator j = m_pParentCore->GetEventManagers()->begin(); j != m_pParentCore->GetEventManagers()->end(); ++j)
+						{
+							(*j)->OnBotJoinedChannel(this, pChannel);
+						}
+
+						i = m_plIncompleteChannels.erase(i);
+						break;
 					}
 				}
 			}
+			return;
 		}
-		return;
-	}
 
-	if (strCommand == "QUIT")
-	{
-		std::string strNickname = vecParts[0].substr(1);
-		std::string::size_type iSeparator = strNickname.find('!');
-		if (iSeparator != std::string::npos)
+		if (strCommand == "PART")
 		{
-			strNickname = strNickname.substr(0, iSeparator);
-			std::string strIdent = vecParts[0].substr(iSeparator + 2);
-			if ((iSeparator = strIdent.find('@')) != std::string::npos)
+			std::string strChannel = vecParams[0];
+			std::string strReason = vecParams[1];
+
+			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+			if (pChannel != NULL)
 			{
-				std::string strHost = strIdent.substr(iSeparator + 1);
-				strIdent = strIdent.substr(0, iSeparator);
-
-				std::string strReason = vecParts[2].substr(1);
-				if (!vecParts[3].empty())
-				{
-					strReason += " " + vecParts[3];
-				}
-
-				CIrcUser *pUser = FindUser(strNickname.c_str());
-				if (pUser != NULL)
-				{
-					pUser->SetIdent(strIdent.c_str());
-					pUser->SetHost(strHost.c_str());
-
-					m_pParentCore->GetScriptEventManager()->OnUserQuit(this, pUser, strReason.c_str());
-					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
-					{
-						(*i)->OnUserQuit(this, pUser, strReason.c_str());
-					}
-
-					for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
-					{
-						(*i)->m_plIrcUsers.remove(pUser);
-					}
-
-					dbgprintf("We don't know %s anymore.\n", pUser->GetNickname());
-					m_plGlobalUsers.remove(pUser);
-					delete pUser;
-				}
-				else
-				{
-					dbgprintf("Error: we don't know %s yet, for some reason.\n", strNickname.c_str());
-
-					CIrcUser tempUser(this, strNickname.c_str(), true);
-					tempUser.SetIdent(strIdent.c_str());
-					tempUser.SetHost(strHost.c_str());
-
-					m_pParentCore->GetScriptEventManager()->OnUserQuit(this, &tempUser, strReason.c_str());
-					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
-					{
-						(*i)->OnUserQuit(this, &tempUser, strReason.c_str());
-					}
-				}
-			}
-		}
-		return;
-	}
-
-	if (strCommand == "NICK")
-	{
-		std::string strNickname = vecParts[0].substr(1);
-		std::string::size_type iSeparator = strNickname.find('!');
-		if (iSeparator != std::string::npos)
-		{
-			strNickname = strNickname.substr(0, iSeparator);
-			std::string strIdent = vecParts[0].substr(iSeparator + 2);
-			if ((iSeparator = strIdent.find('@')) != std::string::npos)
-			{
-				std::string strHost = strIdent.substr(iSeparator + 1);
-				strIdent = strIdent.substr(0, iSeparator);
-
-				std::string strNewNick = vecParts[2];
-				if (*(strNewNick.begin()) == ':')
-				{
-					strNewNick = strNewNick.substr(1);
-				}
-
 				if (strNickname == m_pIrcSocket->GetCurrentNickname())
 				{
-					m_pIrcSocket->m_strCurrentNickname = strNewNick;
+					dbgprintf("WE LEFT %s.\n", pChannel->GetName());
+
+					for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
+					{
+						if ((*i)->m_plIrcChannels.size() == 1)
+						{
+							dbgprintf("We lost %s.\n", (*i)->GetNickname());
+							m_plGlobalUsers.remove(*i);
+							delete *i;
+						}
+						i = pChannel->m_plIrcUsers.erase(i);
+						if (i == pChannel->m_plIrcUsers.end())
+						{
+							break;
+						}
+					}
+
+					m_plIrcChannels.remove(pChannel);
+					delete pChannel;
 				}
 				else
 				{
 					CIrcUser *pUser = FindUser(strNickname.c_str());
 					if (pUser != NULL)
 					{
-						pUser->SetIdent(strIdent.c_str());
-						pUser->SetHost(strHost.c_str());
+						pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
 
-						dbgprintf("Renaming %s to %s.\n", pUser->GetNickname(), strNewNick.c_str());
-						pUser->SetNickname(strNewNick.c_str());
-
-						m_pParentCore->GetScriptEventManager()->OnUserChangedNickname(this, pUser, strNickname.c_str());
+						m_pParentCore->GetScriptEventManager()->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
 						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 						{
-							(*i)->OnUserChangedNickname(this, pUser, strNickname.c_str());
+							(*i)->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
+						}
+
+						dbgprintf("Removing %s from %s.\n", pUser->GetNickname(), pChannel->GetName());
+						pUser->m_plIrcChannels.remove(pChannel);
+						pChannel->m_plIrcUsers.remove(pUser);
+						if (pUser->m_plIrcChannels.size() == 0)
+						{
+							dbgprintf("We don't know %s anymore.\n", pUser->GetNickname());
+							m_plGlobalUsers.remove(pUser);
+							delete pUser;
 						}
 					}
 					else
 					{
-						CIrcUser tempUser(this, strNewNick.c_str(), true);
-						tempUser.SetIdent(strIdent.c_str());
-						tempUser.SetHost(strHost.c_str());
+						CIrcUser tempUser(this, strNickname.c_str(), true);
+						tempUser.UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
 
-						m_pParentCore->GetScriptEventManager()->OnUserChangedNickname(this, &tempUser, strNickname.c_str());
+						m_pParentCore->GetScriptEventManager()->OnUserLeftChannel(this, &tempUser, pChannel, strReason.c_str());
 						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 						{
-							(*i)->OnUserChangedNickname(this, &tempUser, strNickname.c_str());
+							(*i)->OnUserLeftChannel(this, &tempUser, pChannel, strReason.c_str());
 						}
 					}
 				}
 			}
+			return;
 		}
-		return;
-	}
 
-	if (strCommand == "PRIVMSG")
-	{
-		std::string strNickname = vecParts[0].substr(1);
-		std::string::size_type iSeparator = strNickname.find('!');
-		if (iSeparator != std::string::npos)
+		if (strCommand == "KICK")
 		{
-			strNickname = strNickname.substr(0, iSeparator);
-			std::string strIdent = vecParts[0].substr(iSeparator + 2);
-			if ((iSeparator = strIdent.find('@')) != std::string::npos)
+			std::string strChannel = vecParams[0];
+			std::string strVictim = vecParams[1];
+
+			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+			if (pChannel != NULL)
 			{
-				std::string strHost = strIdent.substr(iSeparator + 1);
-				strIdent = strIdent.substr(0, iSeparator);
-
-				std::string strTarget = vecParts[2];
-				std::string strMessage = vecParts[3];
-				if (*(strMessage.begin()) == ':')
-				{
-					strMessage = strMessage.substr(1);
-				}
-
 				CIrcUser *pUser = FindUser(strNickname.c_str());
-				if (pUser != NULL)
+				if (strVictim == m_pIrcSocket->GetCurrentNickname())
 				{
-					pUser->SetIdent(strIdent.c_str());
-					pUser->SetHost(strHost.c_str());
+					dbgprintf("WE WERE KICKED FROM %s.\n", pChannel->GetName());
 
-					if (strTarget == m_pIrcSocket->GetCurrentNickname())
+					for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
 					{
-						// privmsg to bot
-						dbgprintf("[priv] <%s> %s\n", strNickname.c_str(), strMessage.c_str());
-
-						m_pParentCore->GetScriptEventManager()->OnUserPrivateMessage(this, pUser, strMessage.c_str());
-						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+						if ((*i)->m_plIrcChannels.size() == 1)
 						{
-							(*i)->OnUserPrivateMessage(this, pUser, strMessage.c_str());
+							dbgprintf("We lost %s.\n", (*i)->GetNickname());
+							m_plGlobalUsers.remove(*i);
+							delete *i;
+						}
+						i = pChannel->m_plIrcUsers.erase(i);
+						if (i == pChannel->m_plIrcUsers.end())
+						{
+							break;
 						}
 					}
-					else
-					{
-						CIrcChannel *pChannel = FindChannel(strTarget.c_str());
-						if (pChannel != NULL)
-						{
-							dbgprintf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
 
-							m_pParentCore->GetScriptEventManager()->OnUserChannelMessage(this, pUser, pChannel, strMessage.c_str());
+					m_plIrcChannels.remove(pChannel);
+					delete pChannel;
+				}
+				else
+				{
+					CIrcUser *pVictim = FindUser(strVictim.c_str());
+
+					if (pVictim != NULL)
+					{
+						if (pUser != NULL)
+						{
+							pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+							m_pParentCore->GetScriptEventManager()->OnUserKickedUser(this, pUser, pVictim, pChannel, "");
 							for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 							{
-								(*i)->OnUserChannelMessage(this, pUser, pChannel, strMessage.c_str());
+								(*i)->OnUserKickedUser(this, pUser, pVictim, pChannel, "");
 							}
 						}
+						else
+						{
+							CIrcUser tempUser(this, strNickname.c_str(), true);
+							tempUser.UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+							m_pParentCore->GetScriptEventManager()->OnUserKickedUser(this, &tempUser, pVictim, pChannel, "");
+							for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+							{
+								(*i)->OnUserKickedUser(this, &tempUser, pVictim, pChannel, "");
+							}
+						}
+
+						dbgprintf("Removing %s from %s.\n", pVictim->GetNickname(), pChannel->GetName());
+						pVictim->m_plIrcChannels.remove(pChannel);
+						pChannel->m_plIrcUsers.remove(pVictim);
+						if (pVictim->m_plIrcChannels.size() == 0)
+						{
+							dbgprintf("We don't know %s anymore.\n", pVictim->GetNickname());
+							m_plGlobalUsers.remove(pVictim);
+							delete pVictim;
+						}
+					}
+					/* (The victim *must* be on the channel to be kicked, so we'll not handle this)
+					else
+					{
+					}
+					*/
+				}
+			}
+			return;
+		}
+		if (strCommand == "PRIVMSG")
+		{
+			std::string strTarget = vecParams[0];
+			std::string strMessage = vecParams[1];
+
+			CIrcUser *pUser = FindUser(strNickname.c_str());
+			if (pUser != NULL)
+			{
+				pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+				if (strTarget == m_pIrcSocket->GetCurrentNickname())
+				{
+					// privmsg to bot
+					dbgprintf("[priv] <%s> %s\n", strNickname.c_str(), strMessage.c_str());
+
+					m_pParentCore->GetScriptEventManager()->OnUserPrivateMessage(this, pUser, strMessage.c_str());
+					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+					{
+						(*i)->OnUserPrivateMessage(this, pUser, strMessage.c_str());
 					}
 				}
 				else
 				{
-					CIrcUser tempUser(this, strNickname.c_str(), true);
-					tempUser.SetIdent(strIdent.c_str());
-					tempUser.SetHost(strHost.c_str());
-
-					if (strTarget == m_pIrcSocket->GetCurrentNickname())
+					CIrcChannel *pChannel = FindChannel(strTarget.c_str());
+					if (pChannel != NULL)
 					{
-						m_pParentCore->GetScriptEventManager()->OnUserPrivateMessage(this, &tempUser, strMessage.c_str());
+						dbgprintf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
+
+						m_pParentCore->GetScriptEventManager()->OnUserChannelMessage(this, pUser, pChannel, strMessage.c_str());
 						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 						{
-							(*i)->OnUserPrivateMessage(this, &tempUser, strMessage.c_str());
-						}
-					}
-					else
-					{
-						CIrcChannel *pChannel = FindChannel(strTarget.c_str());
-						if (pChannel != NULL)
-						{
-							dbgprintf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
-
-							m_pParentCore->GetScriptEventManager()->OnUserChannelMessage(this, &tempUser, pChannel, strMessage.c_str());
-							for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
-							{
-								(*i)->OnUserChannelMessage(this, &tempUser, pChannel, strMessage.c_str());
-							}
+							(*i)->OnUserChannelMessage(this, pUser, pChannel, strMessage.c_str());
 						}
 					}
 				}
 			}
+			else
+			{
+				CIrcUser tempUser(this, strNickname.c_str(), true);
+				tempUser.UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+				if (strTarget == m_pIrcSocket->GetCurrentNickname())
+				{
+					m_pParentCore->GetScriptEventManager()->OnUserPrivateMessage(this, &tempUser, strMessage.c_str());
+					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+					{
+						(*i)->OnUserPrivateMessage(this, &tempUser, strMessage.c_str());
+					}
+				}
+				else
+				{
+					CIrcChannel *pChannel = FindChannel(strTarget.c_str());
+					if (pChannel != NULL)
+					{
+						dbgprintf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
+
+						m_pParentCore->GetScriptEventManager()->OnUserChannelMessage(this, &tempUser, pChannel, strMessage.c_str());
+						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+						{
+							(*i)->OnUserChannelMessage(this, &tempUser, pChannel, strMessage.c_str());
+						}
+					}
+				}
+			}
+			return;
 		}
-		return;
+	}
+	else if (iParamCount == 1)
+	{
+		if (strCommand == "JOIN")
+		{
+			std::string strChannel = vecParams[0];
+
+			CIrcChannel *pChannel = NULL;
+			bool bSelf = false;
+			if (strNickname == m_pIrcSocket->GetCurrentNickname())
+			{
+				pChannel = new CIrcChannel(this, strChannel.c_str());
+				m_plIrcChannels.push_back(pChannel);
+				dbgprintf("WE JOINED '%s'\n", pChannel->GetName());
+
+				SendRawFormat("WHO %s", pChannel->GetName());
+
+				bSelf = true;
+			}
+			else
+			{
+				pChannel = FindChannel(strChannel.c_str());
+				if (pChannel != NULL)
+				{
+					dbgprintf("'%s' JOINED '%s'\n", strNickname.c_str(), pChannel->GetName());
+				}
+			}
+			if (pChannel != NULL)
+			{
+				CIrcUser *pUser = FindUser(strNickname.c_str());
+				if (pUser == NULL)
+				{
+					dbgprintf("We don't know %s yet, adding him (2).\n", strNickname.c_str());
+					pUser = new CIrcUser(this, strNickname.c_str());
+					m_plGlobalUsers.push_back(pUser);
+				}
+				else
+				{
+					dbgprintf("We already know %s.\n", strNickname.c_str());
+				}
+
+				pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+				pUser->m_plIrcChannels.push_back(pChannel);
+				pChannel->m_plIrcUsers.push_back(pUser);
+
+				if (bSelf)
+				{
+					// Add this channel to our list of channels with an incomplete list of users
+					m_plIncompleteChannels.push_back(pChannel);
+				}
+				else
+				{
+					m_pParentCore->GetScriptEventManager()->OnUserJoinedChannel(this, pUser, pChannel);
+					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+					{
+						(*i)->OnUserJoinedChannel(this, pUser, pChannel);
+					}
+				}
+			}
+			return;
+		}
+
+		if (strCommand == "PART")
+		{
+			std::string strChannel = vecParams[0];
+
+			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+			if (pChannel != NULL)
+			{
+				if (strNickname == m_pIrcSocket->GetCurrentNickname())
+				{
+					dbgprintf("WE LEFT %s.\n", pChannel->GetName());
+
+					for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
+					{
+						if ((*i)->m_plIrcChannels.size() == 1)
+						{
+							dbgprintf("We lost %s.\n", (*i)->GetNickname());
+							m_plGlobalUsers.remove(*i);
+							delete *i;
+						}
+						i = pChannel->m_plIrcUsers.erase(i);
+						if (i == pChannel->m_plIrcUsers.end())
+						{
+							break;
+						}
+					}
+
+					m_plIrcChannels.remove(pChannel);
+					delete pChannel;
+				}
+				else
+				{
+					CIrcUser *pUser = FindUser(strNickname.c_str());
+					if (pUser != NULL)
+					{
+						pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+						m_pParentCore->GetScriptEventManager()->OnUserLeftChannel(this, pUser, pChannel, "");
+						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+						{
+							(*i)->OnUserLeftChannel(this, pUser, pChannel, "");
+						}
+
+						dbgprintf("Removing %s from %s.\n", pUser->GetNickname(), pChannel->GetName());
+						pUser->m_plIrcChannels.remove(pChannel);
+						pChannel->m_plIrcUsers.remove(pUser);
+						if (pUser->m_plIrcChannels.size() == 0)
+						{
+							dbgprintf("We don't know %s anymore.\n", pUser->GetNickname());
+							m_plGlobalUsers.remove(pUser);
+							delete pUser;
+						}
+					}
+					else
+					{
+						CIrcUser tempUser(this, strNickname.c_str(), true);
+						tempUser.UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+						m_pParentCore->GetScriptEventManager()->OnUserLeftChannel(this, &tempUser, pChannel, "");
+						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+						{
+							(*i)->OnUserLeftChannel(this, &tempUser, pChannel, "");
+						}
+					}
+				}
+			}
+			return;
+		}
+		if (strCommand == "QUIT")
+		{
+			std::string strReason = vecParams[0];
+
+			CIrcUser *pUser = FindUser(strNickname.c_str());
+			if (pUser != NULL)
+			{
+				pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+				m_pParentCore->GetScriptEventManager()->OnUserQuit(this, pUser, strReason.c_str());
+				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+				{
+					(*i)->OnUserQuit(this, pUser, strReason.c_str());
+				}
+
+				for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
+				{
+					(*i)->m_plIrcUsers.remove(pUser);
+				}
+
+				dbgprintf("We don't know %s anymore.\n", pUser->GetNickname());
+				m_plGlobalUsers.remove(pUser);
+				delete pUser;
+			}
+			else
+			{
+				dbgprintf("Error: we don't know %s yet, for some reason.\n", strNickname.c_str());
+
+				CIrcUser tempUser(this, strNickname.c_str(), true);
+				tempUser.UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+				m_pParentCore->GetScriptEventManager()->OnUserQuit(this, &tempUser, strReason.c_str());
+				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+				{
+					(*i)->OnUserQuit(this, &tempUser, strReason.c_str());
+				}
+			}
+			return;
+		}
+		if (strCommand == "NICK")
+		{
+			std::string strNewNick = vecParams[0];
+
+			if (strNickname == m_pIrcSocket->GetCurrentNickname())
+			{
+				m_pIrcSocket->m_strCurrentNickname = strNewNick;
+			}
+			else
+			{
+				CIrcUser *pUser = FindUser(strNickname.c_str());
+				if (pUser != NULL)
+				{
+					pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+					dbgprintf("Renaming %s to %s.\n", pUser->GetNickname(), strNewNick.c_str());
+					pUser->SetNickname(strNewNick.c_str());
+
+					m_pParentCore->GetScriptEventManager()->OnUserChangedNickname(this, pUser, strNickname.c_str());
+					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+					{
+						(*i)->OnUserChangedNickname(this, pUser, strNickname.c_str());
+					}
+				}
+				else
+				{
+					CIrcUser tempUser(this, strNewNick.c_str(), true);
+					tempUser.UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+					m_pParentCore->GetScriptEventManager()->OnUserChangedNickname(this, &tempUser, strNickname.c_str());
+					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+					{
+						(*i)->OnUserChangedNickname(this, &tempUser, strNickname.c_str());
+					}
+				}
+			}
+			return;
+		}
+	}
+	else if (iParamCount == 0)
+	{
+		if (strCommand == "QUIT")
+		{
+			CIrcUser *pUser = FindUser(strNickname.c_str());
+			if (pUser != NULL)
+			{
+				pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+				m_pParentCore->GetScriptEventManager()->OnUserQuit(this, pUser, "");
+				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+				{
+					(*i)->OnUserQuit(this, pUser, "");
+				}
+
+				for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
+				{
+					(*i)->m_plIrcUsers.remove(pUser);
+				}
+
+				dbgprintf("We don't know %s anymore.\n", pUser->GetNickname());
+				m_plGlobalUsers.remove(pUser);
+				delete pUser;
+			}
+			else
+			{
+				dbgprintf("Error: we don't know %s yet, for some reason.\n", strNickname.c_str());
+
+				CIrcUser tempUser(this, strNickname.c_str(), true);
+				tempUser.UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+				m_pParentCore->GetScriptEventManager()->OnUserQuit(this, &tempUser, "");
+				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+				{
+					(*i)->OnUserQuit(this, &tempUser, "");
+				}
+			}
+			return;
+		}
 	}
 
 	if (strCommand == "005")
 	{
-		std::string strSupports = vecParts[3];
-		
-		std::string::size_type iLastPos = strSupports.find_first_not_of(' ', 0);
-		std::string::size_type iPos = strSupports.find_first_of(' ', iLastPos);
-		while (iPos != std::string::npos || iLastPos != std::string::npos)
+		for (int i = 1; i < iParamCount; ++i)
 		{
-			std::string strSupport = strSupports.substr(iLastPos, iPos - iLastPos);
+			std::string strSupport = vecParams[i];
 			if (strSupport == "NAMESX")
 			{
 				SendRaw("PROTOCTL NAMESX");
@@ -922,15 +1014,15 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 				std::string strValue = strSupport.substr(iEqual + 1);
 				if (strSupport.length() > 10 && strSupport.substr(0, 10) == "CHANMODES=")
 				{
-					std::string::size_type iLastPos_ = strValue.find_first_not_of(',', 0);
-					std::string::size_type iPos_ = strValue.find_first_of(',', iLastPos_);
+					std::string::size_type iLastPos = strValue.find_first_not_of(',', 0);
+					std::string::size_type iPos = strValue.find_first_of(',', iLastPos);
 					int i = 0;
-					while (i < 4 && (iPos_ != std::string::npos || iLastPos_ != std::string::npos))
+					while (i < 4 && (iPos != std::string::npos || iLastPos != std::string::npos))
 					{
-						m_SupportSettings.strChanmodes[i] = strValue.substr(iLastPos_, iPos_ - iLastPos_);
+						m_SupportSettings.strChanmodes[i] = strValue.substr(iLastPos, iPos - iLastPos);
 
-						iLastPos_ = strValue.find_first_not_of(',', iPos_);
-						iPos_ = strValue.find_first_of(',', iLastPos_);
+						iLastPos = strValue.find_first_not_of(',', iPos);
+						iPos = strValue.find_first_of(',', iLastPos);
 						++i;
 					}
 				}
@@ -942,72 +1034,22 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					m_SupportSettings.strPrefixes[1] = strValue.substr(iEnd + 1);
 				}
 			}
-
-			iLastPos = strSupports.find_first_not_of(' ', iPos);
-			iPos = strSupports.find_first_of(' ', iLastPos);
 		}
 		return;
 	}
 
 	if (strCommand == "MODE")
 	{
-		std::string strNickname = vecParts[0].substr(1);
-		std::string::size_type iSeparator = strNickname.find('!');
-		std::string strIdent;
-		std::string strHost;
-		if (iSeparator != std::string::npos)
-		{
-			strNickname = strNickname.substr(0, iSeparator);
-			std::string strIdent = vecParts[0].substr(iSeparator + 2);
-			if ((iSeparator = strIdent.find('@')) != std::string::npos)
-			{
-				strHost = strIdent.substr(iSeparator + 1);
-				strIdent = strIdent.substr(0, iSeparator);
-			}
-		}
-
-		std::string strChannel = vecParts[2];
-		std::string strModes = vecParts[3];
-		iSeparator = strModes.find(' ');
-		std::string strParams;
-		if (iSeparator != std::string::npos)
-		{
-			strModes = strModes.substr(0, iSeparator);
-			strParams = vecParts[3].substr(iSeparator + 1);
-		}
+		std::string strChannel = vecParams[0];
+		std::string strModes = vecParams[1];
 
 		CIrcChannel *pChannel = FindChannel(strChannel.c_str());
 
 		if (pChannel != NULL)
 		{
-			CIrcUser *pUser = FindUser(strNickname.c_str());
-			if (pUser != NULL)
-			{
-				pUser->SetIdent(strIdent.c_str());
-				pUser->SetHost(strHost.c_str());
-
-				m_pParentCore->GetScriptEventManager()->OnUserSetChannelModes(this, pUser, pChannel, strModes.c_str(), strParams.c_str());
-				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
-				{
-					(*i)->OnUserSetChannelModes(this, pUser, pChannel, strModes.c_str(), strParams.c_str());
-				}
-			}
-			else
-			{
-				CIrcUser tempUser(this, strNickname.c_str(), true);
-				tempUser.SetIdent(strIdent.c_str());
-				tempUser.SetHost(strHost.c_str());
-
-				m_pParentCore->GetScriptEventManager()->OnUserSetChannelModes(this, &tempUser, pChannel, strModes.c_str(), strParams.c_str());
-				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
-				{
-					(*i)->OnUserSetChannelModes(this, &tempUser, pChannel, strModes.c_str(), strParams.c_str());
-				}
-			}
-
-			std::string::size_type iLastPos = strParams.find_first_not_of(' ', 0);
-			std::string::size_type iPos = strParams.find_first_of(' ', iLastPos);
 			int iSet = 0;
+			int iParamOffset = 2;
+			std::string strParams;
 			for (std::string::iterator i = strModes.begin(); i != strModes.end(); ++i)
 			{
 				char cMode = *i;
@@ -1044,12 +1086,21 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					case 1:
 					case 2: // Always parameter
 					{
-						if (iPos != std::string::npos || iLastPos != std::string::npos)
+						if ((int)vecParams.size() >= iParamOffset + 1)
 						{
-							std::string strParam = strParams.substr(iLastPos, iPos - iLastPos);
+							std::string strParam = vecParams[iParamOffset++];
+							if (strParams.empty())
+							{
+								strParams = strParam;
+							}
+							else
+							{
+								strParams += " " + strParam;
+							}
+
 							//dbgprintf("1MODEEEEEEE %c%c %s!\n", iSet == 1 ? '+' : '-', cMode, strParam.c_str());
 
-							if (bPrefixMode)
+							if (bPrefixMode && pChannel != NULL)
 							{
 								CIrcUser *pUser = FindUser(strParam.c_str());
 
@@ -1075,28 +1126,36 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 										cNewMode = 2;
 										break;
 									}
+
 									if (iSet == 1)
+									{
 										pUser->m_mapChannelModes[pChannel] |= cNewMode;
+									}
 									else
+									{
 										pUser->m_mapChannelModes[pChannel] &= ~cNewMode;
+									}
 								}
 							}
-
-							iLastPos = strParams.find_first_not_of(' ', iPos);
-							iPos = strParams.find_first_of(' ', iLastPos);
 						}
 						break;
 					}
 
 					case 3: // Parameter if iSet == 1
 					{
-						if (iSet == 1 && (iPos != std::string::npos || iLastPos != std::string::npos))
+						if (iSet == 1 && (int)vecParams.size() >= iParamOffset + 1)
 						{
-							std::string strParam = strParams.substr(iLastPos, iPos - iLastPos);
-							//dbgprintf("2MODEEEEEEE +%c %s!\n", cMode, strParam.c_str());
+							std::string strParam = vecParams[iParamOffset++];
+							if (strParams.empty())
+							{
+								strParams = strParam;
+							}
+							else
+							{
+								strParams += " " + strParam;
+							}
 
-							iLastPos = strParams.find_first_not_of(' ', iPos);
-							iPos = strParams.find_first_of(' ', iLastPos);
+							//dbgprintf("2MODEEEEEEE +%c %s!\n", cMode, strParam.c_str());
 						}
 						else if (iSet == 2)
 						{
@@ -1112,71 +1171,30 @@ void CBot::HandleData(const std::vector<std::string> &vecParts)
 					}
 				}
 			}
-		}
-		return;
-	}
-
-	// WHO reply
-	//:ircd 352 #channel ident host ircd nickname IDK :hopcount realname
-	if (strCommand == "352")
-	{
-		std::string strChannel = vecParts[2];
-		std::string strOther = vecParts[3];
-		std::string::size_type iSeparator = strOther.find(' ');
-		if (iSeparator != std::string::npos)
-		{
-			std::string strIdent = strOther.substr(iSeparator + 1);
-			if ((iSeparator = strIdent.find(' ')) != std::string::npos)
-			{
-				std::string strHost = strIdent.substr(iSeparator + 1);
-				strIdent = strIdent.substr(0, iSeparator);
-				if ((iSeparator = strHost.find(' ')) != std::string::npos)
-				{
-					std::string strServer = strHost.substr(iSeparator + 1);
-					strHost = strHost.substr(0, iSeparator);
-					if ((iSeparator = strServer.find(' ')) != std::string::npos)
-					{
-						std::string strNickname = strServer.substr(iSeparator + 1);
-						strServer = strServer.substr(0, iSeparator);
-						if ((iSeparator = strNickname.find(' ')) != std::string::npos)
-						{
-							std::string strUnknown = strNickname.substr(iSeparator + 1);
-							strNickname = strNickname.substr(0, iSeparator);
-							if ((iSeparator = strUnknown.find(' ')) != std::string::npos)
-							{
-								std::string strHopCount = strUnknown.substr(iSeparator + 1);
-								strUnknown = strUnknown.substr(0, iSeparator);
-								if ((iSeparator = strHopCount.find(' ')) != std::string::npos)
-								{
-									std::string strRealname = strHopCount.substr(iSeparator + 1);
-									strHopCount = strHopCount.substr(0, iSeparator);
-
-									CIrcUser *pUser = FindUser(strNickname.c_str());
-									if (pUser != NULL)
-									{
-										pUser->SetIdent(strIdent.c_str());
-										pUser->SetHost(strHost.c_str());
-									}
-								}
-							}
-						}
-					}
-				}
-			}
 			
-			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
-			if (pChannel != NULL && !pChannel->m_bHasDetailedUsers)
+			CIrcUser *pUser = FindUser(strNickname.c_str());
+			if (pUser != NULL)
 			{
-				pChannel->m_bHasDetailedUsers = true;
+				pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
 
-				m_pParentCore->GetScriptEventManager()->OnBotGotChannelUserList(this, pChannel);
+				m_pParentCore->GetScriptEventManager()->OnUserSetChannelModes(this, pUser, pChannel, strModes.c_str(), strParams.c_str());
 				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 				{
-					(*i)->OnBotGotChannelUserList(this, pChannel);
+					(*i)->OnUserSetChannelModes(this, pUser, pChannel, strModes.c_str(), strParams.c_str());
+				}
+			}
+			else
+			{
+				CIrcUser tempUser(this, strNickname.c_str(), true);
+				tempUser.UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
+
+				m_pParentCore->GetScriptEventManager()->OnUserSetChannelModes(this, &tempUser, pChannel, strModes.c_str(), strParams.c_str());
+				for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
+				{
+					(*i)->OnUserSetChannelModes(this, &tempUser, pChannel, strModes.c_str(), strParams.c_str());
 				}
 			}
 		}
-
 		return;
 	}
 }

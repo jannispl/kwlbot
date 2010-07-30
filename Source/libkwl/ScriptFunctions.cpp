@@ -93,7 +93,8 @@ FuncReturn CScriptFunctions::RemoveEventHandler(const Arguments &args)
 				if ((*i)->handlerFunction->Equals(v8::Handle<v8::Function>::Cast(args[1])))
 				{
 					delete *i;
-					if ((i = m_pCallingScript->m_lstEventHandlers.erase(i)) == m_pCallingScript->m_lstEventHandlers.end())
+					i = m_pCallingScript->m_lstEventHandlers.erase(i);
+					if (i == m_pCallingScript->m_lstEventHandlers.end())
 					{
 						break;
 					}
@@ -102,7 +103,8 @@ FuncReturn CScriptFunctions::RemoveEventHandler(const Arguments &args)
 			else
 			{
 				delete *i;
-				if ((i = m_pCallingScript->m_lstEventHandlers.erase(i)) == m_pCallingScript->m_lstEventHandlers.end())
+				i = m_pCallingScript->m_lstEventHandlers.erase(i);
+				if (i == m_pCallingScript->m_lstEventHandlers.end())
 				{
 					break;
 				}

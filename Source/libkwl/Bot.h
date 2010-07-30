@@ -43,7 +43,7 @@ public:
 	char PrefixToMode(char cPrefix);
 	bool IsPrefixMode(char cMode);
 	char GetModeGroup(char cMode);
-	void HandleData(const std::vector<std::string> &vecParts);
+	void HandleData(const std::string &strOrigin, const std::string &strCommand, const std::vector<std::string> &vecParams);
 
 	bool TestAccessLevel(CIrcUser *pUser, int iLevel);
 

@@ -28,9 +28,8 @@ public:
 
 	void SetNickname(const char *szNickname);
 	const char *GetNickname();
-	void SetHost(const char *szHost);
+	void UpdateIfNecessary(const char *szHost, const char *szIdent);
 	const char *GetHost();
-	void SetIdent(const char *szIdent);
 	const char *GetIdent();
 
 	bool IsTemporary();

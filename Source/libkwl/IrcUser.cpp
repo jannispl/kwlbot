@@ -33,9 +33,17 @@ const char *CIrcUser::GetNickname()
 	return m_strNickname.c_str();
 }
 
-void CIrcUser::SetIdent(const char *szIdent)
+void CIrcUser::UpdateIfNecessary(const char *szIdent, const char *szHost)
 {
-	m_strIdent = szIdent;
+	if (szIdent[0] != '\0')
+	{
+		m_strIdent = szIdent;
+	}
+
+	if (szHost[0] != '\0')
+	{
+		m_strHost = szHost;
+	}
 }
 
 const char *CIrcUser::GetIdent()
@@ -46,11 +54,6 @@ const char *CIrcUser::GetIdent()
 bool CIrcUser::IsTemporary()
 {
 	return m_bTemporary;
-}
-
-void CIrcUser::SetHost(const char *szHost)
-{
-	m_strHost = szHost;
 }
 
 const char *CIrcUser::GetHost()

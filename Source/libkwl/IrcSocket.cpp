@@ -128,46 +128,75 @@ void CIrcSocket::HandleData(const char *szData)
 	printf("[in] %s\n", szData);
 #endif
 
-	// TODO: Parse prefix/command/params better
+	bool bPrefix = szData[0] == ':';
 
 	std::string strData(szData);
 
-	std::string::size_type iLastPos = strData.find_first_not_of(' ', 0);
-	std::string::size_type iPos = strData.find_first_of(' ', iLastPos);
-	std::vector<std::string> vecParts;
-	int i = 0;
+	std::string::size_type iSeparator = strData.find(' ');
+	if (iSeparator == std::string::npos)
+	{
+		// TODO: Support messages without a space
+		return;
+	}
+
+	std::string strOrigin;
+	std::string strCommand;
+	std::string strParams;
+
+	if (bPrefix)
+	{
+		strData = strData.substr(1);
+		--iSeparator;
+
+		strOrigin = strData.substr(0, iSeparator);
+		strCommand = strData.substr(iSeparator + 1);
+		if ((iSeparator = strCommand.find(' ')) == std::string::npos)
+		{
+			return;
+		}
+		strCommand = strCommand.substr(0, iSeparator);
+		strParams = strData.substr(strOrigin.length() + strCommand.length() + 2);
+	}
+	else
+	{
+		strCommand = strData.substr(0, iSeparator);
+		strParams = strData.substr(iSeparator + 1);
+	}
+
+	std::string::size_type iLastPos = strParams.find_first_not_of(' ', 0);
+	std::string::size_type iPos = strParams.find_first_of(' ', iLastPos);
+	std::vector<std::string> vecParams;
 	while (iPos != std::string::npos || iLastPos != std::string::npos)
 	{
-		vecParts.push_back(strData.substr(iLastPos, i != 3 ? iPos - iLastPos : std::string::npos));
-		if (i == 3)
+		if (strParams[iLastPos != std::string::npos ? iLastPos : 0] == ':')
 		{
+			vecParams.push_back(strParams.substr(iLastPos + 1));
+
+			iLastPos = strParams.find_first_not_of(' ', iPos);
+			iPos = strParams.find_first_of(' ', iLastPos);
 			break;
 		}
-		iLastPos = strData.find_first_not_of(' ', iPos);
-		iPos = strData.find_first_of(' ', iLastPos);
-		++i;
-	}
-	
-	while (i <= 3)
-	{
-		vecParts.push_back(std::string());
-		++i;
+
+		vecParams.push_back(strParams.substr(iLastPos, iPos - iLastPos));
+
+		iLastPos = strParams.find_first_not_of(' ', iPos);
+		iPos = strParams.find_first_of(' ', iLastPos);
 	}
 
-	m_pParentBot->HandleData(vecParts);
+	m_pParentBot->HandleData(strOrigin, strCommand, vecParams);
 
+	m_pParentBot->GetParentCore()->GetScriptEventManager()->OnBotReceivedRaw(m_pParentBot, szData);
 	for (CPool<CEventManager *>::iterator i = m_pParentBot->GetParentCore()->GetEventManagers()->begin(); i != m_pParentBot->GetParentCore()->GetEventManagers()->end(); ++i)
 	{
 		(*i)->OnBotReceivedRaw(m_pParentBot, szData);
 	}
 
-	if (vecParts[0] == "PING")
+	if (strCommand == "PING" && vecParams.size() >= 1)
 	{
-		SendRawFormat("PONG %s", vecParts[1].c_str());
+		SendRawFormat("PONG %s", vecParams[0].c_str());
 		return;
 	}
-
-	if (vecParts[1] == "433" && vecParts[3].substr(0, vecParts[3].find(' ')) == m_pParentBot->GetSettings()->GetNickname())
+	else if (strCommand == "433" && vecParams.size() >= 1 && vecParams[0] == m_pParentBot->GetSettings()->GetNickname())
 	{
 		m_strCurrentNickname = m_pParentBot->GetSettings()->GetAlternativeNickname();
 		SendRawFormat("NICK %s", m_strCurrentNickname.c_str());
