@@ -15,6 +15,9 @@ class CScriptModule;
 #include "ScriptObject.h"
 #include "ArgumentList.h"
 
+/**
+ * @brief Class which represents a script module.
+ */
 class CScriptModule : public CScriptObject
 {
 public:

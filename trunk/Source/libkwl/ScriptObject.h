@@ -12,6 +12,9 @@ class CScriptObject;
 #ifndef _SCRIPTOBJECT_H
 #define _SCRIPTOBJECT_H
 
+/**
+ * @brief Abstract class which is used for script objects.
+ */
 class CScriptObject
 {
 public:

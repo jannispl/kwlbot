@@ -20,7 +20,7 @@ class CCore;
 #include "IrcSettings.h"
 
 /**
- * Core container which manages all bot instances.
+ * @brief Core container which manages all bot instances.
  */
 class DLLEXPORT CCore
 {

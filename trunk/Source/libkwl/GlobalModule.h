@@ -15,6 +15,9 @@ class CGlobalModule;
 #include "Core.h"
 #include "v8/v8.h"
 
+/**
+ * @brief Class which represents a global module.
+ */
 class DLLEXPORT CGlobalModule
 {
 public:

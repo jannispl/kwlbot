@@ -19,7 +19,7 @@ class CEventManager;
 #include "Script.h"
 
 /**
- * Abstract class which defines an event manager.
+ * @brief Abstract class which defines an event manager.
  */
 class CEventManager
 {

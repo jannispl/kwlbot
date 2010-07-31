@@ -29,6 +29,9 @@ class CTcpSocket;
   #define SOCKET_ERROR (-1)
 #endif
 
+/**
+ * @brief Utility class which handles sockets.
+ */
 class DLLEXPORT CTcpSocket
 {
 public:
