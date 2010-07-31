@@ -16,7 +16,7 @@ addEventHandler("onUserChannelMessage",
 			}
 			catch (error)
 			{
-				channel.sendMessage("Error: " + error.message.replace("\r", "").replace("\n", " ");
+				channel.sendMessage("Error: " + error.message.replace("\r", "").replace("\n", " "));
 			}
 			
 			return;

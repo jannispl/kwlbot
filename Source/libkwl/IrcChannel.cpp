@@ -16,7 +16,7 @@ CIrcChannel::CIrcChannel(CBot *pParentBot, const char *szName)
 {
 	m_pParentBot = pParentBot;
 
-	SetName(szName);
+	UpdateName(szName);
 }
 
 CIrcChannel::~CIrcChannel()
@@ -27,7 +27,7 @@ CIrcChannel::~CIrcChannel()
 	}
 }
 
-void CIrcChannel::SetName(const char *szName)
+void CIrcChannel::UpdateName(const char *szName)
 {
 	size_t iLen = strlen(szName);
 	if (m_szName == NULL)

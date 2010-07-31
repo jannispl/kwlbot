@@ -18,6 +18,9 @@ class CEventManager;
 #include "IrcChannel.h"
 #include "Script.h"
 
+/**
+ * Abstract class which defines an event manager.
+ */
 class CEventManager
 {
 public:

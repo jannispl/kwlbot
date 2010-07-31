@@ -25,16 +25,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/** \mainpage V8 API Reference Guide
- *
- * V8 is Google's open source JavaScript engine.
- *
- * This set of documents provides reference material generated from the
- * V8 header file, include/v8.h.
- *
- * For other documentation see http://code.google.com/apis/v8/
- */
-
 #ifndef V8_H_
 #define V8_H_
 
@@ -3390,19 +3380,6 @@ Local<Object> AccessorInfo::This() const {
 Local<Object> AccessorInfo::Holder() const {
   return Local<Object>(reinterpret_cast<Object*>(&args_[-1]));
 }
-
-
-/**
- * \example shell.cc
- * A simple shell that takes a list of expressions on the
- * command-line and executes them.
- */
-
-
-/**
- * \example process.cc
- */
-
 
 }  // namespace v8
 

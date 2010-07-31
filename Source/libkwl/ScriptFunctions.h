@@ -32,7 +32,6 @@ public:
 
 	static FuncReturn getterMemoryUsage(v8::Local<v8::String> strProperty, const v8::AccessorInfo& accessorInfo);
 
-	static FuncReturn Bot__GetNickname(const Arguments &args);
 	static FuncReturn Bot__SendRaw(const Arguments &args);
 	static FuncReturn Bot__SendMessage(const Arguments &args);
 	static FuncReturn Bot__SendNotice(const Arguments &args);
@@ -41,20 +40,26 @@ public:
 	static FuncReturn Bot__JoinChannel(const Arguments &args);
 	static FuncReturn Bot__LeaveChannel(const Arguments &args);
 
-	static FuncReturn IrcUser__GetNickname(const Arguments &args);
+	static FuncReturn Bot__getterNickname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+	static FuncReturn Bot__getterNumAccessLevels(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+
 	static FuncReturn IrcUser__HasChannel(const Arguments &args);
 	static FuncReturn IrcUser__SendMessage(const Arguments &args);
-	static FuncReturn IrcUser__GetIdent(const Arguments &args);
-	static FuncReturn IrcUser__GetHost(const Arguments &args);
 	static FuncReturn IrcUser__TestAccessLevel(const Arguments &args);
-	static FuncReturn IrcUser__IsTemporary(const Arguments &args);
 	static FuncReturn IrcUser__GetModeOnChannel(const Arguments &args);
+	
+	static FuncReturn IrcUser__getterNickname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+	static FuncReturn IrcUser__getterIdent(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+	static FuncReturn IrcUser__getterHostname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+	static FuncReturn IrcUser__getterTemporary(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 
 	static FuncReturn IrcChannel__GetName(const Arguments &args);
 	static FuncReturn IrcChannel__FindUser(const Arguments &args);
 	static FuncReturn IrcChannel__HasUser(const Arguments &args);
 	static FuncReturn IrcChannel__SetTopic(const Arguments &args);
 	static FuncReturn IrcChannel__SendMessage(const Arguments &args);
+
+	static FuncReturn IrcChannel__getterName(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 
 	static void WeakCallbackUsingDelete(v8::Persistent<v8::Value> pv, void *nobj);
 	static void WeakCallbackUsingFree(v8::Persistent<v8::Value> pv, void *nobj);

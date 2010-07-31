@@ -128,9 +128,7 @@ void CIrcSocket::Pulse()
 
 void CIrcSocket::HandleData(const char *szData)
 {
-#ifdef _DEBUG
 	printf("[in] %s\n", szData);
-#endif
 
 	bool bPrefix = szData[0] == ':';
 
