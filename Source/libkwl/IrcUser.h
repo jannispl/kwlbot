@@ -19,7 +19,7 @@ class CIrcUser;
 #include <map>
 
 /**
- * Class which represents a remote IRC user.
+ * @brief Class which represents a remote IRC user.
  */
 class DLLEXPORT CIrcUser : public CScriptObject
 {

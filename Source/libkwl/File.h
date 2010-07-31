@@ -15,6 +15,9 @@ class CFile;
 #include "ScriptObject.h"
 #include <stdio.h>
 
+/**
+ * @brief Utility class which handles files.
+ */
 class CFile : public CScriptObject
 {
 public:

@@ -19,7 +19,7 @@ class CIrcChannel;
 #include "Script.h"
 
 /**
- * Class which represents a remote IRC channel.
+ * @brief Class which represents a remote IRC channel.
  */
 class DLLEXPORT CIrcChannel : public CScriptObject
 {

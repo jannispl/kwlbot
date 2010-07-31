@@ -15,6 +15,9 @@ class CScriptEventManager;
 #include "Core.h"
 #include "EventManager.h"
 
+/**
+ * @brief Handles calling events in scripts.
+ */
 class CScriptEventManager : public CEventManager
 {
 public:

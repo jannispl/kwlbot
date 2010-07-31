@@ -16,6 +16,9 @@ class CConfig;
 #include <string>
 #include <map>
 
+/**
+ * @brief Config parser.
+ */
 class CConfig
 {
 public:

@@ -12,6 +12,9 @@ Purpose:	Utility class for a list of arguments
 
 #include <vector>
 
+/**
+ * @brief Utility class for a list of arguments.
+ */
 class CArgumentList
 {
 public:

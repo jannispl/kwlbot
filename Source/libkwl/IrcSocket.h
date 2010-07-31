@@ -17,7 +17,7 @@ class CIrcSocket;
 #include "Bot.h"
 
 /**
- * Class which manages a connection to an IRC server.
+ * @brief Class which manages a connection to an IRC server.
  */
 class DLLEXPORT CIrcSocket
 {

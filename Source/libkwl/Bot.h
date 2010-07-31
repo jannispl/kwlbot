@@ -24,7 +24,7 @@ class CBot;
 #include <string>
 
 /**
- * Class which represents an IRC bot.
+ * @brief Class which represents an IRC bot.
  */
 class DLLEXPORT CBot : public CScriptObject
 {

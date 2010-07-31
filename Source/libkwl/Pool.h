@@ -14,6 +14,9 @@ Purpose:	Template class which represents a pool for elements
 
 #include <malloc.h>
 
+/**
+ * @brief Template class which represents a pool for elements.
+ */
 template <typename T> class CPool
 {
 public:

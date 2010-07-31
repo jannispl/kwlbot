@@ -16,7 +16,7 @@ class CIrcSettings;
 #include "Config.h"
 
 /**
- * Class which manages IRC-related settings.
+ * @brief Class which manages IRC-related settings.
  */
 class DLLEXPORT CIrcSettings
 {

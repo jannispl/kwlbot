@@ -18,6 +18,9 @@ class CScriptFunctions;
 using v8::Arguments;
 typedef v8::Handle<v8::Value> FuncReturn;
 
+/**
+ * @brief Contains definitions for scripting functions.
+ */
 class CScriptFunctions
 {
 public:

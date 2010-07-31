@@ -18,6 +18,9 @@ class CScript;
 #include <list>
 #include <string>
 
+/**
+ * @brief Class which represents a script.
+ */
 class DLLEXPORT CScript
 {
 	friend class CScriptFunctions;
