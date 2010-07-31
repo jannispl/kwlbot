@@ -237,7 +237,31 @@ char CBot::GetModeGroup(char cMode)
 void CBot::HandleData(const std::string &strOrigin, const std::string &strCommand, const std::vector<std::string> &vecParams)
 {
 	int iParamCount = vecParams.size();
+	int iNumeric;
 
+	if (strCommand.length() == 3)
+	{
+		iNumeric = 1;
+		for (std::string::const_iterator i = strCommand.begin(); i != strCommand.end(); ++i)
+		{
+			if (*i < '0' || *i > '9')
+			{
+				iNumeric = 0;
+				break;
+			}
+		}
+
+		if (iNumeric == 1)
+		{
+			iNumeric = atoi(strCommand.c_str());
+		}
+	}
+	else
+	{
+		iNumeric = 0;
+	}
+
+	CIrcUser *pUser = NULL;
 	std::string strNickname, strIdent, strHostname;
 	if (!strOrigin.empty())
 	{
@@ -256,15 +280,24 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			}
 			else
 			{
-				strIdent = strOrigin.substr(iSeparator, iSeparator2 - iSeparator + 1);
+				strIdent = strOrigin.substr(iSeparator + 1, iSeparator2 - iSeparator - 1);
 				strHostname = strOrigin.substr(iSeparator2 + 1);
+			}
+		}
+
+		if (iNumeric == 0) // A numeric reply is not allowed to originate from a client (RFC 2812)
+		{
+			pUser = FindUser(strNickname.c_str());
+			if (pUser != NULL)
+			{
+				pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
 			}
 		}
 	}
 
 	if (!m_bGotMotd)
 	{
-		if (strCommand == "376" || strCommand == "422")
+		if (iNumeric != 0 && (iNumeric == 376 || iNumeric == 422))
 		{
 			m_bGotMotd = true;
 
@@ -295,7 +328,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 	send a NAMES reply afterwards. We urgently need a channel's user list before
 	calling the onBotJoinedChannel event */
 
-	if (strCommand != "366" /* End of NAMES */ && strCommand != "332" /* Topic */ && strCommand != "333" /* Topic Timestamp */ && m_plIncompleteChannels.size() != 0) // If we did not get a NAMES reply right after the JOIN message
+	if ((iNumeric == 0 || (iNumeric != 353 /* NAMES */ && iNumeric != 366 /* End of NAMES */ && iNumeric != 332 /* Topic */ && iNumeric != 333 /* Topic Timestamp */)) && m_plIncompleteChannels.size() != 0) // If we did not get a NAMES reply right after the JOIN message
 	{
 		for (CPool<CIrcChannel *>::iterator i = m_plIncompleteChannels.begin(); i != m_plIncompleteChannels.end(); ++i)
 		{
@@ -317,13 +350,12 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 	{
 		// WHO reply
 		//:ircd 352 #channel ident host ircd nickname IDK :hopcount realname
-		if (strCommand == "352")
+		if (iNumeric == 352)
 		{
 			std::string strChannel = vecParams[0];
 			std::string strIdent = vecParams[1];
 			std::string strHost = vecParams[2];
 
-			CIrcUser *pUser = FindUser(strNickname.c_str());
 			if (pUser != NULL)
 			{
 				pUser->UpdateIfNecessary(strIdent.c_str(), strHost.c_str());
@@ -344,6 +376,90 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			return;
 		}
 	}
+	else if (iParamCount == 4)
+	{
+		if (iNumeric == 353)
+		{
+			std::string strChannel = vecParams[2];
+
+			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+			if (pChannel != NULL)
+			{
+				std::string strNames = vecParams[3];
+
+				std::string::size_type iLastPos = strNames.find_first_not_of(' ', 0);
+				std::string::size_type iPos = strNames.find_first_of(' ', iLastPos);
+				while (iPos != std::string::npos || iLastPos != std::string::npos)
+				{
+					std::string strName = strNames.substr(iLastPos, iPos - iLastPos);
+					
+					char cMode = 0;
+					bool bBreak = false;
+					std::string::size_type iOffset = 0;
+					for (std::string::iterator i = strName.begin(); i != strName.end(); ++i)
+					{
+						switch (*i)
+						{
+						case '~':
+							cMode |= 32;
+							++iOffset;
+							break;
+						case '&':
+							cMode |= 16;
+							++iOffset;
+							break;
+						case '@':
+							cMode |= 8;
+							++iOffset;
+							break;
+						case '%':
+							cMode |= 4;
+							++iOffset;
+							break;
+						case '+':
+							cMode |= 2;
+							++iOffset;
+							break;
+						default:
+							bBreak = true;
+							break;
+						}
+						if (bBreak)
+						{
+							break;
+						}
+					}
+					
+					if (iOffset != 0)
+					{
+						strName = strName.substr(iOffset);
+					}
+
+					if (strName != m_pIrcSocket->GetCurrentNickname())
+					{
+						if (pUser == NULL)
+						{
+							dbgprintf("We don't know %s yet, adding him (1).\n", strName.c_str());
+							pUser = new CIrcUser(this, strName.c_str());
+							m_plGlobalUsers.push_back(pUser);
+						}
+						else
+						{
+							dbgprintf("We already know %s.\n", pUser->GetNickname());
+						}
+						pUser->m_plIrcChannels.push_back(pChannel);
+						pUser->m_mapChannelModes[pChannel] = cMode;
+
+						pChannel->m_plIrcUsers.push_back(pUser);
+					}
+
+					iLastPos = strNames.find_first_not_of(' ', iPos);
+					iPos = strNames.find_first_of(' ', iLastPos);
+				}
+			}
+			return;
+		}
+	}
 	else if (iParamCount == 3)
 	{
 		if (strCommand == "KICK")
@@ -355,7 +471,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
 			if (pChannel != NULL)
 			{
-				CIrcUser *pUser = FindUser(strNickname.c_str());
 				if (strVictim == m_pIrcSocket->GetCurrentNickname())
 				{
 					dbgprintf("WE WERE KICKED FROM %s.\n", pChannel->GetName());
@@ -428,89 +543,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 	}
 	else if (iParamCount == 2)
 	{
-		if (strCommand == "353")
-		{
-			std::string strChannel = vecParams[0];
-
-			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
-			if (pChannel != NULL)
-			{
-				std::string strNames = vecParams[1];
-
-				std::string::size_type iLastPos = strNames.find_first_not_of(' ', 0);
-				std::string::size_type iPos = strNames.find_first_of(' ', iLastPos);
-				while (iPos != std::string::npos || iLastPos != std::string::npos)
-				{
-					std::string strName = strNames.substr(iLastPos, iPos - iLastPos);
-					
-					char cMode = 0;
-					bool bBreak = false;
-					std::string::size_type iOffset = 0;
-					for (std::string::iterator i = strName.begin(); i != strName.end(); ++i)
-					{
-						switch (*i)
-						{
-						case '~':
-							cMode |= 32;
-							++iOffset;
-							break;
-						case '&':
-							cMode |= 16;
-							++iOffset;
-							break;
-						case '@':
-							cMode |= 8;
-							++iOffset;
-							break;
-						case '%':
-							cMode |= 4;
-							++iOffset;
-							break;
-						case '+':
-							cMode |= 2;
-							++iOffset;
-							break;
-						default:
-							bBreak = true;
-							break;
-						}
-						if (bBreak)
-						{
-							break;
-						}
-					}
-					
-					if (iOffset != 0)
-					{
-						strName = strName.substr(iOffset);
-					}
-
-					if (strName != m_pIrcSocket->GetCurrentNickname())
-					{
-						CIrcUser *pUser = FindUser(strName.c_str());
-						if (pUser == NULL)
-						{
-							dbgprintf("We don't know %s yet, adding him (1).\n", strName.c_str());
-							pUser = new CIrcUser(this, strName.c_str());
-							m_plGlobalUsers.push_back(pUser);
-						}
-						else
-						{
-							dbgprintf("We already know %s.\n", pUser->GetNickname());
-						}
-						pUser->m_plIrcChannels.push_back(pChannel);
-						pUser->m_mapChannelModes[pChannel] = cMode;
-
-						pChannel->m_plIrcUsers.push_back(pUser);
-					}
-
-					iLastPos = strNames.find_first_not_of(' ', iPos);
-					iPos = strNames.find_first_of(' ', iLastPos);
-				}
-			}
-			return;
-		}
-
 		if (strCommand == "366")
 		{
 			std::string strChannel = vecParams[0];
@@ -568,7 +600,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 				}
 				else
 				{
-					CIrcUser *pUser = FindUser(strNickname.c_str());
 					if (pUser != NULL)
 					{
 						pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
@@ -613,7 +644,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
 			if (pChannel != NULL)
 			{
-				CIrcUser *pUser = FindUser(strNickname.c_str());
 				if (strVictim == m_pIrcSocket->GetCurrentNickname())
 				{
 					dbgprintf("WE WERE KICKED FROM %s.\n", pChannel->GetName());
@@ -688,7 +718,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			std::string strTarget = vecParams[0];
 			std::string strMessage = vecParams[1];
 
-			CIrcUser *pUser = FindUser(strNickname.c_str());
 			if (pUser != NULL)
 			{
 				pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
@@ -778,7 +807,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			}
 			if (pChannel != NULL)
 			{
-				CIrcUser *pUser = FindUser(strNickname.c_str());
 				if (pUser == NULL)
 				{
 					dbgprintf("We don't know %s yet, adding him (2).\n", strNickname.c_str());
@@ -843,7 +871,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 				}
 				else
 				{
-					CIrcUser *pUser = FindUser(strNickname.c_str());
 					if (pUser != NULL)
 					{
 						pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
@@ -883,7 +910,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 		{
 			std::string strReason = vecParams[0];
 
-			CIrcUser *pUser = FindUser(strNickname.c_str());
 			if (pUser != NULL)
 			{
 				pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
@@ -928,13 +954,12 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			}
 			else
 			{
-				CIrcUser *pUser = FindUser(strNickname.c_str());
 				if (pUser != NULL)
 				{
 					pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
 
 					dbgprintf("Renaming %s to %s.\n", pUser->GetNickname(), strNewNick.c_str());
-					pUser->SetNickname(strNewNick.c_str());
+					pUser->UpdateNickname(strNewNick.c_str());
 
 					m_pParentCore->GetScriptEventManager()->OnUserChangedNickname(this, pUser, strNickname.c_str());
 					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
@@ -961,7 +986,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 	{
 		if (strCommand == "QUIT")
 		{
-			CIrcUser *pUser = FindUser(strNickname.c_str());
 			if (pUser != NULL)
 			{
 				pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
@@ -1172,7 +1196,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 				}
 			}
 			
-			CIrcUser *pUser = FindUser(strNickname.c_str());
 			if (pUser != NULL)
 			{
 				pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
@@ -1208,7 +1231,7 @@ bool CBot::TestAccessLevel(CIrcUser *pUser, int iLevel)
 
 	AccessRules accessRules = m_vecAccessRules[iLevel - 1];
 
-	if (!accessRules.strRequireHost.empty() && !wildcmp(accessRules.strRequireHost.c_str(), pUser->GetHost()))
+	if (!accessRules.strRequireHost.empty() && !wildcmp(accessRules.strRequireHost.c_str(), pUser->GetHostname()))
 	{
 		return false;
 	}
@@ -1224,6 +1247,11 @@ bool CBot::TestAccessLevel(CIrcUser *pUser, int iLevel)
 	}
 
 	return true;
+}
+
+int CBot::GetNumAccessLevels()
+{
+	return m_vecAccessRules.size();
 }
 
 CScript *CBot::CreateScript(const char *szFilename)

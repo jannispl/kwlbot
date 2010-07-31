@@ -39,7 +39,6 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		m_ClassTemplates.Bot->SetClassName(v8::String::New("Bot"));
 		m_ClassTemplates.Bot->InstanceTemplate()->SetInternalFieldCount(1);
 		v8::Handle<v8::ObjectTemplate> botProto = m_ClassTemplates.Bot->PrototypeTemplate();
-		botProto->Set(v8::String::New("getNickname"), v8::FunctionTemplate::New(CScriptFunctions::Bot__GetNickname));
 		botProto->Set(v8::String::New("sendRaw"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendRaw));
 		botProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendMessage));
 		botProto->Set(v8::String::New("sendNotice"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendNotice));
@@ -48,30 +47,35 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		botProto->Set(v8::String::New("joinChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__JoinChannel));
 		botProto->Set(v8::String::New("leaveChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__LeaveChannel));
 
+		botProto->SetAccessor(v8::String::New("nickname"), CScriptFunctions::Bot__getterNickname);
+		botProto->SetAccessor(v8::String::New("numAccessLevels"), CScriptFunctions::Bot__getterNumAccessLevels);
+
 		// CIrcUser
 		m_ClassTemplates.IrcUser = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
 		m_ClassTemplates.IrcUser->SetClassName(v8::String::New("IrcUser"));
 		m_ClassTemplates.IrcUser->InstanceTemplate()->SetInternalFieldCount(1);
 		v8::Handle<v8::ObjectTemplate> userProto = m_ClassTemplates.IrcUser->PrototypeTemplate();
-		userProto->Set(v8::String::New("getNickname"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetNickname));
 		userProto->Set(v8::String::New("hasChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__HasChannel));
 		userProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__SendMessage));
-		userProto->Set(v8::String::New("getIdent"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetIdent));
-		userProto->Set(v8::String::New("getHost"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetHost));
 		userProto->Set(v8::String::New("testAccessLevel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__TestAccessLevel));
-		userProto->Set(v8::String::New("isTemporary"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__IsTemporary));
 		userProto->Set(v8::String::New("getModeOnChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetModeOnChannel));
+
+		userProto->SetAccessor(v8::String::New("nickname"), CScriptFunctions::IrcUser__getterNickname);
+		userProto->SetAccessor(v8::String::New("ident"), CScriptFunctions::IrcUser__getterIdent);
+		userProto->SetAccessor(v8::String::New("hostname"), CScriptFunctions::IrcUser__getterHostname);
+		userProto->SetAccessor(v8::String::New("temporary"), CScriptFunctions::IrcUser__getterTemporary);
 
 		// CIrcChannel
 		m_ClassTemplates.IrcChannel = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
 		m_ClassTemplates.IrcChannel->SetClassName(v8::String::New("IrcChannel"));
 		m_ClassTemplates.IrcChannel->InstanceTemplate()->SetInternalFieldCount(1);
 		v8::Handle<v8::ObjectTemplate> channelProto = m_ClassTemplates.IrcChannel->PrototypeTemplate();
-		channelProto->Set(v8::String::New("getName"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__GetName));
 		channelProto->Set(v8::String::New("findUser"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__FindUser));
 		channelProto->Set(v8::String::New("hasUser"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__HasUser));
 		channelProto->Set(v8::String::New("setTopic"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SetTopic));
 		channelProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SendMessage));
+
+		channelProto->SetAccessor(v8::String::New("name"), CScriptFunctions::IrcChannel__getterName);
 
 		// CScriptModule
 		m_ClassTemplates.ScriptModule = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__constructor));
