@@ -33,8 +33,6 @@ public:
 	static FuncReturn GetEventHandlers(const Arguments &args);
 	static FuncReturn CancelEvent(const Arguments &args);
 
-	static FuncReturn getterMemoryUsage(v8::Local<v8::String> strProperty, const v8::AccessorInfo& accessorInfo);
-
 	static FuncReturn Bot__SendRaw(const Arguments &args);
 	static FuncReturn Bot__SendMessage(const Arguments &args);
 	static FuncReturn Bot__SendNotice(const Arguments &args);
@@ -63,6 +61,12 @@ public:
 	static FuncReturn IrcChannel__SendMessage(const Arguments &args);
 
 	static FuncReturn IrcChannel__getterName(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+	static FuncReturn IrcChannel__getterTopic(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+	static void IrcChannel__setterTopic(v8::Local<v8::String> strProperty, v8::Local<v8::Value> newValue, const v8::AccessorInfo &accessorInfo);
+
+	static FuncReturn Topic__ToString(const Arguments &args);
+	static FuncReturn Topic__getterSetBy(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+	static FuncReturn Topic__getterSetOn(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 
 	static void WeakCallbackUsingDelete(v8::Persistent<v8::Value> pv, void *nobj);
 	static void WeakCallbackUsingFree(v8::Persistent<v8::Value> pv, void *nobj);

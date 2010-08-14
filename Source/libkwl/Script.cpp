@@ -76,6 +76,17 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		channelProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SendMessage));
 
 		channelProto->SetAccessor(v8::String::New("name"), CScriptFunctions::IrcChannel__getterName);
+		channelProto->SetAccessor(v8::String::New("topic"), CScriptFunctions::IrcChannel__getterTopic, CScriptFunctions::IrcChannel__setterTopic);
+
+		// Topic
+		m_ClassTemplates.Topic = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
+		m_ClassTemplates.Topic->SetClassName(v8::String::New("Topic"));
+		m_ClassTemplates.Topic->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> topicProto = m_ClassTemplates.Topic->PrototypeTemplate();
+
+		topicProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::Topic__ToString));
+		topicProto->SetAccessor(v8::String::New("setBy"), CScriptFunctions::Topic__getterSetBy);
+		topicProto->SetAccessor(v8::String::New("setOn"), CScriptFunctions::Topic__getterSetOn);
 
 		// CScriptModule
 		m_ClassTemplates.ScriptModule = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__constructor));
@@ -98,8 +109,6 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		m_GlobalTemplate->Set(v8::String::New("removeEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::RemoveEventHandler));
 		m_GlobalTemplate->Set(v8::String::New("getEventHandlers"), v8::FunctionTemplate::New(CScriptFunctions::GetEventHandlers));
 		m_GlobalTemplate->Set(v8::String::New("cancelEvent"), v8::FunctionTemplate::New(CScriptFunctions::CancelEvent));
-
-		m_GlobalTemplate->SetAccessor(v8::String::New("memusage"), CScriptFunctions::getterMemoryUsage);
 
 		m_GlobalTemplate->Set(v8::String::New("Bot"), m_ClassTemplates.Bot);
 		m_GlobalTemplate->Set(v8::String::New("IrcUser"), m_ClassTemplates.IrcUser);

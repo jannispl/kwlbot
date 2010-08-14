@@ -17,6 +17,7 @@ class CIrcChannel;
 #include "IrcUser.h"
 #include "Pool.h"
 #include "Script.h"
+#include <time.h>
 
 /**
  * @brief Class which represents a remote IRC channel.
@@ -79,6 +80,14 @@ public:
 
 	CPool<CIrcUser *> m_plIrcUsers;
 	bool m_bHasDetailedUsers;
+
+	typedef struct
+	{
+		time_t ullTopicSetDate;
+		std::string strTopicSetBy;
+		std::string strTopic;
+	} TopicInfo;
+	TopicInfo m_topicInfo;
 
 private:
 	CBot *m_pParentBot;

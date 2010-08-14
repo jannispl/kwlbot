@@ -42,6 +42,7 @@ public:
 		v8::Persistent<v8::FunctionTemplate> Bot;
 		v8::Persistent<v8::FunctionTemplate> IrcUser;
 		v8::Persistent<v8::FunctionTemplate> IrcChannel;
+		v8::Persistent<v8::FunctionTemplate> Topic;
 		v8::Persistent<v8::FunctionTemplate> File;
 		v8::Persistent<v8::FunctionTemplate> ScriptModule;
 		v8::Persistent<v8::FunctionTemplate> ScriptModuleProcedure;

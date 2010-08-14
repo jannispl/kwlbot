@@ -176,21 +176,6 @@ FuncReturn CScriptFunctions::CancelEvent(const Arguments &args)
 	return v8::True();
 }
 
-FuncReturn CScriptFunctions::getterMemoryUsage(v8::Local<v8::String> strProperty, const v8::AccessorInfo& accessorInfo)
-{
-#ifdef WIN32
-	PROCESS_MEMORY_COUNTERS memoryCounters;
-	if (!GetProcessMemoryInfo(GetCurrentProcess(), &memoryCounters, sizeof(PROCESS_MEMORY_COUNTERS)))
-	{
-		return v8::False();
-	}
-
-	return v8::Integer::NewFromUnsigned(memoryCounters.WorkingSetSize);
-#else
-	return v8::Integer::NewFromUnsigned(0);
-#endif
-}
-
 FuncReturn CScriptFunctions::Bot__SendRaw(const Arguments &args)
 {
 	if (args.Length() < 1)
@@ -713,6 +698,51 @@ FuncReturn CScriptFunctions::IrcChannel__getterName(v8::Local<v8::String> strPro
 	return v8::String::New(((CIrcChannel *)pObject)->GetName());
 }
 
+FuncReturn CScriptFunctions::IrcChannel__getterTopic(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	
+	m_bAllowInternalConstructions = true;
+	v8::Persistent<v8::Object> obj = v8::Persistent<v8::Object>::New(CScript::m_ClassTemplates.Topic->GetFunction()->NewInstance());
+	m_bAllowInternalConstructions = false;
+
+	obj->SetInternalField(0, v8::External::New(pObject));
+	return obj;
+}
+
+void CScriptFunctions::IrcChannel__setterTopic(v8::Local<v8::String> strProperty, v8::Local<v8::Value> newValue, const v8::AccessorInfo &accessorInfo)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+
+	v8::String::Utf8Value strTopic(newValue);
+	if (*strTopic == NULL)
+	{
+		return;
+	}
+
+	((CIrcChannel *)pObject)->SetTopic(*strTopic);
+}
+
+FuncReturn CScriptFunctions::Topic__ToString(const Arguments &args)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+
+	return v8::String::New(((CIrcChannel *)pObject)->m_topicInfo.strTopic.c_str());
+}
+
+FuncReturn CScriptFunctions::Topic__getterSetBy(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+
+	return v8::String::New(((CIrcChannel *)pObject)->m_topicInfo.strTopicSetBy.c_str());
+}
+
+FuncReturn CScriptFunctions::Topic__getterSetOn(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	return v8::Date::New((double)((CIrcChannel *)pObject)->m_topicInfo.ullTopicSetDate * 1000);
+}
+
 void CScriptFunctions::WeakCallbackUsingDelete(v8::Persistent<v8::Value> pv, void *nobj)
 {
 	v8::HandleScope handle_scope;
@@ -757,6 +787,11 @@ void CScriptFunctions::WeakCallbackUsingFree(v8::Persistent<v8::Value> pv, void 
 
 FuncReturn CScriptFunctions::ScriptModule__constructor(const v8::Arguments &args)
 {
+	if (m_bAllowInternalConstructions)
+	{
+		return v8::Undefined();
+	}
+
 	if (!args.IsConstructCall() || args.Length() < 1)
 	{
 		return v8::False();
@@ -836,6 +871,10 @@ FuncReturn CScriptFunctions::ScriptModuleProcedure__Call(const v8::Arguments &ar
 		else if (args[i]->IsObject())
 		{
 			list.Add(v8::Local<v8::External>::Cast(args[i]->ToObject()->GetInternalField(0))->Value());
+		}
+		else
+		{
+			list.Add((void *)NULL);
 		}
 	}
 
