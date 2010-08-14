@@ -67,7 +67,7 @@ CCore::~CCore()
 
 	for (CPool<CEventManager *>::iterator i = m_plEventManagers.begin(); i != m_plEventManagers.end(); ++i)
 	{
-		//delete *i; /* FIXME */
+		// We don't need to delete the instance here. The modules are responsible for doing it.
 		i = m_plEventManagers.erase(i);
 		if (i == m_plEventManagers.end())
 		{

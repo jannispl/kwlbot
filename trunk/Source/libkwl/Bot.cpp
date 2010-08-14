@@ -349,13 +349,14 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 	if (iParamCount == 8)
 	{
 		// WHO reply
-		//:ircd 352 #channel ident host ircd nickname IDK :hopcount realname
+		//:ircd 352 botname #channel ident host ircd nickname IDK :hopcount realname
 		if (iNumeric == 352)
 		{
-			std::string strChannel = vecParams[0];
-			std::string strIdent = vecParams[1];
-			std::string strHost = vecParams[2];
+			std::string strChannel = vecParams[1];
+			std::string strIdent = vecParams[2];
+			std::string strHost = vecParams[3];
 
+			pUser = FindUser(vecParams[5].c_str());
 			if (pUser != NULL)
 			{
 				pUser->UpdateIfNecessary(strIdent.c_str(), strHost.c_str());
@@ -392,6 +393,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 				while (iPos != std::string::npos || iLastPos != std::string::npos)
 				{
 					std::string strName = strNames.substr(iLastPos, iPos - iLastPos);
+					printf("========NAME '%s'\n", strName.c_str());
 					
 					char cMode = 0;
 					bool bBreak = false;
@@ -435,17 +437,18 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 						strName = strName.substr(iOffset);
 					}
 
+					pUser = FindUser(strName.c_str());
 					if (strName != m_pIrcSocket->GetCurrentNickname())
 					{
 						if (pUser == NULL)
 						{
-							dbgprintf("We don't know %s yet, adding him (1).\n", strName.c_str());
+							printf("We don't know %s yet, adding him (1).\n", strName.c_str());
 							pUser = new CIrcUser(this, strName.c_str());
 							m_plGlobalUsers.push_back(pUser);
 						}
 						else
 						{
-							dbgprintf("We already know %s.\n", pUser->GetNickname());
+							printf("We already know %s.\n", pUser->GetNickname());
 						}
 						pUser->m_plIrcChannels.push_back(pChannel);
 						pUser->m_mapChannelModes[pChannel] = cMode;
@@ -457,6 +460,25 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 					iPos = strNames.find_first_of(' ', iLastPos);
 				}
 			}
+			return;
+		}
+
+		if (iNumeric == 333)
+		{
+			std::string strChannel = vecParams[1];
+
+			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+			if (pChannel == NULL)
+			{
+				return;
+			}
+
+			pChannel->m_topicInfo.strTopicSetBy = vecParams[2];
+#ifdef WIN32
+			pChannel->m_topicInfo.ullTopicSetDate = _atoi64(vecParams[3].c_str());
+#else
+			pChannel->m_topicInfo.ullTopicSetDate = strtoll(vecParams[3].c_str(), NULL, 10);
+#endif
 			return;
 		}
 	}
@@ -538,6 +560,21 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 					*/
 				}
 			}
+			return;
+		}
+
+		if (iNumeric == 332)
+		{
+			std::string strChannel = vecParams[1];
+
+			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+			if (pChannel == NULL)
+			{
+				return;
+			}
+
+			pChannel->m_topicInfo.strTopicSetBy = strNickname;
+			pChannel->m_topicInfo.strTopic = vecParams[2];
 			return;
 		}
 	}
@@ -776,6 +813,22 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 					}
 				}
 			}
+			return;
+		}
+
+		if (strCommand == "TOPIC")
+		{
+			std::string strChannel = vecParams[0];
+
+			CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+			if (pChannel == NULL)
+			{
+				return;
+			}
+
+			pChannel->m_topicInfo.ullTopicSetDate = time(NULL);
+			pChannel->m_topicInfo.strTopicSetBy = strNickname;
+			pChannel->m_topicInfo.strTopic = vecParams[1];
 			return;
 		}
 	}
