@@ -29,6 +29,7 @@ Purpose:	Precompiled header file
   #pragma warning(disable:4251)
 #else
   #include <unistd.h>
+  #include <stdlib.h>
   #include <string.h>
 
   #define stricmp strcasecmp
