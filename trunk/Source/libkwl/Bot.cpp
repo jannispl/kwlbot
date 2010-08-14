@@ -393,7 +393,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 				while (iPos != std::string::npos || iLastPos != std::string::npos)
 				{
 					std::string strName = strNames.substr(iLastPos, iPos - iLastPos);
-					printf("========NAME '%s'\n", strName.c_str());
 					
 					char cMode = 0;
 					bool bBreak = false;
@@ -442,13 +441,13 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 					{
 						if (pUser == NULL)
 						{
-							printf("We don't know %s yet, adding him (1).\n", strName.c_str());
+							dbgprintf("We don't know %s yet, adding him (1).\n", strName.c_str());
 							pUser = new CIrcUser(this, strName.c_str());
 							m_plGlobalUsers.push_back(pUser);
 						}
 						else
 						{
-							printf("We already know %s.\n", pUser->GetNickname());
+							dbgprintf("We already know %s.\n", pUser->GetNickname());
 						}
 						pUser->m_plIrcChannels.push_back(pChannel);
 						pUser->m_mapChannelModes[pChannel] = cMode;
