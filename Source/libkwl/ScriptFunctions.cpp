@@ -65,7 +65,7 @@ FuncReturn CScriptFunctions::AddEventHandler(const Arguments &args)
 	CScript::EventHandler *pEventHandler = new CScript::EventHandler;
 	pEventHandler->strEvent = *strEvent;
 	pEventHandler->handlerFunction = v8::Persistent<v8::Function>::New(function);
-	m_pCallingScript->m_lstEventHandlers.push_front(pEventHandler);
+	m_pCallingScript->m_plEventHandlers.push_front(pEventHandler);
 
 	return v8::True();
 }
@@ -84,7 +84,7 @@ FuncReturn CScriptFunctions::RemoveEventHandler(const Arguments &args)
 		return v8::False();
 	}
 
-	for (CPool<CScript::EventHandler *>::iterator i = m_pCallingScript->m_lstEventHandlers.begin(); i != m_pCallingScript->m_lstEventHandlers.end(); ++i)
+	for (CPool<CScript::EventHandler *>::iterator i = m_pCallingScript->m_plEventHandlers.begin(); i != m_pCallingScript->m_plEventHandlers.end(); ++i)
 	{
 		if ((*i)->strEvent == *strEvent)
 		{
@@ -93,8 +93,8 @@ FuncReturn CScriptFunctions::RemoveEventHandler(const Arguments &args)
 				if ((*i)->handlerFunction->Equals(v8::Handle<v8::Function>::Cast(args[1])))
 				{
 					delete *i;
-					i = m_pCallingScript->m_lstEventHandlers.erase(i);
-					if (i == m_pCallingScript->m_lstEventHandlers.end())
+					i = m_pCallingScript->m_plEventHandlers.erase(i);
+					if (i == m_pCallingScript->m_plEventHandlers.end())
 					{
 						break;
 					}
@@ -103,8 +103,8 @@ FuncReturn CScriptFunctions::RemoveEventHandler(const Arguments &args)
 			else
 			{
 				delete *i;
-				i = m_pCallingScript->m_lstEventHandlers.erase(i);
-				if (i == m_pCallingScript->m_lstEventHandlers.end())
+				i = m_pCallingScript->m_plEventHandlers.erase(i);
+				if (i == m_pCallingScript->m_plEventHandlers.end())
 				{
 					break;
 				}
@@ -132,7 +132,7 @@ FuncReturn CScriptFunctions::GetEventHandlers(const Arguments &args)
 
 		v8::Local<v8::Array> eventHandlers = v8::Array::New();
 		int iNum = 0;
-		for (CPool<CScript::EventHandler *>::iterator i = m_pCallingScript->m_lstEventHandlers.begin(); i != m_pCallingScript->m_lstEventHandlers.end(); ++i)
+		for (CPool<CScript::EventHandler *>::iterator i = m_pCallingScript->m_plEventHandlers.begin(); i != m_pCallingScript->m_plEventHandlers.end(); ++i)
 		{
 			if ((*i)->strEvent == *strEvent)
 			{
@@ -144,9 +144,9 @@ FuncReturn CScriptFunctions::GetEventHandlers(const Arguments &args)
 		return eventHandlers;
 	}
 
-	v8::Local<v8::Array> eventHandlers = v8::Array::New(m_pCallingScript->m_lstEventHandlers.size());
+	v8::Local<v8::Array> eventHandlers = v8::Array::New(m_pCallingScript->m_plEventHandlers.size());
 	int iNum = 0;
-	for (CPool<CScript::EventHandler *>::iterator i = m_pCallingScript->m_lstEventHandlers.begin(); i != m_pCallingScript->m_lstEventHandlers.end(); ++i)
+	for (CPool<CScript::EventHandler *>::iterator i = m_pCallingScript->m_plEventHandlers.begin(); i != m_pCallingScript->m_plEventHandlers.end(); ++i)
 	{
 		v8::Local<v8::Object> eventHandler = v8::Object::New();
 		eventHandler->Set(v8::String::New("event"), v8::String::New((*i)->strEvent.c_str()));
@@ -338,7 +338,7 @@ FuncReturn CScriptFunctions::Bot__FindUser(const Arguments &args)
 	}
 
 	m_bAllowInternalConstructions = true;
-	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.IrcUser->GetFunction()->NewInstance();
+	v8::Local<v8::Object> obj = CScript::m_classTemplates.IrcUser->GetFunction()->NewInstance();
 	m_bAllowInternalConstructions = false;
 
 	obj->SetInternalField(0, v8::External::New(pUser));
@@ -367,7 +367,7 @@ FuncReturn CScriptFunctions::Bot__FindChannel(const Arguments &args)
 	}
 
 	m_bAllowInternalConstructions = true;
-	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.IrcChannel->GetFunction()->NewInstance();
+	v8::Local<v8::Object> obj = CScript::m_classTemplates.IrcChannel->GetFunction()->NewInstance();
 	m_bAllowInternalConstructions = false;
 	obj->SetInternalField(0, v8::External::New(pChannel));
 	return obj;
@@ -447,11 +447,40 @@ FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
 	return v8::Boolean::New(((CBot *)pObject)->LeaveChannel(pChannel, strReason.empty() ? NULL : strReason.c_str()));
 }
 
+FuncReturn CScriptFunctions::Bot__ToString(const Arguments &args)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+
+	std::string strObjectName = "Bot(" + std::string(((CBot *)pObject)->GetSocket()->GetCurrentNickname()) + ")";
+	return v8::String::New(strObjectName.c_str(), strObjectName.length());
+}
+
 FuncReturn CScriptFunctions::Bot__getterNickname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
 	return v8::String::New(((CBot *)pObject)->GetSocket()->GetCurrentNickname());
+}
+
+FuncReturn CScriptFunctions::Bot__getterChannels(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	
+	CPool<CIrcChannel *> *pChannels = ((CBot *)pObject)->GetChannels();
+
+	v8::Local<v8::Object> channels = v8::Object::New();
+
+	m_bAllowInternalConstructions = true;
+	for (CPool<CIrcChannel *>::iterator i = pChannels->begin(); i != pChannels->end(); ++i)
+	{
+		v8::Local<v8::Object> objChannel = CScript::m_classTemplates.IrcChannel->GetFunction()->NewInstance();
+		objChannel->SetInternalField(0, v8::External::New(*i));
+
+		channels->Set(v8::String::New((*i)->GetName()), objChannel);
+	}
+	m_bAllowInternalConstructions = false;
+
+	return channels;
 }
 
 FuncReturn CScriptFunctions::Bot__getterNumAccessLevels(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
@@ -509,7 +538,7 @@ FuncReturn CScriptFunctions::IrcUser__SendMessage(const Arguments &args)
 	return v8::True();
 }
 
-FuncReturn CScriptFunctions::IrcUser__TestAccessLevel(const v8::Arguments &args)
+FuncReturn CScriptFunctions::IrcUser__TestAccessLevel(const Arguments &args)
 {
 	if (args.Length() < 1)
 	{
@@ -528,7 +557,7 @@ FuncReturn CScriptFunctions::IrcUser__TestAccessLevel(const v8::Arguments &args)
 	return v8::Boolean::New(((CIrcUser *)pObject)->GetParentBot()->TestAccessLevel((CIrcUser *)pObject, iLevel));
 }
 
-FuncReturn CScriptFunctions::IrcUser__GetModeOnChannel(const v8::Arguments &args)
+FuncReturn CScriptFunctions::IrcUser__GetModeOnChannel(const Arguments &args)
 {
 	if (args.Length() < 1)
 	{
@@ -554,6 +583,14 @@ FuncReturn CScriptFunctions::IrcUser__GetModeOnChannel(const v8::Arguments &args
 	}
 
 	return v8::Integer::New((int)((CIrcUser *)pObject)->GetModeOnChannel((CIrcChannel *)pChannel));
+}
+
+FuncReturn CScriptFunctions::IrcUser__ToString(const Arguments &args)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+
+	std::string strObjectName = "IrcUser(" + std::string(((CIrcUser *)pObject)->GetNickname()) + ")";
+	return v8::String::New(strObjectName.c_str(), strObjectName.length());
 }
 
 FuncReturn CScriptFunctions::IrcUser__getterNickname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
@@ -615,7 +652,7 @@ FuncReturn CScriptFunctions::IrcChannel__FindUser(const Arguments &args)
 	}
 
 	m_bAllowInternalConstructions = true;
-	v8::Local<v8::Object> obj = CScript::m_ClassTemplates.IrcUser->GetFunction()->NewInstance();
+	v8::Local<v8::Object> obj = CScript::m_classTemplates.IrcUser->GetFunction()->NewInstance();
 	m_bAllowInternalConstructions = false;
 
 	obj->SetInternalField(0, v8::External::New(pUser));
@@ -691,6 +728,14 @@ FuncReturn CScriptFunctions::IrcChannel__SendMessage(const Arguments &args)
 	return v8::True();
 }
 
+FuncReturn CScriptFunctions::IrcChannel__ToString(const Arguments &args)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+
+	std::string strObjectName = "IrcChannel(" + std::string(((CIrcChannel *)pObject)->GetName()) + ")";
+	return v8::String::New(strObjectName.c_str(), strObjectName.length());
+}
+
 FuncReturn CScriptFunctions::IrcChannel__getterName(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
@@ -698,12 +743,33 @@ FuncReturn CScriptFunctions::IrcChannel__getterName(v8::Local<v8::String> strPro
 	return v8::String::New(((CIrcChannel *)pObject)->GetName());
 }
 
+FuncReturn CScriptFunctions::IrcChannel__getterUsers(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+
+	CPool<CIrcUser *> *pUsers = ((CIrcChannel *)pObject)->GetUsers();
+
+	v8::Local<v8::Object> users = v8::Object::New();
+
+	m_bAllowInternalConstructions = true;
+	for (CPool<CIrcUser *>::iterator i = pUsers->begin(); i != pUsers->end(); ++i)
+	{
+		v8::Local<v8::Object> objUser = CScript::m_classTemplates.IrcUser->GetFunction()->NewInstance();
+		objUser->SetInternalField(0, v8::External::New(*i));
+
+		users->Set(v8::String::New((*i)->GetNickname()), objUser);
+	}
+	m_bAllowInternalConstructions = false;
+
+	return users;
+}
+
 FuncReturn CScriptFunctions::IrcChannel__getterTopic(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 	
 	m_bAllowInternalConstructions = true;
-	v8::Persistent<v8::Object> obj = v8::Persistent<v8::Object>::New(CScript::m_ClassTemplates.Topic->GetFunction()->NewInstance());
+	v8::Local<v8::Object> obj = CScript::m_classTemplates.Topic->GetFunction()->NewInstance();
 	m_bAllowInternalConstructions = false;
 
 	obj->SetInternalField(0, v8::External::New(pObject));
@@ -807,7 +873,7 @@ FuncReturn CScriptFunctions::ScriptModule__constructor(const v8::Arguments &args
 
 	v8::V8::AdjustAmountOfExternalAllocatedMemory(5000);
 
-	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.ScriptModule->GetFunction();
+	v8::Local<v8::Function> ctor = CScript::m_classTemplates.ScriptModule->GetFunction();
 	m_bAllowInternalConstructions = true;
 	v8::Persistent<v8::Object> obj = v8::Persistent<v8::Object>::New(ctor->NewInstance());
 	m_bAllowInternalConstructions = false;
@@ -833,7 +899,7 @@ FuncReturn CScriptFunctions::ScriptModule__GetProcedure(const v8::Arguments &arg
 
 	CScriptModule::Procedure *pProcedure = ((CScriptModule *)pObject)->AllocateProcedure(*strName);
 
-	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.ScriptModuleProcedure->GetFunction();
+	v8::Local<v8::Function> ctor = CScript::m_classTemplates.ScriptModuleProcedure->GetFunction();
 	m_bAllowInternalConstructions = true;
 	v8::Persistent<v8::Object> obj = v8::Persistent<v8::Object>::New(ctor->NewInstance());
 	m_bAllowInternalConstructions = false;

@@ -11,8 +11,8 @@ Purpose:	Class which represents a script
 #include "Script.h"
 #include "ScriptFunctions.h"
 
-v8::Persistent<v8::ObjectTemplate> CScript::m_GlobalTemplate;
-CScript::ClassTemplates_t CScript::m_ClassTemplates;
+v8::Persistent<v8::ObjectTemplate> CScript::m_globalTemplate;
+CScript::ClassTemplates_t CScript::m_classTemplates;
 
 CScript::CScript(CBot *pParentBot)
 	: m_pParentBot(pParentBot), m_bLoaded(false), m_bCurrentEventCancelled(false), m_bCallingEvent(false)
@@ -32,13 +32,13 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 
 	v8::HandleScope handleScope;
 
-	if (m_GlobalTemplate.IsEmpty())
+	if (m_globalTemplate.IsEmpty())
 	{
 		// CBot
-		m_ClassTemplates.Bot = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
-		m_ClassTemplates.Bot->SetClassName(v8::String::New("Bot"));
-		m_ClassTemplates.Bot->InstanceTemplate()->SetInternalFieldCount(1);
-		v8::Handle<v8::ObjectTemplate> botProto = m_ClassTemplates.Bot->PrototypeTemplate();
+		m_classTemplates.Bot = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
+		m_classTemplates.Bot->SetClassName(v8::String::New("Bot"));
+		m_classTemplates.Bot->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> botProto = m_classTemplates.Bot->PrototypeTemplate();
 		botProto->Set(v8::String::New("sendRaw"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendRaw));
 		botProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendMessage));
 		botProto->Set(v8::String::New("sendNotice"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendNotice));
@@ -46,19 +46,22 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		botProto->Set(v8::String::New("findChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__FindChannel));
 		botProto->Set(v8::String::New("joinChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__JoinChannel));
 		botProto->Set(v8::String::New("leaveChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__LeaveChannel));
+		botProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::Bot__ToString));
 
 		botProto->SetAccessor(v8::String::New("nickname"), CScriptFunctions::Bot__getterNickname);
+		botProto->SetAccessor(v8::String::New("channels"), CScriptFunctions::Bot__getterChannels);
 		botProto->SetAccessor(v8::String::New("numAccessLevels"), CScriptFunctions::Bot__getterNumAccessLevels);
 
 		// CIrcUser
-		m_ClassTemplates.IrcUser = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
-		m_ClassTemplates.IrcUser->SetClassName(v8::String::New("IrcUser"));
-		m_ClassTemplates.IrcUser->InstanceTemplate()->SetInternalFieldCount(1);
-		v8::Handle<v8::ObjectTemplate> userProto = m_ClassTemplates.IrcUser->PrototypeTemplate();
+		m_classTemplates.IrcUser = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
+		m_classTemplates.IrcUser->SetClassName(v8::String::New("IrcUser"));
+		m_classTemplates.IrcUser->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> userProto = m_classTemplates.IrcUser->PrototypeTemplate();
 		userProto->Set(v8::String::New("hasChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__HasChannel));
 		userProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__SendMessage));
 		userProto->Set(v8::String::New("testAccessLevel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__TestAccessLevel));
 		userProto->Set(v8::String::New("getModeOnChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetModeOnChannel));
+		userProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__ToString));
 
 		userProto->SetAccessor(v8::String::New("nickname"), CScriptFunctions::IrcUser__getterNickname);
 		userProto->SetAccessor(v8::String::New("ident"), CScriptFunctions::IrcUser__getterIdent);
@@ -66,74 +69,75 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		userProto->SetAccessor(v8::String::New("temporary"), CScriptFunctions::IrcUser__getterTemporary);
 
 		// CIrcChannel
-		m_ClassTemplates.IrcChannel = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
-		m_ClassTemplates.IrcChannel->SetClassName(v8::String::New("IrcChannel"));
-		m_ClassTemplates.IrcChannel->InstanceTemplate()->SetInternalFieldCount(1);
-		v8::Handle<v8::ObjectTemplate> channelProto = m_ClassTemplates.IrcChannel->PrototypeTemplate();
+		m_classTemplates.IrcChannel = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
+		m_classTemplates.IrcChannel->SetClassName(v8::String::New("IrcChannel"));
+		m_classTemplates.IrcChannel->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> channelProto = m_classTemplates.IrcChannel->PrototypeTemplate();
 		channelProto->Set(v8::String::New("findUser"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__FindUser));
 		channelProto->Set(v8::String::New("hasUser"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__HasUser));
-		channelProto->Set(v8::String::New("setTopic"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SetTopic));
 		channelProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SendMessage));
+		channelProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__ToString));
 
 		channelProto->SetAccessor(v8::String::New("name"), CScriptFunctions::IrcChannel__getterName);
+		channelProto->SetAccessor(v8::String::New("users"), CScriptFunctions::IrcChannel__getterUsers);
 		channelProto->SetAccessor(v8::String::New("topic"), CScriptFunctions::IrcChannel__getterTopic, CScriptFunctions::IrcChannel__setterTopic);
 
 		// Topic
-		m_ClassTemplates.Topic = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
-		m_ClassTemplates.Topic->SetClassName(v8::String::New("Topic"));
-		m_ClassTemplates.Topic->InstanceTemplate()->SetInternalFieldCount(1);
-		v8::Handle<v8::ObjectTemplate> topicProto = m_ClassTemplates.Topic->PrototypeTemplate();
+		m_classTemplates.Topic = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
+		m_classTemplates.Topic->SetClassName(v8::String::New("Topic"));
+		m_classTemplates.Topic->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> topicProto = m_classTemplates.Topic->PrototypeTemplate();
 
 		topicProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::Topic__ToString));
 		topicProto->SetAccessor(v8::String::New("setBy"), CScriptFunctions::Topic__getterSetBy);
 		topicProto->SetAccessor(v8::String::New("setOn"), CScriptFunctions::Topic__getterSetOn);
 
 		// CScriptModule
-		m_ClassTemplates.ScriptModule = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__constructor));
-		m_ClassTemplates.ScriptModule->SetClassName(v8::String::New("ScriptModule"));
-		m_ClassTemplates.ScriptModule->InstanceTemplate()->SetInternalFieldCount(1);
-		v8::Handle<v8::ObjectTemplate> scriptModuleProto = m_ClassTemplates.ScriptModule->PrototypeTemplate();
+		m_classTemplates.ScriptModule = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__constructor));
+		m_classTemplates.ScriptModule->SetClassName(v8::String::New("ScriptModule"));
+		m_classTemplates.ScriptModule->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> scriptModuleProto = m_classTemplates.ScriptModule->PrototypeTemplate();
 		scriptModuleProto->Set(v8::String::New("getProcedure"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__GetProcedure));
 
 		// CScriptModule::Procedure
-		m_ClassTemplates.ScriptModuleProcedure = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
-		m_ClassTemplates.ScriptModuleProcedure->SetClassName(v8::String::New("ScriptModuleProcedure"));
-		m_ClassTemplates.ScriptModuleProcedure->InstanceTemplate()->SetInternalFieldCount(1);
-		v8::Handle<v8::ObjectTemplate> scriptModuleProcedureProto = m_ClassTemplates.ScriptModuleProcedure->PrototypeTemplate();
+		m_classTemplates.ScriptModuleProcedure = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
+		m_classTemplates.ScriptModuleProcedure->SetClassName(v8::String::New("ScriptModuleProcedure"));
+		m_classTemplates.ScriptModuleProcedure->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> scriptModuleProcedureProto = m_classTemplates.ScriptModuleProcedure->PrototypeTemplate();
 		scriptModuleProcedureProto->Set(v8::String::New("call"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModuleProcedure__Call));
 
 		// Global
-		m_GlobalTemplate = v8::Persistent<v8::ObjectTemplate>::New(v8::ObjectTemplate::New());
-		m_GlobalTemplate->Set(v8::String::New("print"), v8::FunctionTemplate::New(CScriptFunctions::Print));
-		m_GlobalTemplate->Set(v8::String::New("addEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::AddEventHandler));
-		m_GlobalTemplate->Set(v8::String::New("removeEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::RemoveEventHandler));
-		m_GlobalTemplate->Set(v8::String::New("getEventHandlers"), v8::FunctionTemplate::New(CScriptFunctions::GetEventHandlers));
-		m_GlobalTemplate->Set(v8::String::New("cancelEvent"), v8::FunctionTemplate::New(CScriptFunctions::CancelEvent));
+		m_globalTemplate = v8::Persistent<v8::ObjectTemplate>::New(v8::ObjectTemplate::New());
+		m_globalTemplate->Set(v8::String::New("print"), v8::FunctionTemplate::New(CScriptFunctions::Print));
+		m_globalTemplate->Set(v8::String::New("addEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::AddEventHandler));
+		m_globalTemplate->Set(v8::String::New("removeEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::RemoveEventHandler));
+		m_globalTemplate->Set(v8::String::New("getEventHandlers"), v8::FunctionTemplate::New(CScriptFunctions::GetEventHandlers));
+		m_globalTemplate->Set(v8::String::New("cancelEvent"), v8::FunctionTemplate::New(CScriptFunctions::CancelEvent));
 
-		m_GlobalTemplate->Set(v8::String::New("Bot"), m_ClassTemplates.Bot);
-		m_GlobalTemplate->Set(v8::String::New("IrcUser"), m_ClassTemplates.IrcUser);
-		m_GlobalTemplate->Set(v8::String::New("IrcChannel"), m_ClassTemplates.IrcChannel);
-		m_GlobalTemplate->Set(v8::String::New("ScriptModule"), m_ClassTemplates.ScriptModule);
+		m_globalTemplate->Set(v8::String::New("Bot"), m_classTemplates.Bot);
+		m_globalTemplate->Set(v8::String::New("IrcUser"), m_classTemplates.IrcUser);
+		m_globalTemplate->Set(v8::String::New("IrcChannel"), m_classTemplates.IrcChannel);
+		m_globalTemplate->Set(v8::String::New("ScriptModule"), m_classTemplates.ScriptModule);
 
 		// Ask the global modules if they have anything
 		for (CPool<CGlobalModule *>::iterator i = pCore->GetGlobalModules()->begin(); i != pCore->GetGlobalModules()->end(); ++i)
 		{
-			(*i)->TemplateRequest(m_GlobalTemplate);
+			(*i)->TemplateRequest(m_globalTemplate);
 		}
 	}
 
 	// Create a new context
-	m_ScriptContext = v8::Context::New(NULL, m_GlobalTemplate);
+	m_scriptContext = v8::Context::New(NULL, m_globalTemplate);
 
-	v8::Context::Scope contextScope(m_ScriptContext);
+	v8::Context::Scope contextScope(m_scriptContext);
 
 	// Create the bot object
-	v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.Bot->GetFunction();
+	v8::Local<v8::Function> ctor = CScript::m_classTemplates.Bot->GetFunction();
 	CScriptFunctions::m_bAllowInternalConstructions = true;
 	v8::Local<v8::Object> bot = ctor->NewInstance();
 	CScriptFunctions::m_bAllowInternalConstructions = false;
 	bot->SetInternalField(0, v8::External::New(m_pParentBot));
-	m_ScriptContext->Global()->Set(v8::String::New("bot"), bot);
+	m_scriptContext->Global()->Set(v8::String::New("bot"), bot);
 
 	v8::Handle<v8::String> strFilename = v8::String::New(szFilename);
 
@@ -209,7 +213,7 @@ bool CScript::CallEvent(const char *szEventName, int iArgCount, v8::Handle<v8::V
 	m_bCallingEvent = true;
 
 	CScriptFunctions::m_pCallingScript = this;
-	for (CPool<EventHandler *>::iterator i = m_lstEventHandlers.begin(); i != m_lstEventHandlers.end(); ++i)
+	for (CPool<EventHandler *>::iterator i = m_plEventHandlers.begin(); i != m_plEventHandlers.end(); ++i)
 	{
 		if ((*i)->strEvent == szEventName && (*i)->handlerFunction->IsFunction())
 		{
@@ -276,10 +280,10 @@ void CScript::ReportException(v8::TryCatch *pTryCatch)
 
 void CScript::EnterContext()
 {
-	m_ScriptContext->Enter();
+	m_scriptContext->Enter();
 }
 
 void CScript::ExitContext()
 {
-	m_ScriptContext->Exit();
+	m_scriptContext->Exit();
 }

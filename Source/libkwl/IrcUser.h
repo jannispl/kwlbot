@@ -43,14 +43,6 @@ public:
 	const char *GetNickname();
 	
 	/**
-	 * Updates user information if necessary.
-	 * @internal
-	 * @param  szIdent     The new ident.
-	 * @param  szHostname  The new hostname.
-	 */
-	void UpdateIfNecessary(const char *szIdent, const char *szHostname);
-	
-	/**
 	 * Gets the user's hostname.
 	 * @return The user's hostname.
 	 */
@@ -94,12 +86,20 @@ public:
 	 */
 	CScriptObject::eScriptType GetType();
 
+private:
+	/**
+	 * Updates user information if necessary.
+	 * @internal
+	 * @param  szIdent     The new ident.
+	 * @param  szHostname  The new hostname.
+	 */
+	void UpdateIfNecessary(const char *szIdent, const char *szHostname);
+
 #ifdef WIN32
 	template class DLLEXPORT CPool<CIrcChannel *>;
 #endif
 	CPool<CIrcChannel *> m_plIrcChannels;
 
-private:
 	CBot *m_pParentBot;
 	std::string m_strNickname;
 	std::string m_strHostname;

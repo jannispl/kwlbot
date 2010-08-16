@@ -40,14 +40,17 @@ public:
 	static FuncReturn Bot__FindChannel(const Arguments &args);
 	static FuncReturn Bot__JoinChannel(const Arguments &args);
 	static FuncReturn Bot__LeaveChannel(const Arguments &args);
+	static FuncReturn Bot__ToString(const Arguments &args);
 
 	static FuncReturn Bot__getterNickname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+	static FuncReturn Bot__getterChannels(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 	static FuncReturn Bot__getterNumAccessLevels(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 
 	static FuncReturn IrcUser__HasChannel(const Arguments &args);
 	static FuncReturn IrcUser__SendMessage(const Arguments &args);
 	static FuncReturn IrcUser__TestAccessLevel(const Arguments &args);
 	static FuncReturn IrcUser__GetModeOnChannel(const Arguments &args);
+	static FuncReturn IrcUser__ToString(const Arguments &args);
 	
 	static FuncReturn IrcUser__getterNickname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 	static FuncReturn IrcUser__getterIdent(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
@@ -59,8 +62,10 @@ public:
 	static FuncReturn IrcChannel__HasUser(const Arguments &args);
 	static FuncReturn IrcChannel__SetTopic(const Arguments &args);
 	static FuncReturn IrcChannel__SendMessage(const Arguments &args);
+	static FuncReturn IrcChannel__ToString(const Arguments &args);
 
 	static FuncReturn IrcChannel__getterName(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+	static FuncReturn IrcChannel__getterUsers(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 	static FuncReturn IrcChannel__getterTopic(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 	static void IrcChannel__setterTopic(v8::Local<v8::String> strProperty, v8::Local<v8::Value> newValue, const v8::AccessorInfo &accessorInfo);
 
