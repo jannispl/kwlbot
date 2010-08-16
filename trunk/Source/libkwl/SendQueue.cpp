@@ -55,7 +55,7 @@ bool CSendQueue::IsEmpty() const
 
 // return true: everything handled well
 // return false: something not done yet
-bool CSendQueue::Process(SOCKET socket)
+bool CSendQueue::Process(socket_t socket)
 {
 	while (!IsEmpty())
 	{

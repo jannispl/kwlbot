@@ -163,7 +163,7 @@ int CBot::SendRawFormat(const char *szFormat, ...)
 	char szBuffer[IRC_MAX_LEN + 1];
 	va_list vaArgs;
 	va_start(vaArgs, szFormat);
-	vsprintf(szBuffer, szFormat, vaArgs);
+	vsnprintf(szBuffer, IRC_MAX_LEN + 1, szFormat, vaArgs);
 	va_end(vaArgs);
 
 	return SendRaw(szBuffer);
