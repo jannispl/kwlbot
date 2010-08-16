@@ -25,7 +25,7 @@ public:
 	void Add(char *pPtr, size_t iSize, bool bRealloc = true, bool bNeedFree = false);
 	void AddFile(FILE *pFile, size_t iBufferSize, bool bNeedClose = true);
 	bool IsEmpty() const;
-	bool Process(SOCKET socket);
+	bool Process(socket_t socket);
 
 private:
 	typedef struct

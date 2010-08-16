@@ -56,7 +56,7 @@ int CIrcSocket::SendRaw(const char *szData)
 int CIrcSocket::SendRawStatic(const char *szData)
 {
 	m_sendQueue.Add((char *)szData, strlen(szData), false);
-	m_sendQueue.Add(IRC_EOL, sizeof(IRC_EOL) - 1, false);
+	m_sendQueue.Add((char *)IRC_EOL, sizeof(IRC_EOL) - 1, false);
 
 	return m_sendQueue.Process(m_tcpSocket.GetSocket()) ? 0 : -1;
 }
@@ -67,7 +67,7 @@ int CIrcSocket::SendRawFormat(const char *szFormat, ...)
 
 	va_list vaArgs;
 	va_start(vaArgs, szFormat);
-	vsprintf(szBuffer, szFormat, vaArgs);
+	vsnprintf(szBuffer, IRC_MAX_LEN + 1, szFormat, vaArgs);
 	va_end(vaArgs);
 
 	return SendRaw(szBuffer);
