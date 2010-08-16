@@ -18,17 +18,17 @@ CIrcSocket::CIrcSocket(CBot *pParentBot)
 CIrcSocket::~CIrcSocket()
 {
 	SendRawFormat("QUIT :%s", m_pParentBot->GetSettings()->GetQuitMessage());
-	m_TcpSocket.Close();
+	m_tcpSocket.Close();
 }
 
 bool CIrcSocket::Connect(const char *szHostname, int iPort, const char *szPassword)
 {
-	if (!m_TcpSocket.Connect(szHostname, iPort))
+	if (!m_tcpSocket.Connect(szHostname, iPort))
 	{
 		return false;
 	}
 
-	m_TcpSocket.SetBlocking(false);
+	m_tcpSocket.SetBlocking(false);
 
 	CIrcSettings *pSettings = m_pParentBot->GetSettings();
 	if (szPassword != NULL && szPassword[0] != '\0')
@@ -44,21 +44,21 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort, const char *szPasswo
 
 int CIrcSocket::SendRaw(const char *szData)
 {
-	int iRet;
-	do
-	{
-		iRet = m_TcpSocket.Write(szData);
-	}
-	while (iRet == -1);
+	size_t iLength = strlen(szData);
+	char *pData = (char *)malloc(iLength + sizeof(IRC_EOL));
+	strcpy(pData, szData);
+	strcat(pData, IRC_EOL);
+	m_sendQueue.Add(pData, iLength + sizeof(IRC_EOL) - 1, false, true);
 
-	int iRet2;
-	do
-	{
-		iRet2 = m_TcpSocket.Write(IRC_EOL, sizeof(IRC_EOL) - 1);
-	}
-	while (iRet2 == -1);
+	return m_sendQueue.Process(m_tcpSocket.GetSocket()) ? 0 : -1;
+}
 
-	return iRet + iRet2;
+int CIrcSocket::SendRawStatic(const char *szData)
+{
+	m_sendQueue.Add((char *)szData, strlen(szData), false);
+	m_sendQueue.Add(IRC_EOL, sizeof(IRC_EOL) - 1, false);
+
+	return m_sendQueue.Process(m_tcpSocket.GetSocket()) ? 0 : -1;
 }
 
 int CIrcSocket::SendRawFormat(const char *szFormat, ...)
@@ -75,11 +75,13 @@ int CIrcSocket::SendRawFormat(const char *szFormat, ...)
 
 int CIrcSocket::ReadRaw(char *pDest, size_t iSize)
 {
-	return m_TcpSocket.Read(pDest, iSize);
+	return m_tcpSocket.Read(pDest, iSize);
 }
 
 void CIrcSocket::Pulse()
 {
+	m_sendQueue.Process(m_tcpSocket.GetSocket());
+
 	char szBuffer[256];
 	int iSize = ReadRaw(szBuffer, 255);
 	if (iSize == 0)

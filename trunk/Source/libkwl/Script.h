@@ -47,7 +47,7 @@ public:
 		v8::Persistent<v8::FunctionTemplate> ScriptModule;
 		v8::Persistent<v8::FunctionTemplate> ScriptModuleProcedure;
 	} ClassTemplates_t;
-	static ClassTemplates_t m_ClassTemplates;
+	static ClassTemplates_t m_classTemplates;
 
 	bool m_bCallingEvent;
 	bool m_bCurrentEventCancelled;
@@ -60,12 +60,12 @@ private:
 #ifdef WIN32
 	template class DLLEXPORT v8::Persistent<v8::Context>;
 #endif
-	v8::Persistent<v8::Context> m_ScriptContext;
+	v8::Persistent<v8::Context> m_scriptContext;
 
 #ifdef WIN32
 	template class DLLEXPORT v8::Persistent<v8::ObjectTemplate>;
 #endif
-	static v8::Persistent<v8::ObjectTemplate> m_GlobalTemplate;
+	static v8::Persistent<v8::ObjectTemplate> m_globalTemplate;
 
 	typedef struct
 	{
@@ -76,7 +76,7 @@ private:
 #ifdef WIN32
 	template class DLLEXPORT CPool<EventHandler *>;
 #endif
-	CPool<EventHandler *> m_lstEventHandlers;
+	CPool<EventHandler *> m_plEventHandlers;
 };
 
 #endif

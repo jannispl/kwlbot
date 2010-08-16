@@ -72,7 +72,7 @@ void CScriptEventManager::OnBotJoinedChannel(CBot *pBot, CIrcChannel *pChannel)
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.IrcChannel->GetFunction();
+		v8::Local<v8::Function> ctor = CScript::m_classTemplates.IrcChannel->GetFunction();
 
 		CScriptFunctions::m_bAllowInternalConstructions = true;
 
@@ -96,8 +96,8 @@ void CScriptEventManager::OnUserJoinedChannel(CBot *pBot, CIrcUser *pUser, CIrcC
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
+		v8::Local<v8::Function> ctor1 = CScript::m_classTemplates.IrcUser->GetFunction();
+		v8::Local<v8::Function> ctor2 = CScript::m_classTemplates.IrcChannel->GetFunction();
 
 		CScriptFunctions::m_bAllowInternalConstructions = true;
 
@@ -124,8 +124,8 @@ void CScriptEventManager::OnUserLeftChannel(CBot *pBot, CIrcUser *pUser, CIrcCha
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
+		v8::Local<v8::Function> ctor1 = CScript::m_classTemplates.IrcUser->GetFunction();
+		v8::Local<v8::Function> ctor2 = CScript::m_classTemplates.IrcChannel->GetFunction();
 
 		CScriptFunctions::m_bAllowInternalConstructions = true;
 
@@ -152,8 +152,8 @@ void CScriptEventManager::OnUserKickedUser(CBot *pBot, CIrcUser *pUser, CIrcUser
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
+		v8::Local<v8::Function> ctor1 = CScript::m_classTemplates.IrcUser->GetFunction();
+		v8::Local<v8::Function> ctor2 = CScript::m_classTemplates.IrcChannel->GetFunction();
 
 		CScriptFunctions::m_bAllowInternalConstructions = true;
 
@@ -183,7 +183,7 @@ void CScriptEventManager::OnUserQuit(CBot *pBot, CIrcUser *pUser, const char *sz
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.IrcUser->GetFunction();
+		v8::Local<v8::Function> ctor = CScript::m_classTemplates.IrcUser->GetFunction();
 
 		CScriptFunctions::m_bAllowInternalConstructions = true;
 
@@ -207,7 +207,7 @@ void CScriptEventManager::OnUserChangedNickname(CBot *pBot, CIrcUser *pUser, con
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.IrcUser->GetFunction();
+		v8::Local<v8::Function> ctor = CScript::m_classTemplates.IrcUser->GetFunction();
 
 		CScriptFunctions::m_bAllowInternalConstructions = true;
 
@@ -231,7 +231,7 @@ void CScriptEventManager::OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, cons
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.IrcUser->GetFunction();
+		v8::Local<v8::Function> ctor = CScript::m_classTemplates.IrcUser->GetFunction();
 
 		CScriptFunctions::m_bAllowInternalConstructions = true;
 
@@ -255,8 +255,8 @@ void CScriptEventManager::OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrc
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
+		v8::Local<v8::Function> ctor1 = CScript::m_classTemplates.IrcUser->GetFunction();
+		v8::Local<v8::Function> ctor2 = CScript::m_classTemplates.IrcChannel->GetFunction();
 
 		CScriptFunctions::m_bAllowInternalConstructions = true;
 
@@ -283,8 +283,8 @@ void CScriptEventManager::OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIr
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor1 = CScript::m_ClassTemplates.IrcUser->GetFunction();
-		v8::Local<v8::Function> ctor2 = CScript::m_ClassTemplates.IrcChannel->GetFunction();
+		v8::Local<v8::Function> ctor1 = CScript::m_classTemplates.IrcUser->GetFunction();
+		v8::Local<v8::Function> ctor2 = CScript::m_classTemplates.IrcChannel->GetFunction();
 
 		CScriptFunctions::m_bAllowInternalConstructions = true;
 
@@ -311,7 +311,7 @@ void CScriptEventManager::OnBotGotChannelUserList(CBot *pBot, CIrcChannel *pChan
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.IrcChannel->GetFunction();
+		v8::Local<v8::Function> ctor = CScript::m_classTemplates.IrcChannel->GetFunction();
 
 		CScriptFunctions::m_bAllowInternalConstructions = true;
 
@@ -335,7 +335,7 @@ void CScriptEventManager::OnBotReceivedRaw(CBot *pBot, const char *szRaw)
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor = CScript::m_ClassTemplates.Bot->GetFunction();
+		v8::Local<v8::Function> ctor = CScript::m_classTemplates.Bot->GetFunction();
 
 		CScriptFunctions::m_bAllowInternalConstructions = true;
 

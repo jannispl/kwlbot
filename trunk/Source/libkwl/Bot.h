@@ -58,6 +58,15 @@ public:
 	int SendRaw(const char *szData);
 
 	/**
+	 * Sends raw data to the server (static).
+	 * (Static: the data will be in the program's memory all time)
+	 * @param szData The raw data to send.
+	 * @see SendRaw()
+	 * @return 0 if everything was transmitted, -1 if something had to be queued.
+	 */
+	int SendRawStatic(const char *szData);
+
+	/**
 	 * Sends raw data to the server (formatted).
 	 * @param szData The formatted raw data to send.
 	 * @param ... Argument list
@@ -86,6 +95,12 @@ public:
 	 */
 	CIrcChannel *FindChannel(const char *szName);
 	
+	/**
+	 * Gets a pointer to the channel pool.
+	 * @return A pointer to a CPool<CIrcChannel *>.
+	 */
+	CPool<CIrcChannel *> *GetChannels();
+
 	/**
 	 * Searches the user pool for a certain user.
 	 * @param  szName          The user's nickname.

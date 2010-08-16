@@ -140,6 +140,11 @@ public:
 		return ret != SOCKET_ERROR;
 	}
 
+	socket_t GetSocket()
+	{
+		return m_Socket;
+	}
+
 private:
 	socket_t m_Socket;
 };

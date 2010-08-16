@@ -24,6 +24,8 @@ class CIrcChannel;
  */
 class DLLEXPORT CIrcChannel : public CScriptObject
 {
+	friend class CBot;
+
 public:
 	CIrcChannel(CBot *pParentBot, const char *szName);
 	~CIrcChannel();
@@ -57,6 +59,12 @@ public:
 	bool HasUser(CIrcUser *pUser);
 
 	/**
+	 * Gets a pointer to the user pool.
+	 * @return A pointer to a CPool<CIrcUser *>.
+	 */
+	CPool<CIrcUser *> *GetUsers();
+
+	/**
 	 * Sends a request to the server to change the channel's topic.
 	 * @param  szTopic  The new topic.
 	 */
@@ -74,13 +82,6 @@ public:
 	 */
 	CScriptObject::eScriptType GetType();
 
-#ifdef WIN32
-	template class DLLEXPORT CPool<CIrcUser *>;
-#endif
-
-	CPool<CIrcUser *> m_plIrcUsers;
-	bool m_bHasDetailedUsers;
-
 	typedef struct
 	{
 		time_t ullTopicSetDate;
@@ -88,10 +89,16 @@ public:
 		std::string strTopic;
 	} TopicInfo;
 	TopicInfo m_topicInfo;
-
+	
 private:
 	CBot *m_pParentBot;
 	char *m_szName;
+
+#ifdef WIN32
+	template class DLLEXPORT CPool<CIrcUser *>;
+#endif
+	CPool<CIrcUser *> m_plIrcUsers;
+	bool m_bHasDetailedUsers;
 };
 
 #endif

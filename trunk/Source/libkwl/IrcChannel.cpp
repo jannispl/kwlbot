@@ -75,6 +75,11 @@ bool CIrcChannel::HasUser(CIrcUser *pUser)
 	return false;
 }
 
+CPool<CIrcUser *> *CIrcChannel::GetUsers()
+{
+	return &m_plIrcUsers;
+}
+
 void CIrcChannel::SetTopic(const char *szTopic)
 {
 	m_pParentBot->SendRawFormat("TOPIC %s :%s", GetName(), szTopic);

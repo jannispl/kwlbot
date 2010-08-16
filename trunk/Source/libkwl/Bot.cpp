@@ -153,6 +153,11 @@ int CBot::SendRaw(const char *szData)
 	return m_pIrcSocket->SendRaw(szData);
 }
 
+int CBot::SendRawStatic(const char *szData)
+{
+	return m_pIrcSocket->SendRawStatic(szData);
+}
+
 int CBot::SendRawFormat(const char *szFormat, ...)
 {
 	char szBuffer[IRC_MAX_LEN + 1];
@@ -179,6 +184,11 @@ CIrcChannel *CBot::FindChannel(const char *szName)
 		}
 	}
 	return NULL;
+}
+
+CPool<CIrcChannel *> *CBot::GetChannels()
+{
+	return &m_plIrcChannels;
 }
 
 CIrcUser *CBot::FindUser(const char *szName, bool bCaseSensitive)
@@ -441,13 +451,8 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 					{
 						if (pUser == NULL)
 						{
-							dbgprintf("We don't know %s yet, adding him (1).\n", strName.c_str());
 							pUser = new CIrcUser(this, strName.c_str());
 							m_plGlobalUsers.push_back(pUser);
-						}
-						else
-						{
-							dbgprintf("We already know %s.\n", pUser->GetNickname());
 						}
 						pUser->m_plIrcChannels.push_back(pChannel);
 						pUser->m_mapChannelModes[pChannel] = cMode;
@@ -494,13 +499,10 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			{
 				if (strVictim == m_pIrcSocket->GetCurrentNickname())
 				{
-					dbgprintf("WE WERE KICKED FROM %s.\n", pChannel->GetName());
-
 					for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
 					{
 						if ((*i)->m_plIrcChannels.size() == 1)
 						{
-							dbgprintf("We lost %s.\n", (*i)->GetNickname());
 							m_plGlobalUsers.remove(*i);
 							delete *i;
 						}
@@ -542,12 +544,10 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 							}
 						}
 
-						dbgprintf("Removing %s from %s.\n", pVictim->GetNickname(), pChannel->GetName());
 						pVictim->m_plIrcChannels.remove(pChannel);
 						pChannel->m_plIrcUsers.remove(pVictim);
 						if (pVictim->m_plIrcChannels.size() == 0)
 						{
-							dbgprintf("We don't know %s anymore.\n", pVictim->GetNickname());
 							m_plGlobalUsers.remove(pVictim);
 							delete pVictim;
 						}
@@ -614,13 +614,10 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			{
 				if (strNickname == m_pIrcSocket->GetCurrentNickname())
 				{
-					dbgprintf("WE LEFT %s.\n", pChannel->GetName());
-
 					for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
 					{
 						if ((*i)->m_plIrcChannels.size() == 1)
 						{
-							dbgprintf("We lost %s.\n", (*i)->GetNickname());
 							m_plGlobalUsers.remove(*i);
 							delete *i;
 						}
@@ -646,12 +643,10 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 							(*i)->OnUserLeftChannel(this, pUser, pChannel, strReason.c_str());
 						}
 
-						dbgprintf("Removing %s from %s.\n", pUser->GetNickname(), pChannel->GetName());
 						pUser->m_plIrcChannels.remove(pChannel);
 						pChannel->m_plIrcUsers.remove(pUser);
 						if (pUser->m_plIrcChannels.size() == 0)
 						{
-							dbgprintf("We don't know %s anymore.\n", pUser->GetNickname());
 							m_plGlobalUsers.remove(pUser);
 							delete pUser;
 						}
@@ -682,13 +677,10 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			{
 				if (strVictim == m_pIrcSocket->GetCurrentNickname())
 				{
-					dbgprintf("WE WERE KICKED FROM %s.\n", pChannel->GetName());
-
 					for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
 					{
 						if ((*i)->m_plIrcChannels.size() == 1)
 						{
-							dbgprintf("We lost %s.\n", (*i)->GetNickname());
 							m_plGlobalUsers.remove(*i);
 							delete *i;
 						}
@@ -730,12 +722,10 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 							}
 						}
 
-						dbgprintf("Removing %s from %s.\n", pVictim->GetNickname(), pChannel->GetName());
 						pVictim->m_plIrcChannels.remove(pChannel);
 						pChannel->m_plIrcUsers.remove(pVictim);
 						if (pVictim->m_plIrcChannels.size() == 0)
 						{
-							dbgprintf("We don't know %s anymore.\n", pVictim->GetNickname());
 							m_plGlobalUsers.remove(pVictim);
 							delete pVictim;
 						}
@@ -761,7 +751,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 				if (strTarget == m_pIrcSocket->GetCurrentNickname())
 				{
 					// privmsg to bot
-					dbgprintf("[priv] <%s> %s\n", strNickname.c_str(), strMessage.c_str());
 
 					m_pParentCore->GetScriptEventManager()->OnUserPrivateMessage(this, pUser, strMessage.c_str());
 					for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
@@ -774,8 +763,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 					CIrcChannel *pChannel = FindChannel(strTarget.c_str());
 					if (pChannel != NULL)
 					{
-						dbgprintf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
-
 						m_pParentCore->GetScriptEventManager()->OnUserChannelMessage(this, pUser, pChannel, strMessage.c_str());
 						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 						{
@@ -802,8 +789,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 					CIrcChannel *pChannel = FindChannel(strTarget.c_str());
 					if (pChannel != NULL)
 					{
-						dbgprintf("[%s] <%s> %s\n", strTarget.c_str(), strNickname.c_str(), strMessage.c_str());
-
 						m_pParentCore->GetScriptEventManager()->OnUserChannelMessage(this, &tempUser, pChannel, strMessage.c_str());
 						for (CPool<CEventManager *>::iterator i = m_pParentCore->GetEventManagers()->begin(); i != m_pParentCore->GetEventManagers()->end(); ++i)
 						{
@@ -843,7 +828,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			{
 				pChannel = new CIrcChannel(this, strChannel.c_str());
 				m_plIrcChannels.push_back(pChannel);
-				dbgprintf("WE JOINED '%s'\n", pChannel->GetName());
 
 				SendRawFormat("WHO %s", pChannel->GetName());
 
@@ -852,22 +836,13 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			else
 			{
 				pChannel = FindChannel(strChannel.c_str());
-				if (pChannel != NULL)
-				{
-					dbgprintf("'%s' JOINED '%s'\n", strNickname.c_str(), pChannel->GetName());
-				}
 			}
 			if (pChannel != NULL)
 			{
 				if (pUser == NULL)
 				{
-					dbgprintf("We don't know %s yet, adding him (2).\n", strNickname.c_str());
 					pUser = new CIrcUser(this, strNickname.c_str());
 					m_plGlobalUsers.push_back(pUser);
-				}
-				else
-				{
-					dbgprintf("We already know %s.\n", strNickname.c_str());
 				}
 
 				pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
@@ -901,13 +876,10 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			{
 				if (strNickname == m_pIrcSocket->GetCurrentNickname())
 				{
-					dbgprintf("WE LEFT %s.\n", pChannel->GetName());
-
 					for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
 					{
 						if ((*i)->m_plIrcChannels.size() == 1)
 						{
-							dbgprintf("We lost %s.\n", (*i)->GetNickname());
 							m_plGlobalUsers.remove(*i);
 							delete *i;
 						}
@@ -933,12 +905,10 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 							(*i)->OnUserLeftChannel(this, pUser, pChannel, "");
 						}
 
-						dbgprintf("Removing %s from %s.\n", pUser->GetNickname(), pChannel->GetName());
 						pUser->m_plIrcChannels.remove(pChannel);
 						pChannel->m_plIrcUsers.remove(pUser);
 						if (pUser->m_plIrcChannels.size() == 0)
 						{
-							dbgprintf("We don't know %s anymore.\n", pUser->GetNickname());
 							m_plGlobalUsers.remove(pUser);
 							delete pUser;
 						}
@@ -977,14 +947,11 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 					(*i)->m_plIrcUsers.remove(pUser);
 				}
 
-				dbgprintf("We don't know %s anymore.\n", pUser->GetNickname());
 				m_plGlobalUsers.remove(pUser);
 				delete pUser;
 			}
 			else
 			{
-				dbgprintf("Error: we don't know %s yet, for some reason.\n", strNickname.c_str());
-
 				CIrcUser tempUser(this, strNickname.c_str(), true);
 				tempUser.UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
 
@@ -1010,7 +977,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 				{
 					pUser->UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
 
-					dbgprintf("Renaming %s to %s.\n", pUser->GetNickname(), strNewNick.c_str());
 					pUser->UpdateNickname(strNewNick.c_str());
 
 					m_pParentCore->GetScriptEventManager()->OnUserChangedNickname(this, pUser, strNickname.c_str());
@@ -1053,14 +1019,11 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 					(*i)->m_plIrcUsers.remove(pUser);
 				}
 
-				dbgprintf("We don't know %s anymore.\n", pUser->GetNickname());
 				m_plGlobalUsers.remove(pUser);
 				delete pUser;
 			}
 			else
 			{
-				dbgprintf("Error: we don't know %s yet, for some reason.\n", strNickname.c_str());
-
 				CIrcUser tempUser(this, strNickname.c_str(), true);
 				tempUser.UpdateIfNecessary(strIdent.c_str(), strHostname.c_str());
 
@@ -1081,7 +1044,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			std::string strSupport = vecParams[i];
 			if (strSupport == "NAMESX")
 			{
-				SendRaw("PROTOCTL NAMESX");
+				SendRawStatic("PROTOCTL NAMESX");
 			}
 
 			std::string::size_type iEqual = strSupport.find('=');
@@ -1174,8 +1137,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 								strParams += " " + strParam;
 							}
 
-							//dbgprintf("1MODEEEEEEE %c%c %s!\n", iSet == 1 ? '+' : '-', cMode, strParam.c_str());
-
 							if (bPrefixMode && pChannel != NULL)
 							{
 								CIrcUser *pUser = FindUser(strParam.c_str());
@@ -1230,19 +1191,15 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 							{
 								strParams += " " + strParam;
 							}
-
-							//dbgprintf("2MODEEEEEEE +%c %s!\n", cMode, strParam.c_str());
 						}
 						else if (iSet == 2)
 						{
-							//dbgprintf("2MODEEEEEEE -%c!\n", cMode);
 						}
 						break;
 					}
 
 					case 4: // No parameter
 					{
-						//dbgprintf("3MODEEEEEEE %c%c!\n", iSet == 1 ? '+' : '-', cMode);
 						break;
 					}
 				}

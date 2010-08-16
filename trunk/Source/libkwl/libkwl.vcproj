@@ -246,6 +246,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SendQueue.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SendQueue.h"
+				>
+			</File>
+			<File
 				RelativePath=".\TcpSocket.h"
 				>
 			</File>

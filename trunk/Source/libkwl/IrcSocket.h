@@ -13,6 +13,7 @@ class CIrcSocket;
 #define _IRCSOCKET_H
 
 #include "TcpSocket.h"
+#include "SendQueue.h"
 #include "IrcSettings.h"
 #include "Bot.h"
 
@@ -39,16 +40,25 @@ public:
 	/**
 	 * Sends raw data to the server.
 	 * @param szData The raw data to send.
-	 * @return The amount of bytes transmitted, -1 incase of an error.
+	 * @return 0 if everything was transmitted, -1 if something had to be queued.
 	 */
 	int SendRaw(const char *szData);
 	
 	/**
+	 * Sends raw data to the server (static).
+	 * (Static: the data will be in the program's memory all time)
+	 * @param szData The raw data to send.
+	 * @see SendRaw()
+	 * @return 0 if everything was transmitted, -1 if something had to be queued.
+	 */
+	int SendRawStatic(const char *szData);
+
+	/**
 	 * Sends raw data to the server (formatted).
-	 * @param szData The formatted raw data to send.
+	 * @param szFormat The formatted raw data to send.
 	 * @param ... Argument list
 	 * @see SendRaw()
-	 * @return The amount of bytes transmitted, -1 incase of an error.
+	 * @return 0 if everything was transmitted, -1 if something had to be queued.
 	 */
 	int SendRawFormat(const char *szFormat, ...);
 	
@@ -77,7 +87,9 @@ public:
 	const char *GetCurrentNickname();
 
 private:
-	CTcpSocket m_TcpSocket;
+	CTcpSocket m_tcpSocket;
+	CSendQueue m_sendQueue;
+
 	CBot *m_pParentBot;
 
 	std::string m_strBuffer;
