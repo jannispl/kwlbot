@@ -117,6 +117,7 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		m_globalTemplate->Set(v8::String::New("Bot"), m_classTemplates.Bot);
 		m_globalTemplate->Set(v8::String::New("IrcUser"), m_classTemplates.IrcUser);
 		m_globalTemplate->Set(v8::String::New("IrcChannel"), m_classTemplates.IrcChannel);
+		m_globalTemplate->Set(v8::String::New("Topic"), m_classTemplates.Topic);
 		m_globalTemplate->Set(v8::String::New("ScriptModule"), m_classTemplates.ScriptModule);
 
 		// Ask the global modules if they have anything
