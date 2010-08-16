@@ -12,7 +12,7 @@ Purpose:	Class which represents a remote IRC channel
 #include <cstdlib>
 
 CIrcChannel::CIrcChannel(CBot *pParentBot, const char *szName)
-	: m_szName(NULL), m_bHasDetailedUsers(false)
+	: m_bHasDetailedUsers(false)
 {
 	m_pParentBot = pParentBot;
 
@@ -21,30 +21,16 @@ CIrcChannel::CIrcChannel(CBot *pParentBot, const char *szName)
 
 CIrcChannel::~CIrcChannel()
 {
-	if (m_szName != NULL)
-	{
-		free(m_szName);
-	}
 }
 
 void CIrcChannel::UpdateName(const char *szName)
 {
-	size_t iLen = strlen(szName);
-	if (m_szName == NULL)
-	{
-		m_szName = (char *)malloc(iLen + 1);
-	}
-	else
-	{
-		m_szName = (char *)realloc(m_szName, iLen + 1);
-	}
-
-	strcpy(m_szName, szName);
+	m_strName = szName;
 }
 
 const char *CIrcChannel::GetName()
 {
-	return m_szName;
+	return m_strName.c_str();
 }
 
 CIrcUser *CIrcChannel::FindUser(const char *szNickname, bool bCaseSensitive)

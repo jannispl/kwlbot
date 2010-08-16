@@ -92,7 +92,7 @@ public:
 	
 private:
 	CBot *m_pParentBot;
-	char *m_szName;
+	std::string m_strName;
 
 #ifdef WIN32
 	template class DLLEXPORT CPool<CIrcUser *>;

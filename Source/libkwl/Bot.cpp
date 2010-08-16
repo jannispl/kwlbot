@@ -579,7 +579,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 	}
 	else if (iParamCount == 2)
 	{
-		if (strCommand == "366")
+		if (iNumeric == 366)
 		{
 			std::string strChannel = vecParams[0];
 
