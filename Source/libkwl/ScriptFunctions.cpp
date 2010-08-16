@@ -451,7 +451,19 @@ FuncReturn CScriptFunctions::Bot__ToString(const Arguments &args)
 {
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	std::string strObjectName = "Bot(" + std::string(((CBot *)pObject)->GetSocket()->GetCurrentNickname()) + ")";
+	std::string strObjectName;
+
+	if (pObject == NULL || pObject == (void *)0x1)
+	{
+		v8::Local<v8::Value> dummyObject = v8::Object::New();
+		v8::String::Utf8Value strName(dummyObject);
+		strObjectName = *strName;	
+	}
+	else
+	{
+		strObjectName = "Bot(" + std::string(((CBot *)pObject)->GetSocket()->GetCurrentNickname()) + ")";
+	}
+
 	return v8::String::New(strObjectName.c_str(), strObjectName.length());
 }
 
@@ -589,7 +601,19 @@ FuncReturn CScriptFunctions::IrcUser__ToString(const Arguments &args)
 {
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	std::string strObjectName = "IrcUser(" + std::string(((CIrcUser *)pObject)->GetNickname()) + ")";
+	std::string strObjectName;
+
+	if (pObject == NULL || pObject == (void *)0x1)
+	{
+		v8::Local<v8::Value> dummyObject = v8::Object::New();
+		v8::String::Utf8Value strName(dummyObject);
+		strObjectName = *strName;
+	}
+	else
+	{
+		strObjectName = "IrcUser(" + std::string(((CIrcUser *)pObject)->GetNickname()) + ")";
+	}
+
 	return v8::String::New(strObjectName.c_str(), strObjectName.length());
 }
 
@@ -732,7 +756,19 @@ FuncReturn CScriptFunctions::IrcChannel__ToString(const Arguments &args)
 {
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	std::string strObjectName = "IrcChannel(" + std::string(((CIrcChannel *)pObject)->GetName()) + ")";
+	std::string strObjectName;
+
+	if (pObject == NULL || pObject == (void *)0x1)
+	{
+		v8::Local<v8::Value> dummyObject = v8::Object::New();
+		v8::String::Utf8Value strName(dummyObject);
+		strObjectName = *strName;
+	}
+	else
+	{
+		strObjectName = "IrcChannel(" + std::string(((CIrcChannel *)pObject)->GetName()) + ")";
+	}
+
 	return v8::String::New(strObjectName.c_str(), strObjectName.length());
 }
 
@@ -793,7 +829,20 @@ FuncReturn CScriptFunctions::Topic__ToString(const Arguments &args)
 {
 	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	return v8::String::New(((CIrcChannel *)pObject)->m_topicInfo.strTopic.c_str());
+	std::string strObjectName;
+
+	if (pObject == NULL || pObject == (void *)0x1)
+	{
+		v8::Local<v8::Value> dummyObject = v8::Object::New();
+		v8::String::Utf8Value strName(dummyObject);
+		strObjectName = *strName;
+	}
+	else
+	{
+		strObjectName = ((CIrcChannel *)pObject)->m_topicInfo.strTopic;
+	}
+
+	return v8::String::New(strObjectName.c_str(), strObjectName.length());
 }
 
 FuncReturn CScriptFunctions::Topic__getterSetBy(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
