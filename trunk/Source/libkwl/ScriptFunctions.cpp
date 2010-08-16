@@ -455,9 +455,7 @@ FuncReturn CScriptFunctions::Bot__ToString(const Arguments &args)
 
 	if (pObject == NULL || pObject == (void *)0x1)
 	{
-		v8::Local<v8::Value> dummyObject = v8::Object::New();
-		v8::String::Utf8Value strName(dummyObject);
-		strObjectName = *strName;	
+		strObjectName = "[object Bot]";	
 	}
 	else
 	{
@@ -605,9 +603,7 @@ FuncReturn CScriptFunctions::IrcUser__ToString(const Arguments &args)
 
 	if (pObject == NULL || pObject == (void *)0x1)
 	{
-		v8::Local<v8::Value> dummyObject = v8::Object::New();
-		v8::String::Utf8Value strName(dummyObject);
-		strObjectName = *strName;
+		strObjectName = "[object IrcUser]";
 	}
 	else
 	{
@@ -760,9 +756,7 @@ FuncReturn CScriptFunctions::IrcChannel__ToString(const Arguments &args)
 
 	if (pObject == NULL || pObject == (void *)0x1)
 	{
-		v8::Local<v8::Value> dummyObject = v8::Object::New();
-		v8::String::Utf8Value strName(dummyObject);
-		strObjectName = *strName;
+		strObjectName = "[object IrcChannel]";
 	}
 	else
 	{
@@ -833,9 +827,7 @@ FuncReturn CScriptFunctions::Topic__ToString(const Arguments &args)
 
 	if (pObject == NULL || pObject == (void *)0x1)
 	{
-		v8::Local<v8::Value> dummyObject = v8::Object::New();
-		v8::String::Utf8Value strName(dummyObject);
-		strObjectName = *strName;
+		strObjectName = "[object Topic]";
 	}
 	else
 	{
