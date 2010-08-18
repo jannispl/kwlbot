@@ -63,6 +63,8 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		userProto->Set(v8::String::New("getModeOnChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetModeOnChannel));
 		userProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__ToString));
 
+		userProto->Set(v8::String::New("say"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__SendMessage)); // alias for sendMessage
+
 		userProto->SetAccessor(v8::String::New("nickname"), CScriptFunctions::IrcUser__getterNickname);
 		userProto->SetAccessor(v8::String::New("ident"), CScriptFunctions::IrcUser__getterIdent);
 		userProto->SetAccessor(v8::String::New("hostname"), CScriptFunctions::IrcUser__getterHostname);
@@ -77,6 +79,8 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		channelProto->Set(v8::String::New("hasUser"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__HasUser));
 		channelProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SendMessage));
 		channelProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__ToString));
+
+		channelProto->Set(v8::String::New("say"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SendMessage)); // alias for sendMessage
 
 		channelProto->SetAccessor(v8::String::New("name"), CScriptFunctions::IrcChannel__getterName);
 		channelProto->SetAccessor(v8::String::New("users"), CScriptFunctions::IrcChannel__getterUsers);
@@ -100,7 +104,7 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		scriptModuleProto->Set(v8::String::New("getProcedure"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModule__GetProcedure));
 
 		// CScriptModule::Procedure
-		m_classTemplates.ScriptModuleProcedure = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New());
+		m_classTemplates.ScriptModuleProcedure = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
 		m_classTemplates.ScriptModuleProcedure->SetClassName(v8::String::New("ScriptModuleProcedure"));
 		m_classTemplates.ScriptModuleProcedure->InstanceTemplate()->SetInternalFieldCount(1);
 		v8::Handle<v8::ObjectTemplate> scriptModuleProcedureProto = m_classTemplates.ScriptModuleProcedure->PrototypeTemplate();

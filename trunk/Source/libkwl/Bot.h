@@ -214,7 +214,25 @@ public:
 	CScriptObject::eScriptType GetType();
 
 private:
+	void Handle352(const std::string &strNickname, const std::string &strChannel, const std::string &strIdent, const std::string &strHost);
+	void Handle353(const std::string &strChannel, const std::string &strNames);
+	void Handle333(const std::string &strChannel, const std::string &strTopicSetBy, time_t ullSetDate);
+
+	void HandleKICK(const std::string &strChannel, const std::string &strVictim, const std::string &strReason = "");
+	void HandlePART(const std::string &strChannel, const std::string &strReason = "");
+	void HandlePRIVMSG(const std::string &strTarget, const std::string &strMessage);
+	void HandleJOIN(const std::string &strChannel);
+	void HandleQUIT(const std::string &strReason = "");
+	void HandleNICK(const std::string &strNewNickname);
+	void HandleMODE(const std::string &strChannel, const std::string &strModes, const std::vector<std::string> &vecParams);
+
+	CIrcUser *m_pCurrentUser;
+	std::string m_strCurrentNickname;
+	std::string m_strCurrentIdent;
+	std::string m_strCurrentHostname;
+
 	bool m_bGotMotd;
+	bool m_bUseNamesX;
 	CCore *m_pParentCore;
 	CIrcSocket *m_pIrcSocket;
 	CIrcSettings m_IrcSettings;
