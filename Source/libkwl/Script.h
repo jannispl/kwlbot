@@ -49,33 +49,26 @@ public:
 	} ClassTemplates_t;
 	static ClassTemplates_t m_classTemplates;
 
-	bool m_bCallingEvent;
-	bool m_bCurrentEventCancelled;
-
 private:
-	CBot *m_pParentBot;
-
-	bool m_bLoaded;
-
-#ifdef WIN32
-	template class DLLEXPORT v8::Persistent<v8::Context>;
-#endif
-	v8::Persistent<v8::Context> m_scriptContext;
-
-#ifdef WIN32
-	template class DLLEXPORT v8::Persistent<v8::ObjectTemplate>;
-#endif
-	static v8::Persistent<v8::ObjectTemplate> m_globalTemplate;
-
 	typedef struct
 	{
 		std::string strEvent;
 		v8::Persistent<v8::Function> handlerFunction;
 	} EventHandler;
 
+	CBot *m_pParentBot;
+	bool m_bLoaded;
+	bool m_bCallingEvent;
+	bool m_bCurrentEventCancelled;
+
 #ifdef WIN32
+	template class DLLEXPORT v8::Persistent<v8::Context>;
+	template class DLLEXPORT v8::Persistent<v8::ObjectTemplate>;
 	template class DLLEXPORT CPool<EventHandler *>;
 #endif
+
+	v8::Persistent<v8::Context> m_scriptContext;
+	static v8::Persistent<v8::ObjectTemplate> m_globalTemplate;
 	CPool<EventHandler *> m_plEventHandlers;
 };
 
