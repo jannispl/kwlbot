@@ -45,11 +45,13 @@ public:
 	static FuncReturn Bot__getterNickname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 	static FuncReturn Bot__getterChannels(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 	static FuncReturn Bot__getterNumAccessLevels(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+	static FuncReturn Bot__getterModeFlags(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 
 	static FuncReturn IrcUser__HasChannel(const Arguments &args);
 	static FuncReturn IrcUser__SendMessage(const Arguments &args);
 	static FuncReturn IrcUser__TestAccessLevel(const Arguments &args);
 	static FuncReturn IrcUser__GetModeOnChannel(const Arguments &args);
+	static FuncReturn IrcUser__TestLeastModeOnChannel(const Arguments &args);
 	static FuncReturn IrcUser__ToString(const Arguments &args);
 	
 	static FuncReturn IrcUser__getterNickname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);

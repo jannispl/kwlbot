@@ -14,6 +14,7 @@ Purpose:	Contains definitions for scripting functions
 #include "File.h"
 #include "ScriptModule.h"
 #include "ArgumentList.h"
+#include <math.h>
 
 #ifdef WIN32
 #include <psapi.h>
@@ -500,6 +501,27 @@ FuncReturn CScriptFunctions::Bot__getterNumAccessLevels(v8::Local<v8::String> st
 	return v8::Integer::New(((CBot *)pObject)->GetNumAccessLevels());
 }
 
+FuncReturn CScriptFunctions::Bot__getterModeFlags(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+
+	v8::Local<v8::Object> objFlags = v8::Object::New();
+
+	char *szModePrefixes = (char *)((CBot *)pObject)->GetModePrefixes();
+	int iModeFlag = 1;
+	while (*szModePrefixes)
+	{
+		iModeFlag *= 2;
+
+		char szPrefix[] = { *szModePrefixes, '\0' };
+		objFlags->Set(v8::String::New(szPrefix, 1), v8::Int32::New(iModeFlag));
+
+		++szModePrefixes;
+	}
+
+	return objFlags;
+}
+
 FuncReturn CScriptFunctions::IrcUser__HasChannel(const Arguments &args)
 {
 	if (args.Length() < 1)
@@ -593,6 +615,72 @@ FuncReturn CScriptFunctions::IrcUser__GetModeOnChannel(const Arguments &args)
 	}
 
 	return v8::Integer::New((int)((CIrcUser *)pObject)->GetModeOnChannel((CIrcChannel *)pChannel));
+}
+
+FuncReturn CScriptFunctions::IrcUser__TestLeastModeOnChannel(const Arguments &args)
+{
+	if (args.Length() < 1)
+	{
+		return v8::False();
+	}
+
+	if (!args[0]->IsObject())
+	{
+		return v8::False();
+	}
+
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+
+	CScriptObject *pChannel = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
+	if (pChannel->GetType() != CScriptObject::IrcChannel)
+	{
+		return v8::False();
+	}
+
+	if (((CIrcChannel *)pChannel)->GetParentBot() != ((CIrcUser *)pObject)->GetParentBot())
+	{
+		return v8::False();
+	}
+
+	int iFlag;
+	if (args[1]->IsString())
+	{
+		int iLength = args[1]->ToString()->Length();
+		if (iLength == 1)
+		{
+			v8::String::Utf8Value strPrefix(args[1]);
+			char cPrefix = (*strPrefix)[0];
+
+			char *szModePrefixes = (char *)((CIrcUser *)pObject)->GetParentBot()->GetModePrefixes();
+			iFlag = 1;
+			while (*szModePrefixes)
+			{
+				iFlag *= 2;
+
+				if (*szModePrefixes == cPrefix)
+				{
+					break;
+				}
+				else if (*(szModePrefixes + 1) == '\0')
+				{
+					return v8::False();
+				}
+
+				++szModePrefixes;
+			}
+		}
+		else if (iLength == 0)
+		{
+			// Just to please IJzerenRita!
+			return v8::True();
+		}
+	}
+	else
+	{
+		iFlag = args[1]->ToInt32()->Value();
+	}
+
+	return v8::Boolean::New((((CIrcUser *)pObject)->GetModeOnChannel((CIrcChannel *)pChannel) >> (int)sqrt((float)iFlag)) ? true : false);
 }
 
 FuncReturn CScriptFunctions::IrcUser__ToString(const Arguments &args)
