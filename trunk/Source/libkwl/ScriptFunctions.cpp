@@ -674,6 +674,10 @@ FuncReturn CScriptFunctions::IrcUser__TestLeastModeOnChannel(const Arguments &ar
 			// Just to please IJzerenRita!
 			return v8::True();
 		}
+		else
+		{
+			return v8::False();
+		}
 	}
 	else
 	{
