@@ -506,7 +506,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 		}
 	}
 
-	if (strCommand == "005")
+	if (iNumeric == 005)
 	{
 		for (int i = 1; i < iParamCount; ++i)
 		{
@@ -542,6 +542,9 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 					std::string::size_type iEnd = strValue.find(')');
 					m_SupportSettings.strPrefixes[0] = strValue.substr(0, iEnd);
 					m_SupportSettings.strPrefixes[1] = strValue.substr(iEnd + 1);
+
+					std::reverse(m_SupportSettings.strPrefixes[0].begin(), m_SupportSettings.strPrefixes[0].end());
+					std::reverse(m_SupportSettings.strPrefixes[1].begin(), m_SupportSettings.strPrefixes[1].end());
 				}
 			}
 		}
@@ -578,8 +581,6 @@ void CBot::Handle352(const std::string &strNickname, const std::string &strChann
 
 void CBot::Handle353(const std::string &strChannel, const std::string &strNames)
 {
-	printf("Handle353(\"%s\", \"%s\");\n", strChannel.c_str(), strNames.c_str());
-
 	CIrcChannel *pChannel = FindChannel(strChannel.c_str());
 	if (pChannel != NULL)
 	{
@@ -594,31 +595,20 @@ void CBot::Handle353(const std::string &strChannel, const std::string &strNames)
 			std::string::size_type iOffset = 0;
 			for (std::string::iterator i = strName.begin(); i != strName.end(); ++i)
 			{
-				switch (*i)
+				char cModeFlag = 1;
+				for (size_t j = 0; j < m_SupportSettings.strPrefixes[1].length(); ++j)
 				{
-				case '~':
-					cMode |= 32;
-					++iOffset;
-					break;
-				case '&':
-					cMode |= 16;
-					++iOffset;
-					break;
-				case '@':
-					cMode |= 8;
-					++iOffset;
-					break;
-				case '%':
-					cMode |= 4;
-					++iOffset;
-					break;
-				case '+':
-					cMode |= 2;
-					++iOffset;
-					break;
-				default:
-					bBreak = true;
-					break;
+					cModeFlag *= 2;
+					if (*i == m_SupportSettings.strPrefixes[1][j])
+					{
+						++iOffset;
+						cMode |= cModeFlag;
+						break;
+					}
+					else if (j == m_SupportSettings.strPrefixes[1].length() - 1)
+					{
+						bBreak = true;
+					}
 				}
 
 				// If the server does not support NAMESX, consider any other mode chars part of the nickname.
@@ -1019,34 +1009,26 @@ void CBot::HandleMODE(const std::string &strChannel, const std::string &strModes
 
 						if (pUser != NULL)
 						{
-							char cNewMode = 0;
-							char cPrefix = ModeToPrefix(cMode);
-							switch (cPrefix)
+							char cNewMode = 1;
+							for (size_t j = 0; j < m_SupportSettings.strPrefixes[0].length(); ++j)
 							{
-							case '~':
-								cNewMode = 32;
-								break;
-							case '&':
-								cNewMode = 16;
-								break;
-							case '@':
-								cNewMode = 8;
-								break;
-							case '%':
-								cNewMode = 4;
-								break;
-							case '+':
-								cNewMode = 2;
-								break;
+								cNewMode *= 2;
+								if (*i == m_SupportSettings.strPrefixes[0][j])
+								{
+									break;
+								}
 							}
 
-							if (iSet == 1)
+							if (cNewMode != 1)
 							{
-								pUser->m_mapChannelModes[pChannel] |= cNewMode;
-							}
-							else
-							{
-								pUser->m_mapChannelModes[pChannel] &= ~cNewMode;
+								if (iSet == 1)
+								{
+									pUser->m_mapChannelModes[pChannel] |= cNewMode;
+								}
+								else
+								{
+									pUser->m_mapChannelModes[pChannel] &= ~cNewMode;
+								}
 							}
 						}
 					}
@@ -1213,6 +1195,11 @@ void CBot::SendMessage(const char *szTarget, const char *szMessage)
 void CBot::SendNotice(const char *szTarget, const char *szMessage)
 {
 	SendRawFormat("NOTICE %s :%s", szTarget, szMessage);
+}
+
+const char *CBot::GetModePrefixes()
+{
+	return m_SupportSettings.strPrefixes[1].c_str();
 }
 
 CScriptObject::eScriptType CBot::GetType()

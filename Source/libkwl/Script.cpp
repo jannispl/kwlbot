@@ -51,6 +51,7 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		botProto->SetAccessor(v8::String::New("nickname"), CScriptFunctions::Bot__getterNickname);
 		botProto->SetAccessor(v8::String::New("channels"), CScriptFunctions::Bot__getterChannels);
 		botProto->SetAccessor(v8::String::New("numAccessLevels"), CScriptFunctions::Bot__getterNumAccessLevels);
+		botProto->SetAccessor(v8::String::New("modeFlags"), CScriptFunctions::Bot__getterModeFlags);
 
 		// CIrcUser
 		m_classTemplates.IrcUser = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));
@@ -61,6 +62,7 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		userProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__SendMessage));
 		userProto->Set(v8::String::New("testAccessLevel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__TestAccessLevel));
 		userProto->Set(v8::String::New("getModeOnChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetModeOnChannel));
+		userProto->Set(v8::String::New("testLeastModeOnChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__TestLeastModeOnChannel));
 		userProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__ToString));
 
 		userProto->Set(v8::String::New("say"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__SendMessage)); // alias for sendMessage

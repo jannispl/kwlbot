@@ -208,6 +208,12 @@ public:
 	void SendNotice(const char *szTarget, const char *szMessage);
 
 	/**
+	 * Gets a string of possible mode prefixes.
+	 * @return A string of possible mode prefixes.
+	 */
+	const char *GetModePrefixes();
+
+	/**
 	 * Gets the script type of this class.
 	 * @return The script type of this class.
 	 */
