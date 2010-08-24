@@ -15,6 +15,7 @@ class CScript;
 #include "Core.h"
 #include "ScriptFunctions.h"
 #include "v8/v8.h"
+#include "TimerManager.h"
 #include <list>
 #include <string>
 
@@ -36,6 +37,7 @@ public:
 
 	void EnterContext();
 	void ExitContext();
+	void Pulse();
 
 	typedef struct
 	{
@@ -46,6 +48,7 @@ public:
 		v8::Persistent<v8::FunctionTemplate> File;
 		v8::Persistent<v8::FunctionTemplate> ScriptModule;
 		v8::Persistent<v8::FunctionTemplate> ScriptModuleProcedure;
+		v8::Persistent<v8::FunctionTemplate> Timer;
 	} ClassTemplates_t;
 	static ClassTemplates_t m_classTemplates;
 
@@ -70,6 +73,8 @@ private:
 	v8::Persistent<v8::Context> m_scriptContext;
 	static v8::Persistent<v8::ObjectTemplate> m_globalTemplate;
 	CPool<EventHandler *> m_plEventHandlers;
+
+	CTimerManager *m_pTimerManager;
 };
 
 #endif

@@ -172,6 +172,11 @@ int CBot::SendRawFormat(const char *szFormat, ...)
 void CBot::Pulse()
 {
 	m_pIrcSocket->Pulse();
+
+	for (CPool<CScript *>::iterator i = m_plScripts.begin(); i != m_plScripts.end(); ++i)
+	{
+		(*i)->Pulse();
+	}
 }
 
 CIrcChannel *CBot::FindChannel(const char *szName)
