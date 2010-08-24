@@ -17,10 +17,12 @@ CScript::ClassTemplates_t CScript::m_classTemplates;
 CScript::CScript(CBot *pParentBot)
 	: m_pParentBot(pParentBot), m_bLoaded(false), m_bCurrentEventCancelled(false), m_bCallingEvent(false)
 {
+	m_pTimerManager = new CTimerManager(this);
 }
 
 CScript::~CScript()
 {
+	delete m_pTimerManager;
 }
 
 bool CScript::Load(CCore *pCore, const char *szFilename)
@@ -112,6 +114,13 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		v8::Handle<v8::ObjectTemplate> scriptModuleProcedureProto = m_classTemplates.ScriptModuleProcedure->PrototypeTemplate();
 		scriptModuleProcedureProto->Set(v8::String::New("call"), v8::FunctionTemplate::New(CScriptFunctions::ScriptModuleProcedure__Call));
 
+		// Timer
+		m_classTemplates.Timer = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::Timer__constructor));
+		m_classTemplates.Timer->SetClassName(v8::String::New("Timer"));
+		m_classTemplates.Timer->InstanceTemplate()->SetInternalFieldCount(1);
+		v8::Handle<v8::ObjectTemplate> timerProto = m_classTemplates.Timer->PrototypeTemplate();
+		timerProto->Set(v8::String::New("kill"), v8::FunctionTemplate::New(CScriptFunctions::Timer__Kill));
+
 		// Global
 		m_globalTemplate = v8::Persistent<v8::ObjectTemplate>::New(v8::ObjectTemplate::New());
 		m_globalTemplate->Set(v8::String::New("print"), v8::FunctionTemplate::New(CScriptFunctions::Print));
@@ -125,6 +134,7 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		m_globalTemplate->Set(v8::String::New("IrcChannel"), m_classTemplates.IrcChannel);
 		m_globalTemplate->Set(v8::String::New("Topic"), m_classTemplates.Topic);
 		m_globalTemplate->Set(v8::String::New("ScriptModule"), m_classTemplates.ScriptModule);
+		m_globalTemplate->Set(v8::String::New("Timer"), m_classTemplates.Timer);
 
 		// Ask the global modules if they have anything
 		for (CPool<CGlobalModule *>::iterator i = pCore->GetGlobalModules()->begin(); i != pCore->GetGlobalModules()->end(); ++i)
@@ -293,4 +303,9 @@ void CScript::EnterContext()
 void CScript::ExitContext()
 {
 	m_scriptContext->Exit();
+}
+
+void CScript::Pulse()
+{
+	m_pTimerManager->Pulse();
 }

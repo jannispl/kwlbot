@@ -83,6 +83,9 @@ public:
 
 	static FuncReturn ScriptModuleProcedure__Call(const Arguments &args);
 
+	static FuncReturn Timer__constructor(const Arguments &args);
+	static FuncReturn Timer__Kill(const Arguments &args);
+
 	static FuncReturn InternalConstructor(const Arguments &args);
 };
 

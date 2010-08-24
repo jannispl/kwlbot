@@ -1080,6 +1080,58 @@ FuncReturn CScriptFunctions::ScriptModuleProcedure__Call(const v8::Arguments &ar
 	return v8::Integer::New(((CScriptModule::Procedure *)pObject)->Call(list));
 }
 
+FuncReturn CScriptFunctions::Timer__constructor(const Arguments &args)
+{
+	if (m_bAllowInternalConstructions)
+	{
+		return v8::Undefined();
+	}
+
+	if (args.Length() < 3)
+	{
+		return v8::False();
+	}
+
+	if (!args[0]->IsFunction())
+	{
+		return v8::False();
+	}
+
+	v8::Local<v8::Function> timerFunction = v8::Local<v8::Function>::Cast(args[0]);
+	unsigned long ulInterval = args[1]->ToInteger()->Uint32Value();
+	unsigned int uiNumCalls = args[2]->ToInt32()->Uint32Value();
+
+	v8::Persistent<v8::Value> *pArgValues = NULL;
+	if (args.Length() > 3)
+	{
+		pArgValues = new v8::Persistent<v8::Value>[args.Length() - 3];
+		for (int i = 3; i < args.Length(); ++i)
+		{
+			pArgValues[i - 3] = v8::Persistent<v8::Value>::New(args[i]);
+		}
+	}
+
+	CTimerManager::Timer *pTimer = m_pCallingScript->m_pTimerManager->SetTimer(timerFunction, ulInterval, uiNumCalls, args.Length() - 3, pArgValues);
+
+	v8::Local<v8::Function> ctor = CScript::m_classTemplates.Timer->GetFunction();
+	m_bAllowInternalConstructions = true;
+	v8::Persistent<v8::Object> obj = v8::Persistent<v8::Object>::New(ctor->NewInstance());
+	m_bAllowInternalConstructions = false;
+	//obj.MakeWeak(pTimer, WeakCallbackUsingDelete);
+	obj->SetInternalField(0, v8::External::New(pTimer));
+	
+	return obj;
+}
+
+FuncReturn CScriptFunctions::Timer__Kill(const Arguments &args)
+{
+	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+
+	args.Holder()->SetInternalField(0, v8::Null());
+
+	return v8::Boolean::New(m_pCallingScript->m_pTimerManager->KillTimer((CTimerManager::Timer *)pObject));
+}
+
 FuncReturn CScriptFunctions::InternalConstructor(const Arguments &args)
 {
 	if (!m_bAllowInternalConstructions)

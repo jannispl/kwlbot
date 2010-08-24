@@ -297,6 +297,14 @@
 				RelativePath=".\ScriptObject.h"
 				>
 			</File>
+			<File
+				RelativePath=".\TimerManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TimerManager.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Modules"
