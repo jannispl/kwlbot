@@ -10,6 +10,7 @@ Purpose:	Class which represents an IRC bot
 #include "StdInc.h"
 #include "Bot.h"
 #include "WildcardMatch.h"
+#include <algorithm>
 
 CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 	: m_bGotMotd(false), m_bUseNamesX(false), m_pCurrentUser(NULL)
