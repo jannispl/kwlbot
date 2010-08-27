@@ -14,6 +14,7 @@ Purpose:	Contains definitions for scripting functions
 #include "File.h"
 #include "ScriptModule.h"
 #include "ArgumentList.h"
+#include "IrcMessages.h"
 #include <math.h>
 
 #ifdef WIN32
@@ -190,9 +191,9 @@ FuncReturn CScriptFunctions::Bot__SendRaw(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	((CBot *)pObject)->SendRaw(*strRaw);
+	pBot->SendRaw(*strRaw);
 
 	return v8::True();
 }
@@ -204,7 +205,7 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	std::string strTarget;
 
@@ -215,7 +216,7 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 		switch (pTarget->GetType())
 		{
 		case CScriptObject::IrcUser:
-			if (((CIrcUser *)pTarget)->GetParentBot() != (CBot *)pObject)
+			if (((CIrcUser *)pTarget)->GetParentBot() != pBot)
 			{
 				return v8::False();
 			}
@@ -223,7 +224,7 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 			break;
 
 		case CScriptObject::IrcChannel:
-			if (((CIrcChannel *)pTarget)->GetParentBot() != (CBot *)pObject)
+			if (((CIrcChannel *)pTarget)->GetParentBot() != pBot)
 			{
 				return v8::False();
 			}
@@ -251,7 +252,7 @@ FuncReturn CScriptFunctions::Bot__SendMessage(const Arguments &args)
 		return v8::False();
 	}
 
-	((CBot *)pObject)->SendMessage(strTarget.c_str(), *strMessage);
+	pBot->SendMessage(CPrivateMessage(strTarget.c_str(), *strMessage));
 
 	return v8::True();
 }
@@ -263,7 +264,7 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	std::string strTarget;
 
@@ -274,7 +275,7 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 		switch (pTarget->GetType())
 		{
 		case CScriptObject::IrcUser:
-			if (((CIrcUser *)pTarget)->GetParentBot() != (CBot *)pObject)
+			if (((CIrcUser *)pTarget)->GetParentBot() != pBot)
 			{
 				return v8::False();
 			}
@@ -282,7 +283,7 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 			break;
 
 		case CScriptObject::IrcChannel:
-			if (((CIrcChannel *)pTarget)->GetParentBot() != (CBot *)pObject)
+			if (((CIrcChannel *)pTarget)->GetParentBot() != pBot)
 			{
 				return v8::False();
 			}
@@ -310,7 +311,7 @@ FuncReturn CScriptFunctions::Bot__SendNotice(const Arguments &args)
 		return v8::False();
 	}
 
-	((CBot *)pObject)->SendNotice(strTarget.c_str(), *strMessage);
+	pBot->SendMessage(CNoticeMessage(strTarget.c_str(), *strMessage));
 
 	return v8::True();
 }
@@ -328,11 +329,11 @@ FuncReturn CScriptFunctions::Bot__FindUser(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	bool bCaseSensitive = args.Length() >= 2 && args[1]->IsBoolean() ? args[1]->ToBoolean()->BooleanValue() : true;
 
-	CIrcUser *pUser = ((CBot *)pObject)->FindUser(*strUser, bCaseSensitive);
+	CIrcUser *pUser = pBot->FindUser(*strUser, bCaseSensitive);
 	if (pUser == NULL)
 	{
 		return v8::False();
@@ -359,9 +360,9 @@ FuncReturn CScriptFunctions::Bot__FindChannel(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	CIrcChannel *pChannel = ((CBot *)pObject)->FindChannel(*strChannel);
+	CIrcChannel *pChannel = pBot->FindChannel(*strChannel);
 	if (pChannel == NULL)
 	{
 		return v8::False();
@@ -387,9 +388,9 @@ FuncReturn CScriptFunctions::Bot__JoinChannel(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	((CBot *)pObject)->JoinChannel(*strChannel);
+	pBot->JoinChannel(*strChannel);
 
 	return v8::True();
 }
@@ -401,7 +402,7 @@ FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	CIrcChannel *pChannel = NULL;
 	if (args[0]->IsObject())
@@ -412,7 +413,7 @@ FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
 			return v8::False();
 		}
 
-		if (((CIrcChannel *)pChannel_)->GetParentBot() != (CBot *)pObject)
+		if (((CIrcChannel *)pChannel_)->GetParentBot() != pBot)
 		{
 			return v8::False();
 		}
@@ -427,7 +428,7 @@ FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
 			return v8::False();
 		}
 
-		pChannel = ((CBot *)pObject)->FindChannel(*strChannel_);
+		pChannel = pBot->FindChannel(*strChannel_);
 	}
 
 	if (pChannel == NULL)
@@ -445,22 +446,22 @@ FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
 		}
 	}
 
-	return v8::Boolean::New(((CBot *)pObject)->LeaveChannel(pChannel, strReason.empty() ? NULL : strReason.c_str()));
+	return v8::Boolean::New(pBot->LeaveChannel(pChannel, strReason.empty() ? NULL : strReason.c_str()));
 }
 
 FuncReturn CScriptFunctions::Bot__ToString(const Arguments &args)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	std::string strObjectName;
 
-	if (pObject == NULL || pObject == (void *)0x1)
+	if (pBot == NULL || pBot == (void *)0x1)
 	{
 		strObjectName = "[object Bot]";	
 	}
 	else
 	{
-		strObjectName = "Bot(" + std::string(((CBot *)pObject)->GetSocket()->GetCurrentNickname()) + ")";
+		strObjectName = "Bot(" + std::string(pBot->GetSocket()->GetCurrentNickname()) + ")";
 	}
 
 	return v8::String::New(strObjectName.c_str(), strObjectName.length());
@@ -468,16 +469,16 @@ FuncReturn CScriptFunctions::Bot__ToString(const Arguments &args)
 
 FuncReturn CScriptFunctions::Bot__getterNickname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	return v8::String::New(((CBot *)pObject)->GetSocket()->GetCurrentNickname());
+	return v8::String::New(pBot->GetSocket()->GetCurrentNickname());
 }
 
 FuncReturn CScriptFunctions::Bot__getterChannels(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 	
-	CPool<CIrcChannel *> *pChannels = ((CBot *)pObject)->GetChannels();
+	CPool<CIrcChannel *> *pChannels = pBot->GetChannels();
 
 	v8::Local<v8::Object> channels = v8::Object::New();
 
@@ -496,18 +497,18 @@ FuncReturn CScriptFunctions::Bot__getterChannels(v8::Local<v8::String> strProper
 
 FuncReturn CScriptFunctions::Bot__getterNumAccessLevels(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	return v8::Integer::New(((CBot *)pObject)->GetNumAccessLevels());
+	return v8::Integer::New(pBot->GetNumAccessLevels());
 }
 
 FuncReturn CScriptFunctions::Bot__getterModeFlags(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
 	v8::Local<v8::Object> objFlags = v8::Object::New();
 
-	char *szModePrefixes = (char *)((CBot *)pObject)->GetModePrefixes();
+	char *szModePrefixes = (char *)pBot->GetModePrefixes();
 	int iModeFlag = 1;
 	while (*szModePrefixes)
 	{
@@ -534,7 +535,7 @@ FuncReturn CScriptFunctions::IrcUser__HasChannel(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	CScriptObject *pChannel = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
 	if (pChannel->GetType() != CScriptObject::IrcChannel)
@@ -542,12 +543,12 @@ FuncReturn CScriptFunctions::IrcUser__HasChannel(const Arguments &args)
 		return v8::False();
 	}
 
-	if (((CIrcChannel *)pChannel)->GetParentBot() != ((CIrcUser *)pObject)->GetParentBot())
+	if (((CIrcChannel *)pChannel)->GetParentBot() != pUser->GetParentBot())
 	{
 		return v8::False();
 	}
 
-	return v8::Boolean::New(((CIrcUser *)pObject)->HasChannel((CIrcChannel *)pChannel));
+	return v8::Boolean::New(pUser->HasChannel((CIrcChannel *)pChannel));
 }
 
 FuncReturn CScriptFunctions::IrcUser__SendMessage(const Arguments &args)
@@ -563,9 +564,9 @@ FuncReturn CScriptFunctions::IrcUser__SendMessage(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	((CIrcUser *)pObject)->GetParentBot()->SendMessage(((CIrcUser *)pObject)->GetNickname(), *strMessage);
+	pUser->GetParentBot()->SendMessage(CPrivateMessage(pUser->GetNickname(), *strMessage));
 
 	return v8::True();
 }
@@ -582,11 +583,11 @@ FuncReturn CScriptFunctions::IrcUser__TestAccessLevel(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	int iLevel = (int)args[0]->ToInt32()->NumberValue();
 
-	return v8::Boolean::New(((CIrcUser *)pObject)->GetParentBot()->TestAccessLevel((CIrcUser *)pObject, iLevel));
+	return v8::Boolean::New(pUser->GetParentBot()->TestAccessLevel(pUser, iLevel));
 }
 
 FuncReturn CScriptFunctions::IrcUser__GetModeOnChannel(const Arguments &args)
@@ -601,7 +602,7 @@ FuncReturn CScriptFunctions::IrcUser__GetModeOnChannel(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	CScriptObject *pChannel = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
 	if (pChannel->GetType() != CScriptObject::IrcChannel)
@@ -609,12 +610,12 @@ FuncReturn CScriptFunctions::IrcUser__GetModeOnChannel(const Arguments &args)
 		return v8::False();
 	}
 
-	if (((CIrcChannel *)pChannel)->GetParentBot() != ((CIrcUser *)pObject)->GetParentBot())
+	if (((CIrcChannel *)pChannel)->GetParentBot() != pUser->GetParentBot())
 	{
 		return v8::False();
 	}
 
-	return v8::Integer::New((int)((CIrcUser *)pObject)->GetModeOnChannel((CIrcChannel *)pChannel));
+	return v8::Integer::New((int)pUser->GetModeOnChannel((CIrcChannel *)pChannel));
 }
 
 FuncReturn CScriptFunctions::IrcUser__TestLeastModeOnChannel(const Arguments &args)
@@ -629,7 +630,7 @@ FuncReturn CScriptFunctions::IrcUser__TestLeastModeOnChannel(const Arguments &ar
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	CScriptObject *pChannel = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
 	if (pChannel->GetType() != CScriptObject::IrcChannel)
@@ -637,7 +638,7 @@ FuncReturn CScriptFunctions::IrcUser__TestLeastModeOnChannel(const Arguments &ar
 		return v8::False();
 	}
 
-	if (((CIrcChannel *)pChannel)->GetParentBot() != ((CIrcUser *)pObject)->GetParentBot())
+	if (((CIrcChannel *)pChannel)->GetParentBot() != pUser->GetParentBot())
 	{
 		return v8::False();
 	}
@@ -651,7 +652,7 @@ FuncReturn CScriptFunctions::IrcUser__TestLeastModeOnChannel(const Arguments &ar
 			v8::String::Utf8Value strPrefix(args[1]);
 			char cPrefix = (*strPrefix)[0];
 
-			char *szModePrefixes = (char *)((CIrcUser *)pObject)->GetParentBot()->GetModePrefixes();
+			char *szModePrefixes = (char *)pUser->GetParentBot()->GetModePrefixes();
 			iFlag = 1;
 			while (*szModePrefixes)
 			{
@@ -684,22 +685,22 @@ FuncReturn CScriptFunctions::IrcUser__TestLeastModeOnChannel(const Arguments &ar
 		iFlag = args[1]->ToInt32()->Value();
 	}
 
-	return v8::Boolean::New((((CIrcUser *)pObject)->GetModeOnChannel((CIrcChannel *)pChannel) >> (int)sqrt((float)iFlag)) ? true : false);
+	return v8::Boolean::New((pUser->GetModeOnChannel((CIrcChannel *)pChannel) >> (int)sqrt((float)iFlag)) ? true : false);
 }
 
 FuncReturn CScriptFunctions::IrcUser__ToString(const Arguments &args)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	std::string strObjectName;
 
-	if (pObject == NULL || pObject == (void *)0x1)
+	if (pUser == NULL || pUser == (void *)0x1)
 	{
 		strObjectName = "[object IrcUser]";
 	}
 	else
 	{
-		strObjectName = "IrcUser(" + std::string(((CIrcUser *)pObject)->GetNickname()) + ")";
+		strObjectName = "IrcUser(" + std::string(pUser->GetNickname()) + ")";
 	}
 
 	return v8::String::New(strObjectName.c_str(), strObjectName.length());
@@ -707,37 +708,37 @@ FuncReturn CScriptFunctions::IrcUser__ToString(const Arguments &args)
 
 FuncReturn CScriptFunctions::IrcUser__getterNickname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	return v8::String::New(((CIrcUser *)pObject)->GetNickname());
+	return v8::String::New(pUser->GetNickname());
 }
 
 FuncReturn CScriptFunctions::IrcUser__getterIdent(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	return v8::String::New(((CIrcUser *)pObject)->GetIdent());
+	return v8::String::New(pUser->GetIdent());
 }
 
 FuncReturn CScriptFunctions::IrcUser__getterHostname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {	
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	return v8::String::New(((CIrcUser *)pObject)->GetHostname());
+	return v8::String::New(pUser->GetHostname());
 }
 
 FuncReturn CScriptFunctions::IrcUser__getterTemporary(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	return v8::Boolean::New(((CIrcUser *)pObject)->IsTemporary());
+	return v8::Boolean::New(pUser->IsTemporary());
 }
 
 FuncReturn CScriptFunctions::IrcChannel__GetName(const Arguments &args)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	return v8::String::New(((CIrcChannel *)pObject)->GetName());
+	return v8::String::New(pChannel->GetName());
 }
 
 FuncReturn CScriptFunctions::IrcChannel__FindUser(const Arguments &args)
@@ -753,11 +754,11 @@ FuncReturn CScriptFunctions::IrcChannel__FindUser(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	bool bCaseSensitive = args.Length() >= 2 && args[1]->IsBoolean() ? args[1]->ToBoolean()->BooleanValue() : true;
 
-	CIrcUser *pUser = ((CIrcChannel *)pObject)->FindUser(*strUser, bCaseSensitive);
+	CIrcUser *pUser = pChannel->FindUser(*strUser, bCaseSensitive);
 	if (pUser == NULL)
 	{
 		return v8::False();
@@ -783,7 +784,7 @@ FuncReturn CScriptFunctions::IrcChannel__HasUser(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	CScriptObject *pUser = (CScriptObject *)v8::Local<v8::External>::Cast(args[0]->ToObject()->GetInternalField(0))->Value();
 	if (pUser->GetType() != CScriptObject::IrcUser)
@@ -791,12 +792,12 @@ FuncReturn CScriptFunctions::IrcChannel__HasUser(const Arguments &args)
 		return v8::False();
 	}
 
-	if (((CIrcUser *)pUser)->GetParentBot() != ((CIrcChannel *)pObject)->GetParentBot())
+	if (((CIrcUser *)pUser)->GetParentBot() != pChannel->GetParentBot())
 	{
 		return v8::False();
 	}
 
-	return v8::Boolean::New(((CIrcChannel *)pObject)->HasUser((CIrcUser *)pUser));
+	return v8::Boolean::New(pChannel->HasUser((CIrcUser *)pUser));
 }
 
 
@@ -813,9 +814,9 @@ FuncReturn CScriptFunctions::IrcChannel__SetTopic(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	((CIrcChannel *)pObject)->SetTopic(*strTopic);
+	pChannel->GetParentBot()->SendMessage(CTopicMessage(pChannel->GetName(), *strTopic));
 
 	return v8::True();
 }
@@ -833,26 +834,26 @@ FuncReturn CScriptFunctions::IrcChannel__SendMessage(const Arguments &args)
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	((CIrcChannel *)pObject)->GetParentBot()->SendMessage(((CIrcChannel *)pObject)->GetName(), *strMessage);
+	pChannel->GetParentBot()->SendMessage(CPrivateMessage(pChannel->GetName(), *strMessage));
 
 	return v8::True();
 }
 
 FuncReturn CScriptFunctions::IrcChannel__ToString(const Arguments &args)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	std::string strObjectName;
 
-	if (pObject == NULL || pObject == (void *)0x1)
+	if (pChannel == NULL || pChannel == (void *)0x1)
 	{
 		strObjectName = "[object IrcChannel]";
 	}
 	else
 	{
-		strObjectName = "IrcChannel(" + std::string(((CIrcChannel *)pObject)->GetName()) + ")";
+		strObjectName = "IrcChannel(" + std::string(pChannel->GetName()) + ")";
 	}
 
 	return v8::String::New(strObjectName.c_str(), strObjectName.length());
@@ -860,16 +861,16 @@ FuncReturn CScriptFunctions::IrcChannel__ToString(const Arguments &args)
 
 FuncReturn CScriptFunctions::IrcChannel__getterName(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	return v8::String::New(((CIrcChannel *)pObject)->GetName());
+	return v8::String::New(pChannel->GetName());
 }
 
 FuncReturn CScriptFunctions::IrcChannel__getterUsers(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	CPool<CIrcUser *> *pUsers = ((CIrcChannel *)pObject)->GetUsers();
+	CPool<CIrcUser *> *pUsers = pChannel->GetUsers();
 
 	v8::Local<v8::Object> users = v8::Object::New();
 
@@ -888,19 +889,19 @@ FuncReturn CScriptFunctions::IrcChannel__getterUsers(v8::Local<v8::String> strPr
 
 FuncReturn CScriptFunctions::IrcChannel__getterTopic(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 	
 	m_bAllowInternalConstructions = true;
 	v8::Local<v8::Object> obj = CScript::m_classTemplates.Topic->GetFunction()->NewInstance();
 	m_bAllowInternalConstructions = false;
 
-	obj->SetInternalField(0, v8::External::New(pObject));
+	obj->SetInternalField(0, v8::External::New(pChannel));
 	return obj;
 }
 
 void CScriptFunctions::IrcChannel__setterTopic(v8::Local<v8::String> strProperty, v8::Local<v8::Value> newValue, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
 	v8::String::Utf8Value strTopic(newValue);
 	if (*strTopic == NULL)
@@ -908,22 +909,22 @@ void CScriptFunctions::IrcChannel__setterTopic(v8::Local<v8::String> strProperty
 		return;
 	}
 
-	((CIrcChannel *)pObject)->SetTopic(*strTopic);
+	pChannel->GetParentBot()->SendMessage(CTopicMessage(pChannel->GetName(), *strTopic));
 }
 
 FuncReturn CScriptFunctions::Topic__ToString(const Arguments &args)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	std::string strObjectName;
 
-	if (pObject == NULL || pObject == (void *)0x1)
+	if (pChannel == NULL || pChannel == (void *)0x1)
 	{
 		strObjectName = "[object Topic]";
 	}
 	else
 	{
-		strObjectName = ((CIrcChannel *)pObject)->m_topicInfo.strTopic;
+		strObjectName = pChannel->m_topicInfo.strTopic;
 	}
 
 	return v8::String::New(strObjectName.c_str(), strObjectName.length());
@@ -931,15 +932,15 @@ FuncReturn CScriptFunctions::Topic__ToString(const Arguments &args)
 
 FuncReturn CScriptFunctions::Topic__getterSetBy(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	return v8::String::New(((CIrcChannel *)pObject)->m_topicInfo.strTopicSetBy.c_str());
+	return v8::String::New(pChannel->m_topicInfo.strTopicSetBy.c_str());
 }
 
 FuncReturn CScriptFunctions::Topic__getterSetOn(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
-	return v8::Date::New((double)((CIrcChannel *)pObject)->m_topicInfo.ullTopicSetDate * 1000);
+	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+	return v8::Date::New((double)pChannel->m_topicInfo.ullTopicSetDate * 1000);
 }
 
 void CScriptFunctions::WeakCallbackUsingDelete(v8::Persistent<v8::Value> pv, void *nobj)
@@ -1028,9 +1029,9 @@ FuncReturn CScriptFunctions::ScriptModule__GetProcedure(const v8::Arguments &arg
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CScriptModule *pScriptModule = (CScriptModule *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	CScriptModule::Procedure *pProcedure = ((CScriptModule *)pObject)->AllocateProcedure(*strName);
+	CScriptModule::Procedure *pProcedure = pScriptModule->AllocateProcedure(*strName);
 
 	v8::Local<v8::Function> ctor = CScript::m_classTemplates.ScriptModuleProcedure->GetFunction();
 	m_bAllowInternalConstructions = true;
@@ -1049,7 +1050,7 @@ FuncReturn CScriptFunctions::ScriptModuleProcedure__Call(const v8::Arguments &ar
 		return v8::False();
 	}
 
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CScriptModule::Procedure *pProcedure = (CScriptModule::Procedure *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	CArgumentList list;
 
@@ -1077,7 +1078,7 @@ FuncReturn CScriptFunctions::ScriptModuleProcedure__Call(const v8::Arguments &ar
 		}
 	}
 
-	return v8::Integer::New(((CScriptModule::Procedure *)pObject)->Call(list));
+	return v8::Integer::New(pProcedure->Call(list));
 }
 
 FuncReturn CScriptFunctions::Timer__constructor(const Arguments &args)
@@ -1125,11 +1126,11 @@ FuncReturn CScriptFunctions::Timer__constructor(const Arguments &args)
 
 FuncReturn CScriptFunctions::Timer__Kill(const Arguments &args)
 {
-	CScriptObject *pObject = (CScriptObject *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+	CTimerManager::Timer *pTimer = (CTimerManager::Timer *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
 	args.Holder()->SetInternalField(0, v8::Null());
 
-	return v8::Boolean::New(m_pCallingScript->m_pTimerManager->KillTimer((CTimerManager::Timer *)pObject));
+	return v8::Boolean::New(m_pCallingScript->m_pTimerManager->KillTimer(pTimer));
 }
 
 FuncReturn CScriptFunctions::InternalConstructor(const Arguments &args)

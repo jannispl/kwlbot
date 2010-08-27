@@ -56,6 +56,11 @@ CGlobalModule::CGlobalModule(CCore *pCore, const char *szPath)
 	{
 		printf("Warning: Global module '%s' does not have a \"InitModule\" export!\n", szPath);
 	}
+
+	if (m_Functions.pfnPulse == NULL)
+	{
+		m_Functions.pfnPulse = (Pulse_t)&CGlobalModule::DefaultPulse;
+	}
 }
 
 CGlobalModule::~CGlobalModule()
@@ -81,8 +86,9 @@ void CGlobalModule::TemplateRequest(v8::Handle<v8::ObjectTemplate> &objectTempla
 
 void CGlobalModule::Pulse()
 {
-	if (m_Functions.pfnPulse != NULL)
-	{
-		m_Functions.pfnPulse();
-	}
+	m_Functions.pfnPulse();
+}
+
+void CGlobalModule::DefaultPulse()
+{
 }
