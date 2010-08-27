@@ -1141,7 +1141,7 @@ bool CBot::LeaveChannel(CIrcChannel *pChannel, const char *szReason)
 	return true;
 }
 
-void CBot::SendMessage(CIrcMessage &ircMessage)
+void CBot::SendMessage(const CIrcMessage &ircMessage)
 {
 	ircMessage.Send(this);
 }

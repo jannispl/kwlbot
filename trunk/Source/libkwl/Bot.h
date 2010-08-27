@@ -199,7 +199,7 @@ public:
 	 * Sends an IRC message to the server.
 	 * @param  ircMessage  The message.
 	 */
-	void SendMessage(CIrcMessage &ircMessage);
+	void SendMessage(const CIrcMessage &ircMessage);
 
 	/**
 	 * Gets a string of possible mode prefixes.
