@@ -20,7 +20,10 @@ class CIrcMessage;
 class CIrcMessage
 {
 public:
-	virtual void Send(CBot *pBot);
+	CIrcMessage() {}
+	~CIrcMessage() {}
+
+	void Send(CBot *pBot) const;
 
 protected:
 	char m_szRaw[IRC_MAX_LEN + 1];

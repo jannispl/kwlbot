@@ -1,5 +1,6 @@
 all:
 	make -C libkwl
+	cp libkwl/libkwl.so ./kwlbot/
 	make -C kwlbot
 
 install:
