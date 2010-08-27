@@ -66,11 +66,6 @@ CPool<CIrcUser *> *CIrcChannel::GetUsers()
 	return &m_plIrcUsers;
 }
 
-void CIrcChannel::SetTopic(const char *szTopic)
-{
-	m_pParentBot->SendRawFormat("TOPIC %s :%s", GetName(), szTopic);
-}
-
 CBot *CIrcChannel::GetParentBot()
 {
 	return m_pParentBot;

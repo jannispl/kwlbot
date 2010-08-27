@@ -27,6 +27,7 @@ class CTcpSocket;
 
   #define closesocket(sock) close(sock)
   #define SOCKET_ERROR (-1)
+  #define INVALID_SOCKET (-1)
 #endif
 
 /**
@@ -36,6 +37,7 @@ class DLLEXPORT CTcpSocket
 {
 public:
 	CTcpSocket()
+		: m_Socket(INVALID_SOCKET)
 	{
 #ifdef WIN32
 		WSADATA wsa;
@@ -47,8 +49,10 @@ public:
 
 	~CTcpSocket()
 	{
-		if (m_Socket)
+		if (m_Socket != INVALID_SOCKET)
+		{
 			closesocket(m_Socket);
+		}
 	}
 
 	void SetBlocking(bool bBlocking)
@@ -123,7 +127,9 @@ public:
 	size_t Write(const void *buf, size_t len = 0, int flags = 0)
 	{
 		if (len == 0)
+		{
 			len = strlen((const char *)buf);
+		}
 
 		return send(m_Socket, (const char *)buf, len, flags);
 	}
@@ -135,9 +141,13 @@ public:
 
 	bool Close()
 	{
-		int ret = closesocket(m_Socket);
-		m_Socket = 0;
-		return ret != SOCKET_ERROR;
+		if (closesocket(m_Socket) != SOCKET_ERROR)
+		{
+			m_Socket = INVALID_SOCKET;
+			return true;
+		}
+
+		return false;
 	}
 
 	socket_t GetSocket()

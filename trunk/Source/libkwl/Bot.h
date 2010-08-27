@@ -20,6 +20,7 @@ class CBot;
 #include "IrcUser.h"
 #include "Script.h"
 #include "EventManager.h"
+#include "IrcMessage.h"
 #include <vector>
 #include <string>
 
@@ -91,9 +92,10 @@ public:
 	/**
 	 * Searches the channel pool for a certain channel.
 	 * @param  szName  The channel's name.
+	 * @param  bCaseSensitive  Search case-sensitively or not (optional)
 	 * @return A pointer to a CIrcChannel, or NULL incase the channel was not found.
 	 */
-	CIrcChannel *FindChannel(const char *szName);
+	CIrcChannel *FindChannel(const char *szName, bool bCaseSensitive = false);
 	
 	/**
 	 * Gets a pointer to the channel pool.
@@ -194,18 +196,10 @@ public:
 	bool LeaveChannel(CIrcChannel *pChannel, const char *szReason = NULL);
 	
 	/**
-	 * Sends a message to a certain target.
-	 * @param  szTarget   The message's target.
-	 * @param  szMessage  The message.
+	 * Sends an IRC message to the server.
+	 * @param  ircMessage  The message.
 	 */
-	void SendMessage(const char *szTarget, const char *szMessage);
-	
-	/**
-	 * Sends a notice to a certain target.
-	 * @param  szTarget   The notice's target.
-	 * @param  szNotice  The notice.
-	 */
-	void SendNotice(const char *szTarget, const char *szMessage);
+	void SendMessage(CIrcMessage &ircMessage);
 
 	/**
 	 * Gets a string of possible mode prefixes.
@@ -225,8 +219,11 @@ private:
 	void Handle333(const std::string &strChannel, const std::string &strTopicSetBy, time_t ullSetDate);
 
 	void HandleKICK(const std::string &strChannel, const std::string &strVictim, const std::string &strReason = "");
+	void Handle332(const std::string &strChannel, const std::string &strTopic);
+	void Handle366(const std::string &strChannel);
 	void HandlePART(const std::string &strChannel, const std::string &strReason = "");
 	void HandlePRIVMSG(const std::string &strTarget, const std::string &strMessage);
+	void HandleTOPIC(const std::string &strChannel, const std::string &strTopic);
 	void HandleJOIN(const std::string &strChannel);
 	void HandleQUIT(const std::string &strReason = "");
 	void HandleNICK(const std::string &strNewNickname);
@@ -238,7 +235,6 @@ private:
 	std::string m_strCurrentHostname;
 
 	bool m_bGotMotd;
-	bool m_bUseNamesX;
 	CCore *m_pParentCore;
 	CIrcSocket *m_pIrcSocket;
 	CIrcSettings m_IrcSettings;
@@ -260,7 +256,8 @@ private:
 	{
 		std::string strChanmodes[4];
 		std::string strPrefixes[2];
-	} m_SupportSettings;
+		bool bNamesX;
+	} m_supportSettings;
 
 	std::string m_strAutoMode;
 

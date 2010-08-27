@@ -218,6 +218,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IrcMessage.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\IrcMessage.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IrcMessages.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IrcUser.cpp"
 				>
 			</File>

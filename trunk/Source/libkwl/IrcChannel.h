@@ -65,12 +65,6 @@ public:
 	CPool<CIrcUser *> *GetUsers();
 
 	/**
-	 * Sends a request to the server to change the channel's topic.
-	 * @param  szTopic  The new topic.
-	 */
-	void SetTopic(const char *szTopic);
-
-	/**
 	 * Gets the parent bot.
 	 * @return The parent bot.
 	 */

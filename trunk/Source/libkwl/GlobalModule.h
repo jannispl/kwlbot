@@ -32,6 +32,8 @@ public:
 	void TemplateRequest(v8::Handle<v8::ObjectTemplate> &objectTemplate);
 	void Pulse();
 
+	static void DefaultPulse();
+
 private:
 	struct
 	{
