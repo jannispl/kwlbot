@@ -22,6 +22,11 @@ CScript::CScript(CBot *pParentBot)
 
 CScript::~CScript()
 {
+	v8::HandleScope handleScope;
+
+	m_scriptContext->DetachGlobal();
+	m_scriptContext.Dispose();
+
 	delete m_pTimerManager;
 }
 
@@ -48,6 +53,8 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		botProto->Set(v8::String::New("findChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__FindChannel));
 		botProto->Set(v8::String::New("joinChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__JoinChannel));
 		botProto->Set(v8::String::New("leaveChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__LeaveChannel));
+		botProto->Set(v8::String::New("die"), v8::FunctionTemplate::New(CScriptFunctions::Bot__Die));
+		botProto->Set(v8::String::New("restart"), v8::FunctionTemplate::New(CScriptFunctions::Bot__Restart));
 		botProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::Bot__ToString));
 
 		botProto->SetAccessor(v8::String::New("nickname"), CScriptFunctions::Bot__getterNickname);

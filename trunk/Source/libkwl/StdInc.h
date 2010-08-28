@@ -31,13 +31,14 @@ Purpose:	Precompiled header file
   #include <unistd.h>
   #include <stdlib.h>
   #include <string.h>
+  #include <errno.h>
 
   #define stricmp strcasecmp
 #endif
 
 #include <stdarg.h>
 
-#include "Definitions.h"
+#include "Configuration.h"
 #include "Pool.h"
 
 #ifdef _DEBUG

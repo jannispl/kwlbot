@@ -40,7 +40,7 @@ CIrcUser *CIrcChannel::FindUser(const char *szNickname, bool bCaseSensitive)
 
 	for (CPool<CIrcUser *>::iterator i = m_plIrcUsers.begin(); i != m_plIrcUsers.end(); ++i)
 	{
-		if (pfnCompare(szNickname, (*i)->GetNickname()) == 0)
+		if (pfnCompare(szNickname, (*i)->GetNickname().c_str()) == 0)
 		{
 			return *i;
 		}

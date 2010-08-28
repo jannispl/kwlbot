@@ -339,7 +339,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\Definitions.h"
+			RelativePath=".\Configuration.h"
 			>
 		</File>
 		<File

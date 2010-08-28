@@ -36,8 +36,11 @@ public:
 	void OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, const char *szMessage);
 	void OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szMessage);
 	void OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szModes, const char *szParams);
-	void OnBotGotChannelUserList(CBot *pBot, CIrcChannel *pChannel);
+	void OnUserSetChannelTopic(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szOldTopic);
+	void OnBotSyncedChannel(CBot *pBot, CIrcChannel *pChannel);
+#ifdef ENABLE_RAW_EVENT
 	void OnBotReceivedRaw(CBot *pBot, const char *szRaw);
+#endif
 
 private:
 	CCore *m_pParentCore;

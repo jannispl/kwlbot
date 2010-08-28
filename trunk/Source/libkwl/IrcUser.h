@@ -26,7 +26,7 @@ class DLLEXPORT CIrcUser : public CScriptObject
 	friend class CBot;
 
 public:
-	CIrcUser(CBot *pParentBot, const char *szNickname, bool bTemporary = false);
+	CIrcUser(CBot *pParentBot, const std::string &strNickname, bool bTemporary = false);
 	~CIrcUser();
 
 	/**
@@ -34,25 +34,25 @@ public:
 	 * @internal
 	 * @param  szNickname  The new nickname.
 	 */
-	void UpdateNickname(const char *szNickname);
+	void UpdateNickname(const std::string &strNickname);
 	
 	/**
 	 * Gets the user's nickname.
 	 * @return The user's nickname.
 	 */
-	const char *GetNickname();
+	const std::string &GetNickname();
 	
 	/**
 	 * Gets the user's hostname.
 	 * @return The user's hostname.
 	 */
-	const char *GetHostname();
+	const std::string &GetHostname();
 	
 	/**
 	 * Gets the user's ident.
 	 * @return The user's ident.
 	 */
-	const char *GetIdent();
+	const std::string &GetIdent();
 
 	/**
 	 * Checks if this is a temporary instance.
@@ -93,7 +93,7 @@ private:
 	 * @param  szIdent     The new ident.
 	 * @param  szHostname  The new hostname.
 	 */
-	void UpdateIfNecessary(const char *szIdent, const char *szHostname);
+	void UpdateIfNecessary(const std::string &strIdent, const std::string &strHostname);
 
 #ifdef WIN32
 	template class DLLEXPORT CPool<CIrcChannel *>;

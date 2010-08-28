@@ -70,6 +70,11 @@ public:
 			return m_pCurr == it.ptr();
 		}
 
+		void assign(T elem)
+		{
+			m_pCurr->This = elem;
+		}
+
 	private:
 		_elem *m_pCurr;
 	};

@@ -33,6 +33,13 @@ public:
 	CBot(CCore *pParentCore, CConfig *pConfig);
 	~CBot();
 
+	enum eDeathReason
+	{
+		UserRequest,
+		ConnectionError,
+		Restart
+	};
+
 	/**
 	 * Gets the parent core object.
 	 * @return A pointer to a CCore.
@@ -44,6 +51,12 @@ public:
 	 * @return A pointer to a CIrcSettings.
 	 */
 	CIrcSettings *GetSettings();
+
+	/**
+	 * Gets the configuration for this bot.
+	 * @return A pointer to a CConfig.
+	 */
+	CConfig *GetConfig();
 	
 	/**
 	 * Gets the IRC socket of this bot.
@@ -208,6 +221,33 @@ public:
 	const char *GetModePrefixes();
 
 	/**
+	 * Marks the bot as dead.
+	 */
+	void Die(eDeathReason deathReason = UserRequest);
+
+	/**
+	 * Tests whether the bot is dead.
+	 * @return True if the bot is dead, false otherwise.
+	 */
+	bool IsDead();
+
+	/**
+	 * Gets the reason for the bot's death.
+	 * @return The reason for the bot's death.
+	 */
+	eDeathReason GetDeathReason();
+
+	/**
+	 * Starts the reconnect timer.
+	 */
+	void StartReconnectTimer(unsigned int uiSeconds);
+
+	/**
+	 * Gets the reconnect timer.
+	 */
+	time_t GetReconnectTimer();
+
+	/**
 	 * Gets the script type of this class.
 	 * @return The script type of this class.
 	 */
@@ -234,10 +274,15 @@ private:
 	std::string m_strCurrentIdent;
 	std::string m_strCurrentHostname;
 
+	bool m_bDead;
+	time_t m_tReconnectTimer;
+	eDeathReason m_deathReason;
+
 	bool m_bGotMotd;
 	CCore *m_pParentCore;
 	CIrcSocket *m_pIrcSocket;
-	CIrcSettings m_IrcSettings;
+	CConfig m_botConfig;
+	CIrcSettings m_ircSettings;
 
 #ifdef WIN32
 	template class DLLEXPORT CPool<CIrcChannel *>;

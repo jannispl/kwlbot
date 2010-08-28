@@ -40,6 +40,8 @@ public:
 	static FuncReturn Bot__FindChannel(const Arguments &args);
 	static FuncReturn Bot__JoinChannel(const Arguments &args);
 	static FuncReturn Bot__LeaveChannel(const Arguments &args);
+	static FuncReturn Bot__Die(const Arguments &args);
+	static FuncReturn Bot__Restart(const Arguments &args);
 	static FuncReturn Bot__ToString(const Arguments &args);
 
 	static FuncReturn Bot__getterNickname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);

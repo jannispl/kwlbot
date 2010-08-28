@@ -16,15 +16,15 @@ Purpose:	Class which represents an IRC bot
 #define CALL_EVENT(what, ...) \
 	for (CPool<CEventManager *>::iterator eventManagerIterator = m_pParentCore->GetEventManagers()->begin(); eventManagerIterator != m_pParentCore->GetEventManagers()->end(); ++eventManagerIterator) \
 	{ \
-		(*eventManagerIterator)->what(__VA_ARGS__); \
+		(*eventManagerIterator)->what(this, __VA_ARGS__); \
 	} \
-	m_pParentCore->GetScriptEventManager()->what(__VA_ARGS__)
+	m_pParentCore->GetScriptEventManager()->what(this, __VA_ARGS__)
 
 CBot::CBot(CCore *pParentCore, CConfig *pConfig)
-	: m_bGotMotd(false), m_pCurrentUser(NULL)
+	: m_bDead(false), m_tReconnectTimer((time_t)-1), m_bGotMotd(false), m_pCurrentUser(NULL)
 {
 	m_pParentCore = pParentCore;
-	m_IrcSettings.LoadFromConfig(pConfig);
+	m_ircSettings.LoadFromConfig(pConfig);
 
 	m_pIrcSocket = new CIrcSocket(this);
 	m_pIrcChannelQueue = new CPool<CIrcChannel *>();
@@ -55,7 +55,7 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 	char szValue[64];
 	while (true)
 	{
-		sprintf(szValue, "access-%d", i);
+		sprintf(szValue, "access[%d]", i);
 		if (!pConfig->StartValueList(szValue))
 		{
 			break;
@@ -63,7 +63,6 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 
 		AccessRules rules;
 
-		std::string strTemp;
 		while (pConfig->GetNextValue(&strTemp))
 		{
 			std::string::size_type iSeparator = strTemp.find(':');
@@ -100,15 +99,37 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 	}
 
 	m_bGotMotd = false;
-
 	m_supportSettings.bNamesX = false;
 
-	CALL_EVENT(OnBotCreated, this);
+	CALL_EVENT(OnBotCreated);
+
+	if (pConfig->GetSingleValue("server", &strTemp))
+	{
+		std::string strPassword;
+		pConfig->GetSingleValue("password", &strPassword); // strPassword will remain empty if there is no such config entry
+
+		std::string::size_type iPortSep = strTemp.find(':');
+		if (iPortSep == std::string::npos)
+		{
+			m_pIrcSocket->Connect(strTemp.c_str(), 6667, strPassword.c_str());
+		}
+		else
+		{
+			m_pIrcSocket->Connect(strTemp.substr(0, iPortSep).c_str(), atoi(strTemp.substr(iPortSep + 1).c_str()), strPassword.c_str());
+		}
+	}
+
+	m_botConfig = *pConfig;
 }
 
 CBot::~CBot()
 {
-	CALL_EVENT(OnBotDestroyed, this);
+	CALL_EVENT(OnBotDestroyed);
+
+	for (CPool<CScript *>::iterator i = m_plScripts.begin(); i != m_plScripts.end(); ++i)
+	{
+		delete *i;
+	}
 
 	if (m_pIrcSocket != NULL)
 	{
@@ -140,7 +161,12 @@ CCore *CBot::GetParentCore()
 
 CIrcSettings *CBot::GetSettings()
 {
-	return &m_IrcSettings;
+	return &m_ircSettings;
+}
+
+CConfig *CBot::GetConfig()
+{
+	return &m_botConfig;
 }
 
 CIrcSocket *CBot::GetSocket()
@@ -209,7 +235,7 @@ CIrcUser *CBot::FindUser(const char *szName, bool bCaseSensitive)
 
 	for (CPool<CIrcUser *>::iterator i = m_plGlobalUsers.begin(); i != m_plGlobalUsers.end(); ++i)
 	{
-		if (pfnCompare(szName, (*i)->GetNickname()) == 0)
+		if (pfnCompare(szName, (*i)->GetNickname().c_str()) == 0)
 		{
 			return *i;
 		}
@@ -312,7 +338,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			m_pCurrentUser = FindUser(m_strCurrentNickname.c_str());
 			if (m_pCurrentUser != NULL)
 			{
-				m_pCurrentUser->UpdateIfNecessary(m_strCurrentIdent.c_str(), m_strCurrentHostname.c_str());
+				m_pCurrentUser->UpdateIfNecessary(m_strCurrentIdent, m_strCurrentHostname.c_str());
 			}
 		}
 	}
@@ -328,7 +354,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 				SendRawFormat("MODE %s %s", m_pIrcSocket->GetCurrentNickname(), m_strAutoMode.c_str());
 			}
 
-			CALL_EVENT(OnBotConnected, this);
+			CALL_EVENT(OnBotConnected);
 
 			for (CPool<CIrcChannel *>::iterator i = m_pIrcChannelQueue->begin(); i != m_pIrcChannelQueue->end(); ++i)
 			{
@@ -350,7 +376,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 	{
 		for (CPool<CIrcChannel *>::iterator i = m_plIncompleteChannels.begin(); i != m_plIncompleteChannels.end(); ++i)
 		{
-			CALL_EVENT(OnBotJoinedChannel, this, *i);
+			CALL_EVENT(OnBotJoinedChannel, *i);
 
 			i = m_plIncompleteChannels.erase(i);
 			if (i == m_plIncompleteChannels.end())
@@ -528,7 +554,7 @@ void CBot::Handle352(const std::string &strNickname, const std::string &strChann
 	CIrcUser *pUser = FindUser(strNickname.c_str());
 	if (pUser != NULL)
 	{
-		pUser->UpdateIfNecessary(m_strCurrentIdent.c_str(), m_strCurrentHostname.c_str());
+		pUser->UpdateIfNecessary(m_strCurrentIdent, m_strCurrentHostname);
 	}
 
 	CIrcChannel *pChannel = FindChannel(strChannel.c_str());
@@ -536,7 +562,7 @@ void CBot::Handle352(const std::string &strNickname, const std::string &strChann
 	{
 		pChannel->m_bHasDetailedUsers = true;
 
-		CALL_EVENT(OnBotGotChannelUserList, this, pChannel);
+		CALL_EVENT(OnBotSyncedChannel, pChannel);
 	}
 }
 
@@ -595,6 +621,7 @@ void CBot::Handle353(const std::string &strChannel, const std::string &strNames)
 				pUser = new CIrcUser(this, strName.c_str());
 				m_plGlobalUsers.push_back(pUser);
 			}
+
 			pUser->m_plIrcChannels.push_back(pChannel);
 			pUser->m_mapChannelModes[pChannel] = cMode;
 
@@ -653,14 +680,14 @@ void CBot::HandleKICK(const std::string &strChannel, const std::string &strVicti
 		{
 			if (m_pCurrentUser != NULL)
 			{
-				CALL_EVENT(OnUserKickedUser, this, m_pCurrentUser, pVictim, pChannel, strReason.c_str());
+				CALL_EVENT(OnUserKickedUser, m_pCurrentUser, pVictim, pChannel, strReason.c_str());
 			}
 			else
 			{
-				CIrcUser tempUser(this, m_strCurrentNickname.c_str(), true);
-				tempUser.UpdateIfNecessary(m_strCurrentIdent.c_str(), m_strCurrentHostname.c_str());
+				CIrcUser tempUser(this, m_strCurrentNickname, true);
+				tempUser.UpdateIfNecessary(m_strCurrentIdent, m_strCurrentHostname);
 
-				CALL_EVENT(OnUserKickedUser, this, &tempUser, pVictim, pChannel, strReason.c_str());
+				CALL_EVENT(OnUserKickedUser, &tempUser, pVictim, pChannel, strReason.c_str());
 			}
 
 			pVictim->m_plIrcChannels.remove(pChannel);
@@ -704,7 +731,7 @@ void CBot::Handle366(const std::string &strChannel)
 	{
 		if (*i == pChannel)
 		{
-			CALL_EVENT(OnBotJoinedChannel, this, pChannel);
+			CALL_EVENT(OnBotJoinedChannel, pChannel);
 
 			i = m_plIncompleteChannels.erase(i);
 			break;
@@ -744,7 +771,7 @@ void CBot::HandlePART(const std::string &strChannel, const std::string &strReaso
 	{
 		if (m_pCurrentUser != NULL)
 		{
-			CALL_EVENT(OnUserLeftChannel, this, m_pCurrentUser, pChannel, strReason.c_str());
+			CALL_EVENT(OnUserLeftChannel, m_pCurrentUser, pChannel, strReason.c_str());
 
 			m_pCurrentUser->m_plIrcChannels.remove(pChannel);
 			pChannel->m_plIrcUsers.remove(m_pCurrentUser);
@@ -756,10 +783,10 @@ void CBot::HandlePART(const std::string &strChannel, const std::string &strReaso
 		}
 		else
 		{
-			CIrcUser tempUser(this, m_strCurrentNickname.c_str(), true);
-			tempUser.UpdateIfNecessary(m_strCurrentIdent.c_str(), m_strCurrentHostname.c_str());
+			CIrcUser tempUser(this, m_strCurrentNickname, true);
+			tempUser.UpdateIfNecessary(m_strCurrentIdent, m_strCurrentHostname);
 
-			CALL_EVENT(OnUserLeftChannel, this, &tempUser, pChannel, strReason.c_str());
+			CALL_EVENT(OnUserLeftChannel, &tempUser, pChannel, strReason.c_str());
 		}
 	}
 }
@@ -771,32 +798,32 @@ void CBot::HandlePRIVMSG(const std::string &strTarget, const std::string &strMes
 		if (strTarget == m_pIrcSocket->GetCurrentNickname())
 		{
 			// privmsg to bot
-			CALL_EVENT(OnUserPrivateMessage, this, m_pCurrentUser, strMessage.c_str());
+			CALL_EVENT(OnUserPrivateMessage, m_pCurrentUser, strMessage.c_str());
 		}
 		else
 		{
 			CIrcChannel *pChannel = FindChannel(strTarget.c_str());
 			if (pChannel != NULL)
 			{
-				CALL_EVENT(OnUserChannelMessage, this, m_pCurrentUser, pChannel, strMessage.c_str());
+				CALL_EVENT(OnUserChannelMessage, m_pCurrentUser, pChannel, strMessage.c_str());
 			}
 		}
 	}
 	else
 	{
-		CIrcUser tempUser(this, m_strCurrentNickname.c_str(), true);
-		tempUser.UpdateIfNecessary(m_strCurrentIdent.c_str(), m_strCurrentHostname.c_str());
+		CIrcUser tempUser(this, m_strCurrentNickname, true);
+		tempUser.UpdateIfNecessary(m_strCurrentIdent, m_strCurrentHostname);
 
 		if (strTarget == m_pIrcSocket->GetCurrentNickname())
 		{
-			CALL_EVENT(OnUserPrivateMessage, this, &tempUser, strMessage.c_str());
+			CALL_EVENT(OnUserPrivateMessage, &tempUser, strMessage.c_str());
 		}
 		else
 		{
 			CIrcChannel *pChannel = FindChannel(strTarget.c_str());
 			if (pChannel != NULL)
 			{
-				CALL_EVENT(OnUserChannelMessage, this, &tempUser, pChannel, strMessage.c_str());
+				CALL_EVENT(OnUserChannelMessage, &tempUser, pChannel, strMessage.c_str());
 			}
 		}
 	}
@@ -810,9 +837,24 @@ void CBot::HandleTOPIC(const std::string &strChannel, const std::string &strTopi
 		return;
 	}
 
+	std::string strOldTopic = pChannel->m_topicInfo.strTopic;
+
 	pChannel->m_topicInfo.ullTopicSetDate = time(NULL);
 	pChannel->m_topicInfo.strTopicSetBy = m_strCurrentNickname;
 	pChannel->m_topicInfo.strTopic = strTopic;
+
+	CIrcUser *pUser = pChannel->FindUser(m_strCurrentNickname.c_str());
+	if (pUser != NULL)
+	{
+		CALL_EVENT(OnUserSetChannelTopic, pUser, pChannel, strOldTopic.c_str());
+	}
+	else
+	{
+		CIrcUser tempUser(this, m_strCurrentNickname, true);
+		tempUser.UpdateIfNecessary(m_strCurrentIdent, m_strCurrentHostname);
+
+		CALL_EVENT(OnUserSetChannelTopic, &tempUser, pChannel, strOldTopic.c_str());
+	}
 }
 
 void CBot::HandleJOIN(const std::string &strChannel)
@@ -855,7 +897,7 @@ void CBot::HandleJOIN(const std::string &strChannel)
 	}
 	else
 	{
-		CALL_EVENT(OnUserJoinedChannel, this, m_pCurrentUser, pChannel);
+		CALL_EVENT(OnUserJoinedChannel, m_pCurrentUser, pChannel);
 	}
 }
 
@@ -863,7 +905,7 @@ void CBot::HandleQUIT(const std::string &strReason)
 {
 	if (m_pCurrentUser != NULL)
 	{
-		CALL_EVENT(OnUserQuit, this, m_pCurrentUser, strReason.c_str());
+		CALL_EVENT(OnUserQuit, m_pCurrentUser, strReason.c_str());
 
 		for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
 		{
@@ -875,10 +917,10 @@ void CBot::HandleQUIT(const std::string &strReason)
 	}
 	else
 	{
-		CIrcUser tempUser(this, m_strCurrentNickname.c_str(), true);
-		tempUser.UpdateIfNecessary(m_strCurrentIdent.c_str(), m_strCurrentHostname.c_str());
+		CIrcUser tempUser(this, m_strCurrentNickname, true);
+		tempUser.UpdateIfNecessary(m_strCurrentIdent, m_strCurrentHostname);
 
-		CALL_EVENT(OnUserQuit, this, &tempUser, strReason.c_str());
+		CALL_EVENT(OnUserQuit, &tempUser, strReason.c_str());
 	}
 }
 
@@ -892,16 +934,16 @@ void CBot::HandleNICK(const std::string &strNewNickname)
 
 	if (m_pCurrentUser != NULL)
 	{
-		m_pCurrentUser->UpdateNickname(strNewNickname.c_str());
+		m_pCurrentUser->UpdateNickname(strNewNickname);
 
-		CALL_EVENT(OnUserChangedNickname, this, m_pCurrentUser, m_strCurrentNickname.c_str());
+		CALL_EVENT(OnUserChangedNickname, m_pCurrentUser, m_strCurrentNickname.c_str());
 	}
 	else
 	{
-		CIrcUser tempUser(this, strNewNickname.c_str(), true);
-		tempUser.UpdateIfNecessary(m_strCurrentIdent.c_str(), m_strCurrentHostname.c_str());
+		CIrcUser tempUser(this, strNewNickname, true);
+		tempUser.UpdateIfNecessary(m_strCurrentIdent, m_strCurrentHostname);
 
-		CALL_EVENT(OnUserChangedNickname, this, &tempUser, m_strCurrentNickname.c_str());
+		CALL_EVENT(OnUserChangedNickname, &tempUser, m_strCurrentNickname.c_str());
 	}
 }
 
@@ -1027,14 +1069,14 @@ void CBot::HandleMODE(const std::string &strChannel, const std::string &strModes
 	
 	if (m_pCurrentUser != NULL)
 	{
-		CALL_EVENT(OnUserSetChannelModes, this, m_pCurrentUser, pChannel, strModes.c_str(), strParams.c_str());
+		CALL_EVENT(OnUserSetChannelModes, m_pCurrentUser, pChannel, strModes.c_str(), strParams.c_str());
 	}
 	else
 	{
-		CIrcUser tempUser(this, m_strCurrentNickname.c_str(), true);
-		tempUser.UpdateIfNecessary(m_strCurrentIdent.c_str(), m_strCurrentHostname.c_str());
+		CIrcUser tempUser(this, m_strCurrentNickname, true);
+		tempUser.UpdateIfNecessary(m_strCurrentIdent, m_strCurrentHostname);
 
-		CALL_EVENT(OnUserSetChannelModes, this, &tempUser, pChannel, strModes.c_str(), strParams.c_str());
+		CALL_EVENT(OnUserSetChannelModes, &tempUser, pChannel, strModes.c_str(), strParams.c_str());
 	}
 }
 
@@ -1047,17 +1089,17 @@ bool CBot::TestAccessLevel(CIrcUser *pUser, int iLevel)
 
 	AccessRules accessRules = m_vecAccessRules[iLevel - 1];
 
-	if (!accessRules.strRequireHost.empty() && !wildcmp(accessRules.strRequireHost.c_str(), pUser->GetHostname()))
+	if (!accessRules.strRequireHost.empty() && !wildcmp(accessRules.strRequireHost.c_str(), pUser->GetHostname().c_str()))
 	{
 		return false;
 	}
 
-	if (!accessRules.strRequireIdent.empty() && !wildcmp(accessRules.strRequireIdent.c_str(), pUser->GetIdent()))
+	if (!accessRules.strRequireIdent.empty() && !wildcmp(accessRules.strRequireIdent.c_str(), pUser->GetIdent().c_str()))
 	{
 		return false;
 	}
 
-	if (!accessRules.strRequireNickname.empty() && !wildcmp(accessRules.strRequireNickname.c_str(), pUser->GetNickname()))
+	if (!accessRules.strRequireNickname.empty() && !wildcmp(accessRules.strRequireNickname.c_str(), pUser->GetNickname().c_str()))
 	{
 		return false;
 	}
@@ -1149,6 +1191,32 @@ void CBot::SendMessage(const CIrcMessage &ircMessage)
 const char *CBot::GetModePrefixes()
 {
 	return m_supportSettings.strPrefixes[1].c_str();
+}
+
+void CBot::Die(CBot::eDeathReason deathReason)
+{
+	m_bDead = true;
+	m_deathReason = deathReason;
+}
+
+bool CBot::IsDead()
+{
+	return m_bDead;
+}
+
+CBot::eDeathReason CBot::GetDeathReason()
+{
+	return m_deathReason;
+}
+
+void CBot::StartReconnectTimer(unsigned int uiSeconds)
+{
+	m_tReconnectTimer = time(NULL) + uiSeconds;
+}
+
+time_t CBot::GetReconnectTimer()
+{
+	return m_tReconnectTimer;
 }
 
 CScriptObject::eScriptType CBot::GetType()

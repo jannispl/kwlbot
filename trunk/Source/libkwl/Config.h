@@ -22,6 +22,11 @@ class CConfig;
 class CConfig
 {
 public:
+	CConfig()
+	{
+		m_bLoaded = false;
+	}
+
 	CConfig(std::string strFilename, std::string strSeparator = "=")
 		: m_iValueIndex(0)
 	{

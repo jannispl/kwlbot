@@ -18,19 +18,25 @@ CIrcSocket::CIrcSocket(CBot *pParentBot)
 CIrcSocket::~CIrcSocket()
 {
 	SendRawFormat("QUIT :%s", m_pParentBot->GetSettings()->GetQuitMessage());
+
 	m_tcpSocket.Close();
 }
 
 bool CIrcSocket::Connect(const char *szHostname, int iPort, const char *szPassword)
 {
+	CIrcSettings *pSettings = m_pParentBot->GetSettings();
+
 	if (!m_tcpSocket.Connect(szHostname, iPort))
 	{
+		printf("[%s] Failed to connect to %s:%d, retrying...\n", pSettings->GetNickname(), szHostname, iPort);
+		m_pParentBot->Die(CBot::ConnectionError);
 		return false;
 	}
 
 	m_tcpSocket.SetBlocking(false);
 
-	CIrcSettings *pSettings = m_pParentBot->GetSettings();
+	printf("[%s] Connection to %s:%d established.\n", pSettings->GetNickname(), szHostname, iPort);
+
 	if (szPassword != NULL && szPassword[0] != '\0')
 	{
 		SendRawFormat("PASS %s", szPassword);
@@ -83,11 +89,26 @@ void CIrcSocket::Pulse()
 	m_sendQueue.Process(m_tcpSocket.GetSocket());
 
 	char szBuffer[256];
+
+#ifdef WIN32
+	WSASetLastError(0);
+#else
+	errno = 0;
+#endif
+
 	int iSize = ReadRaw(szBuffer, 255);
-	if (iSize == 0)
+
+	if (iSize == 0 || (iSize == -1 && 
+#ifdef WIN32
+		WSAGetLastError() == WSAECONNABORTED
+#else
+		errno = ECONNRESET
+#endif
+		))
 	{
 		// Connection closed
-		printf("[%s] Connection closed\n", m_pParentBot->GetSettings()->GetNickname());
+		printf("[%s] Connection closed\n", GetCurrentNickname());
+		m_pParentBot->Die(CBot::ConnectionError);
 	}
 	else if (iSize != -1)
 	{
@@ -130,10 +151,6 @@ void CIrcSocket::Pulse()
 
 void CIrcSocket::HandleData(const char *szData)
 {
-#ifdef _DEBUG
-	printf("[in] %s\n", szData);
-#endif
-
 	bool bPrefix = szData[0] == ':';
 
 	std::string strData(szData);
@@ -198,11 +215,13 @@ void CIrcSocket::HandleData(const char *szData)
 
 	m_pParentBot->HandleData(strOrigin, strCommand, vecParams);
 
-	m_pParentBot->GetParentCore()->GetScriptEventManager()->OnBotReceivedRaw(m_pParentBot, szData);
+#ifdef ENABLE_RAW_EVENT
 	for (CPool<CEventManager *>::iterator i = m_pParentBot->GetParentCore()->GetEventManagers()->begin(); i != m_pParentBot->GetParentCore()->GetEventManagers()->end(); ++i)
 	{
 		(*i)->OnBotReceivedRaw(m_pParentBot, szData);
 	}
+	m_pParentBot->GetParentCore()->GetScriptEventManager()->OnBotReceivedRaw(m_pParentBot, szData);
+#endif
 
 	if (strCommand == "PING" && vecParams.size() >= 1)
 	{

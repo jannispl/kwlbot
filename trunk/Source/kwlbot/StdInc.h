@@ -35,7 +35,7 @@ Purpose:	Precompiled header file
 
 #include <stdarg.h>
 
-#include "../libkwl/Definitions.h"
+#include "../libkwl/Configuration.h"
 
 #ifdef _DEBUG
   #define dbgprintf printf

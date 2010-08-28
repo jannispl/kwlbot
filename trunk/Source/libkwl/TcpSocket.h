@@ -109,7 +109,11 @@ public:
 		sockaddr_in addr;
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(iPort);
-		ResolveHostname(szHostname, &addr);
+
+		if (!ResolveHostname(szHostname, &addr))
+		{
+			return false;
+		}
 
 		return Connect((sockaddr *)&addr, sizeof(sockaddr_in));
 	}
