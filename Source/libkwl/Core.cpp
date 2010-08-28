@@ -141,7 +141,50 @@ void CCore::Pulse()
 {
 	for (CPool<CBot *>::iterator i = m_plBots.begin(); i != m_plBots.end(); ++i)
 	{
-		(*i)->Pulse();
+		CBot *pBot = *i;
+		
+		if (!pBot->IsDead())
+		{
+			pBot->Pulse();
+		}
+
+		if (pBot->IsDead())
+		{
+			CBot::eDeathReason deathReason = pBot->GetDeathReason();
+
+			if (deathReason == CBot::ConnectionError || deathReason == CBot::Restart)
+			{
+#ifdef ENABLE_AUTO_RECONNECT
+				if (pBot->GetReconnectTimer() == (time_t)-1)
+				{
+					pBot->StartReconnectTimer(deathReason == CBot::ConnectionError ? AUTO_RECONNECT_TIMEOUT : BOT_RESTART_TIMEOUT);
+				}
+				else if (time(NULL) >= pBot->GetReconnectTimer())
+				{
+					CConfig botConfig = *(pBot->GetConfig());
+
+					delete pBot;
+					i.assign(CreateBot(&botConfig));
+				}
+#else
+				delete pBot;
+				i = m_plBots.erase(i);
+				if (i == m_plBots.end())
+				{
+					break;
+				}
+#endif
+			}
+			else if (deathReason == CBot::UserRequest)
+			{				
+				delete pBot;
+				i = m_plBots.erase(i);
+				if (i == m_plBots.end())
+				{
+					break;
+				}
+			}
+		}
 	}
 	
 	for (CPool<CGlobalModule *>::iterator i = m_plGlobalModules.begin(); i != m_plGlobalModules.end(); ++i)
@@ -176,23 +219,6 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 				CConfig Config((std::string(szDirectory) + fd.cFileName));
 
 				CBot *pBot = CreateBot(&Config);
-
-				std::string strTemp;
-				if (Config.GetSingleValue("server", &strTemp))
-				{
-					std::string strPassword;
-					Config.GetSingleValue("password", &strPassword); // strPassword will remain empty if there is no such config entry
-
-					std::string::size_type iPortSep = strTemp.find(':');
-					if (iPortSep == std::string::npos)
-					{
-						pBot->GetSocket()->Connect(strTemp.c_str(), 6667, strPassword.c_str());
-					}
-					else
-					{
-						pBot->GetSocket()->Connect(strTemp.substr(0, iPortSep).c_str(), atoi(strTemp.substr(iPortSep + 1).c_str()), strPassword.c_str());
-					}
-				}
 			}
 		}
 	}
@@ -221,20 +247,6 @@ void CCore::ScanDirectoryForBots(const char *szDirectory)
 					CConfig Config((std::string(szDirectory) + pEntry->d_name));
 
 					CBot *pBot = CreateBot(&Config);
-
-					std::string strTemp;
-					if (Config.GetSingleValue("server", &strTemp))
-					{
-						std::string::size_type iPortSep = strTemp.find(':');
-						if (iPortSep == std::string::npos)
-						{
-							pBot->GetSocket()->Connect(strTemp.c_str());
-						}
-						else
-						{
-							pBot->GetSocket()->Connect(strTemp.substr(0, iPortSep).c_str(), atoi(strTemp.substr(iPortSep + 1).c_str()));
-						}
-					}
 				}
 			}
 		}

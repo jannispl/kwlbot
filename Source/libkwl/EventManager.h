@@ -36,8 +36,11 @@ public:
 	virtual void OnUserPrivateMessage(CBot *pBot, CIrcUser *pUser, const char *szMessage) = 0;
 	virtual void OnUserChannelMessage(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szMessage) = 0;
 	virtual void OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szModes, const char *szParams) = 0;
-	virtual void OnBotGotChannelUserList(CBot *pBot, CIrcChannel *pChannel) = 0;
+	virtual void OnUserSetChannelTopic(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szOldTopic) = 0;
+	virtual void OnBotSyncedChannel(CBot *pBot, CIrcChannel *pChannel) = 0;
+#ifdef ENABLE_RAW_EVENT
 	virtual void OnBotReceivedRaw(CBot *pBot, const char *szRaw) = 0;
+#endif
 };
 
 #endif

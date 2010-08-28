@@ -64,6 +64,7 @@ int main(int iArgCount, char *szArgs[])
 	SetConsoleCtrlHandler(CtrlHandler, TRUE);
 #else
 	signal(SIGINT, CtrlHandler);
+	signal(SIGKILL, CtrlHandler);
 #endif
 
 	while (true)

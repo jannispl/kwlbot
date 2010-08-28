@@ -303,7 +303,35 @@ void CScriptEventManager::OnUserSetChannelModes(CBot *pBot, CIrcUser *pUser, CIr
 	}
 }
 
-void CScriptEventManager::OnBotGotChannelUserList(CBot *pBot, CIrcChannel *pChannel)
+void CScriptEventManager::OnUserSetChannelTopic(CBot *pBot, CIrcUser *pUser, CIrcChannel *pChannel, const char *szOldTopic)
+{
+	v8::HandleScope handleScope;
+
+	for (CPool<CScript *>::iterator i = pBot->GetScripts()->begin(); i != pBot->GetScripts()->end(); ++i)
+	{
+		(*i)->EnterContext();
+
+		v8::Local<v8::Function> ctor1 = CScript::m_classTemplates.IrcUser->GetFunction();
+		v8::Local<v8::Function> ctor2 = CScript::m_classTemplates.IrcChannel->GetFunction();
+
+		CScriptFunctions::m_bAllowInternalConstructions = true;
+
+		v8::Local<v8::Object> user = ctor1->NewInstance();
+		user->SetInternalField(0, v8::External::New(pUser));
+
+		v8::Local<v8::Object> channel = ctor2->NewInstance();
+		channel->SetInternalField(0, v8::External::New(pChannel));
+
+		CScriptFunctions::m_bAllowInternalConstructions = false;
+
+		v8::Handle<v8::Value> argValues[3] = { user, channel, v8::String::New(szOldTopic) };
+		(*i)->CallEvent("onUserSetChannelTopic", 3, argValues);
+
+		(*i)->ExitContext();
+	}
+}
+
+void CScriptEventManager::OnBotSyncedChannel(CBot *pBot, CIrcChannel *pChannel)
 {
 	v8::HandleScope handleScope;
 
@@ -321,11 +349,13 @@ void CScriptEventManager::OnBotGotChannelUserList(CBot *pBot, CIrcChannel *pChan
 		CScriptFunctions::m_bAllowInternalConstructions = false;
 
 		v8::Handle<v8::Value> argValues[1] = { channel };
-		(*i)->CallEvent("onBotGotChannelUserList", 1, argValues);
+		(*i)->CallEvent("onBotSyncedChannel", 1, argValues);
 
 		(*i)->ExitContext();
 	}
 }
+
+#ifdef ENABLE_RAW_EVENT
 
 void CScriptEventManager::OnBotReceivedRaw(CBot *pBot, const char *szRaw)
 {
@@ -335,18 +365,11 @@ void CScriptEventManager::OnBotReceivedRaw(CBot *pBot, const char *szRaw)
 	{
 		(*i)->EnterContext();
 
-		v8::Local<v8::Function> ctor = CScript::m_classTemplates.Bot->GetFunction();
-
-		CScriptFunctions::m_bAllowInternalConstructions = true;
-
-		v8::Local<v8::Object> bot = ctor->NewInstance();
-		bot->SetInternalField(0, v8::External::New(pBot));
-
-		CScriptFunctions::m_bAllowInternalConstructions = false;
-
 		v8::Handle<v8::Value> argValues[1] = { v8::String::New(szRaw) };
 		(*i)->CallEvent("onBotReceivedRaw", 1, argValues);
 
 		(*i)->ExitContext();
 	}
 }
+
+#endif

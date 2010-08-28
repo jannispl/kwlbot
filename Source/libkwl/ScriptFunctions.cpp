@@ -449,6 +449,24 @@ FuncReturn CScriptFunctions::Bot__LeaveChannel(const Arguments &args)
 	return v8::Boolean::New(pBot->LeaveChannel(pChannel, strReason.empty() ? NULL : strReason.c_str()));
 }
 
+FuncReturn CScriptFunctions::Bot__Die(const Arguments &args)
+{
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+
+	pBot->Die(CBot::UserRequest);
+	
+	return v8::True();
+}
+
+FuncReturn CScriptFunctions::Bot__Restart(const Arguments &args)
+{
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+
+	pBot->Die(CBot::Restart);
+	
+	return v8::True();
+}
+
 FuncReturn CScriptFunctions::Bot__ToString(const Arguments &args)
 {
 	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
@@ -566,7 +584,7 @@ FuncReturn CScriptFunctions::IrcUser__SendMessage(const Arguments &args)
 
 	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	pUser->GetParentBot()->SendMessage(CPrivateMessage(pUser->GetNickname(), *strMessage));
+	pUser->GetParentBot()->SendMessage(CPrivateMessage(pUser->GetNickname().c_str(), *strMessage));
 
 	return v8::True();
 }
@@ -710,21 +728,21 @@ FuncReturn CScriptFunctions::IrcUser__getterNickname(v8::Local<v8::String> strPr
 {
 	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	return v8::String::New(pUser->GetNickname());
+	return v8::String::New(pUser->GetNickname().c_str());
 }
 
 FuncReturn CScriptFunctions::IrcUser__getterIdent(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
 	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	return v8::String::New(pUser->GetIdent());
+	return v8::String::New(pUser->GetIdent().c_str());
 }
 
 FuncReturn CScriptFunctions::IrcUser__getterHostname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {	
 	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
-	return v8::String::New(pUser->GetHostname());
+	return v8::String::New(pUser->GetHostname().c_str());
 }
 
 FuncReturn CScriptFunctions::IrcUser__getterTemporary(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
@@ -880,7 +898,7 @@ FuncReturn CScriptFunctions::IrcChannel__getterUsers(v8::Local<v8::String> strPr
 		v8::Local<v8::Object> objUser = CScript::m_classTemplates.IrcUser->GetFunction()->NewInstance();
 		objUser->SetInternalField(0, v8::External::New(*i));
 
-		users->Set(v8::String::New((*i)->GetNickname()), objUser);
+		users->Set(v8::String::New((*i)->GetNickname().c_str()), objUser);
 	}
 	m_bAllowInternalConstructions = false;
 

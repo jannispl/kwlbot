@@ -11,44 +11,44 @@ Purpose:	Class which represents a remote IRC user
 #include "IrcUser.h"
 #include <cstdlib>
 
-CIrcUser::CIrcUser(CBot *pParentBot, const char *szNickname, bool bTemporary)
+CIrcUser::CIrcUser(CBot *pParentBot, const std::string &strNickname, bool bTemporary)
 {
 	m_pParentBot = pParentBot;
 	m_bTemporary = bTemporary;
 
-	UpdateNickname(szNickname);
+	UpdateNickname(strNickname);
 }
 
 CIrcUser::~CIrcUser()
 {
 }
 
-void CIrcUser::UpdateNickname(const char *szNickname)
+void CIrcUser::UpdateNickname(const std::string &strNickname)
 {
-	m_strNickname = szNickname;
+	m_strNickname = strNickname;
 }
 
-const char *CIrcUser::GetNickname()
+const std::string &CIrcUser::GetNickname()
 {
-	return m_strNickname.c_str();
+	return m_strNickname;
 }
 
-void CIrcUser::UpdateIfNecessary(const char *szIdent, const char *szHostname)
+void CIrcUser::UpdateIfNecessary(const std::string &strIdent, const std::string &strHostname)
 {
-	if (szIdent[0] != '\0')
+	if (strIdent[0] != '\0')
 	{
-		m_strIdent = szIdent;
+		m_strIdent = strIdent;
 	}
 
-	if (szHostname[0] != '\0')
+	if (strHostname[0] != '\0')
 	{
-		m_strHostname = szHostname;
+		m_strHostname = strHostname;
 	}
 }
 
-const char *CIrcUser::GetIdent()
+const std::string &CIrcUser::GetIdent()
 {
-	return m_strIdent.c_str();
+	return m_strIdent;
 }
 
 bool CIrcUser::IsTemporary()
@@ -56,9 +56,9 @@ bool CIrcUser::IsTemporary()
 	return m_bTemporary;
 }
 
-const char *CIrcUser::GetHostname()
+const std::string &CIrcUser::GetHostname()
 {
-	return m_strHostname.c_str();
+	return m_strHostname;
 }
 
 bool CIrcUser::HasChannel(CIrcChannel *pChannel)
