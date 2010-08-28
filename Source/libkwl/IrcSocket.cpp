@@ -102,7 +102,7 @@ void CIrcSocket::Pulse()
 #ifdef WIN32
 		WSAGetLastError() == WSAECONNABORTED
 #else
-		errno = ECONNRESET
+		errno == ECONNRESET
 #endif
 		))
 	{

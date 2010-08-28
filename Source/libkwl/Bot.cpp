@@ -13,6 +13,13 @@ Purpose:	Class which represents an IRC bot
 #include <algorithm>
 
 // Shortcut to call an event
+#define CALL_EVENT_NOARG(what) \
+	for (CPool<CEventManager *>::iterator eventManagerIterator = m_pParentCore->GetEventManagers()->begin(); eventManagerIterator != m_pParentCore->GetEventManagers()->end(); ++eventManagerIterator) \
+	{ \
+		(*eventManagerIterator)->what(this); \
+	} \
+	m_pParentCore->GetScriptEventManager()->what(this)
+
 #define CALL_EVENT(what, ...) \
 	for (CPool<CEventManager *>::iterator eventManagerIterator = m_pParentCore->GetEventManagers()->begin(); eventManagerIterator != m_pParentCore->GetEventManagers()->end(); ++eventManagerIterator) \
 	{ \
@@ -101,7 +108,7 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 	m_bGotMotd = false;
 	m_supportSettings.bNamesX = false;
 
-	CALL_EVENT(OnBotCreated);
+	CALL_EVENT_NOARG(OnBotCreated);
 
 	if (pConfig->GetSingleValue("server", &strTemp))
 	{
@@ -124,7 +131,7 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 
 CBot::~CBot()
 {
-	CALL_EVENT(OnBotDestroyed);
+	CALL_EVENT_NOARG(OnBotDestroyed);
 
 	for (CPool<CScript *>::iterator i = m_plScripts.begin(); i != m_plScripts.end(); ++i)
 	{
@@ -354,7 +361,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 				SendRawFormat("MODE %s %s", m_pIrcSocket->GetCurrentNickname(), m_strAutoMode.c_str());
 			}
 
-			CALL_EVENT(OnBotConnected);
+			CALL_EVENT_NOARG(OnBotConnected);
 
 			for (CPool<CIrcChannel *>::iterator i = m_pIrcChannelQueue->begin(); i != m_pIrcChannelQueue->end(); ++i)
 			{
