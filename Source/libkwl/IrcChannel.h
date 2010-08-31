@@ -27,21 +27,14 @@ class DLLEXPORT CIrcChannel : public CScriptObject
 	friend class CBot;
 
 public:
-	CIrcChannel(CBot *pParentBot, const char *szName);
+	CIrcChannel(CBot *pParentBot, const std::string &strName);
 	~CIrcChannel();
-
-	/**
-	 * Updates the channel's name.
-	 * @internal
-	 * @param  szName  The new name.
-	 */
-	void UpdateName(const char *szName);
 
 	/**
 	 * Gets the channel's name.
 	 * @return The channel's name.
 	 */
-	const char *GetName();
+	const std::string &GetName();
 
 	/**
 	 * Searches the user pool for a certain user.
@@ -85,6 +78,8 @@ public:
 	TopicInfo m_topicInfo;
 	
 private:
+	void UpdateName(const std::string &strName);
+
 	CBot *m_pParentBot;
 	std::string m_strName;
 

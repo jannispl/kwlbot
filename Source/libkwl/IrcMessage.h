@@ -26,7 +26,7 @@ public:
 	void Send(CBot *pBot) const;
 
 protected:
-	char m_szRaw[IRC_MAX_LEN + 1];
+	std::string m_strRaw;
 };
 
 #endif

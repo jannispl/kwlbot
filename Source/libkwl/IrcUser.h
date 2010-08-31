@@ -28,13 +28,6 @@ class DLLEXPORT CIrcUser : public CScriptObject
 public:
 	CIrcUser(CBot *pParentBot, const std::string &strNickname, bool bTemporary = false);
 	~CIrcUser();
-
-	/**
-	 * Updates the user's nickname.
-	 * @internal
-	 * @param  szNickname  The new nickname.
-	 */
-	void UpdateNickname(const std::string &strNickname);
 	
 	/**
 	 * Gets the user's nickname.
@@ -87,12 +80,7 @@ public:
 	CScriptObject::eScriptType GetType();
 
 private:
-	/**
-	 * Updates user information if necessary.
-	 * @internal
-	 * @param  szIdent     The new ident.
-	 * @param  szHostname  The new hostname.
-	 */
+	void UpdateNickname(const std::string &strNickname);
 	void UpdateIfNecessary(const std::string &strIdent, const std::string &strHostname);
 
 #ifdef WIN32

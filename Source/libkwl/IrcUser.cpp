@@ -23,27 +23,9 @@ CIrcUser::~CIrcUser()
 {
 }
 
-void CIrcUser::UpdateNickname(const std::string &strNickname)
-{
-	m_strNickname = strNickname;
-}
-
 const std::string &CIrcUser::GetNickname()
 {
 	return m_strNickname;
-}
-
-void CIrcUser::UpdateIfNecessary(const std::string &strIdent, const std::string &strHostname)
-{
-	if (strIdent[0] != '\0')
-	{
-		m_strIdent = strIdent;
-	}
-
-	if (strHostname[0] != '\0')
-	{
-		m_strHostname = strHostname;
-	}
 }
 
 const std::string &CIrcUser::GetIdent()
@@ -86,4 +68,22 @@ CBot *CIrcUser::GetParentBot()
 CScriptObject::eScriptType CIrcUser::GetType()
 {
 	return IrcUser;
+}
+
+void CIrcUser::UpdateNickname(const std::string &strNickname)
+{
+	m_strNickname = strNickname;
+}
+
+void CIrcUser::UpdateIfNecessary(const std::string &strIdent, const std::string &strHostname)
+{
+	if (strIdent[0] != '\0')
+	{
+		m_strIdent = strIdent;
+	}
+
+	if (strHostname[0] != '\0')
+	{
+		m_strHostname = strHostname;
+	}
 }

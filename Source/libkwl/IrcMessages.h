@@ -27,37 +27,41 @@ class CRawMessage : public CIrcMessage
 public:
 	CRawMessage(const char *szFormat, ...)
 	{
+		static char szBuffer[IRC_MAX_LEN + 1];
+
 		va_list vaArgs;
 		va_start(vaArgs, szFormat);
-		vsnprintf(m_szRaw, IRC_MAX_LEN + 1, szFormat, vaArgs);
+		int iLength = vsnprintf(szBuffer, IRC_MAX_LEN + 1, szFormat, vaArgs);
 		va_end(vaArgs);
+
+		m_strRaw.assign(szBuffer, iLength);
 	}
 };
 
 class CPrivateMessage : public CIrcMessage
 {
 public:
-	CPrivateMessage(const char *szTarget, const char *szMessage)
+	CPrivateMessage(const std::string &strTarget, const std::string &strMessage)
 	{
-		snprintf(m_szRaw, IRC_MAX_LEN, "PRIVMSG %s :%s", szTarget, szMessage);
+		m_strRaw = "PRIVMSG " + strTarget + " :" + strMessage;
 	}
 };
 
 class CNoticeMessage : public CIrcMessage
 {
 public:
-	CNoticeMessage(const char *szTarget, const char *szMessage)
+	CNoticeMessage(const std::string &strTarget, const std::string &strMessage)
 	{
-		snprintf(m_szRaw, IRC_MAX_LEN, "NOTICE %s :%s", szTarget, szMessage);
+		m_strRaw = "NOTICE " + strTarget + " :" + strMessage;
 	}
 };
 
 class CTopicMessage : public CIrcMessage
 {
 public:
-	CTopicMessage(const char *szChannel, const char *szTopic)
+	CTopicMessage(const std::string &strChannel, const std::string &strTopic)
 	{
-		snprintf(m_szRaw, IRC_MAX_LEN, "TOPIC %s :%s", szChannel, szTopic);
+		m_strRaw = "TOPIC " + strChannel + " :" + strTopic;
 	}
 };
 

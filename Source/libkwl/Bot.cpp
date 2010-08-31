@@ -181,12 +181,12 @@ CIrcSocket *CBot::GetSocket()
 	return m_pIrcSocket;
 }
 
-int CBot::SendRaw(const char *szData)
+int CBot::SendRaw(const std::string &strData)
 {
 #ifdef _DEBUG
 	printf("[out] %s\n", szData);
 #endif
-	return m_pIrcSocket->SendRaw(szData);
+	return m_pIrcSocket->SendRaw(strData.c_str());
 }
 
 int CBot::SendRawStatic(const char *szData)
@@ -222,7 +222,7 @@ CIrcChannel *CBot::FindChannel(const char *szName, bool bCaseSensitive)
 
 	for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
 	{
-		if (pfnCompare(szName, (*i)->GetName()) == 0)
+		if (pfnCompare(szName, (*i)->GetName().c_str()) == 0)
 		{
 			return *i;
 		}

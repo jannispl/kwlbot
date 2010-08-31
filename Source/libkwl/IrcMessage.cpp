@@ -12,5 +12,5 @@ Purpose:	Abstract class which defines an IRC message
 
 void CIrcMessage::Send(CBot *pBot) const
 {
-	pBot->SendRaw(m_szRaw);
+	pBot->SendRaw(m_strRaw);
 }

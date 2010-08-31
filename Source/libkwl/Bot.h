@@ -66,10 +66,10 @@ public:
 
 	/**
 	 * Sends raw data to the server.
-	 * @param szData The raw data to send.
+	 * @param strData The raw data to send.
 	 * @return The amount of bytes transmitted, -1 incase of an error.
 	 */
-	int SendRaw(const char *szData);
+	int SendRaw(const std::string &strData);
 
 	/**
 	 * Sends raw data to the server (static).
