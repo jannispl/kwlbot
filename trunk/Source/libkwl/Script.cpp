@@ -80,6 +80,9 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		userProto->SetAccessor(v8::String::New("ident"), CScriptFunctions::IrcUser__getterIdent);
 		userProto->SetAccessor(v8::String::New("hostname"), CScriptFunctions::IrcUser__getterHostname);
 		userProto->SetAccessor(v8::String::New("temporary"), CScriptFunctions::IrcUser__getterTemporary);
+#ifdef SERVICE
+		userProto->SetAccessor(v8::String::New("userModes"), CScriptFunctions::IrcUser__getterUserModes);
+#endif
 
 		// CIrcChannel
 		m_classTemplates.IrcChannel = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));

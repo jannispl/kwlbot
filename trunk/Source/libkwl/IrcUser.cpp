@@ -60,6 +60,13 @@ char CIrcUser::GetModeOnChannel(CIrcChannel *pChannel)
 	return m_mapChannelModes[pChannel];
 }
 
+#ifdef SERVICE
+const std::string &CIrcUser::GetUserModes()
+{
+	return m_strUserModes;
+}
+#endif
+
 CBot *CIrcUser::GetParentBot()
 {
 	return m_pParentBot;

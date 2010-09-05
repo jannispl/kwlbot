@@ -263,6 +263,7 @@ private:
 	void Handle366(const std::string &strChannel);
 	void HandlePART(const std::string &strChannel, const std::string &strReason = "");
 	void HandlePRIVMSG(const std::string &strTarget, const std::string &strMessage);
+	void HandleTOPIC(const std::string &strSetter, time_t ullSetDate, const std::string &strChannel, const std::string &strTopic);
 	void HandleTOPIC(const std::string &strChannel, const std::string &strTopic);
 	void HandleJOIN(const std::string &strChannel);
 	void HandleQUIT(const std::string &strReason = "");
@@ -271,7 +272,7 @@ private:
 
 #ifdef SERVICE
 	void HandleSERVER(const std::string &strHostname, int iHopCount, const std::string &strInformation);
-	void HandleNICK(const std::string &strNickname, int iHopCount, time_t ullTimestamp, const std::string &strIdent, const std::string &strHostname, const std::string &strServer, time_t ullServiceStamp, const std::string &strUsermodes, const std::string &strVirtualHost, const std::string &strInformation);
+	void HandleNICK(const std::string &strNickname, int iHopCount, time_t ullTimestamp, const std::string &strIdent, const std::string &strHostname, const std::string &strServer, time_t ullServiceStamp, const std::string &strUserModes, const std::string &strVirtualHost, const std::string &strInformation);
 #endif
 
 	std::string m_strCurrentOrigin;

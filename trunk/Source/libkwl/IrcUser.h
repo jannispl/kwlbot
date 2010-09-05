@@ -67,6 +67,14 @@ public:
 	 */
 	char GetModeOnChannel(CIrcChannel *pChannel);
 
+#ifdef SERVICE
+	/**
+	 * Gets the user's modes.
+	 * @return The user's modes.
+	 */
+	const std::string &GetUserModes();
+#endif
+
 	/**
 	 * Gets the parent bot.
 	 * @return The parent bot.
@@ -94,6 +102,10 @@ private:
 	std::string m_strIdent;
 	std::map<CIrcChannel *, char> m_mapChannelModes;
 	bool m_bTemporary;
+
+#ifdef SERVICE
+	std::string m_strUserModes;
+#endif
 };
 
 #endif

@@ -13,6 +13,14 @@
 #define AUTO_RECONNECT_TIMEOUT (10)
 #define BOT_RESTART_TIMEOUT (2)
 
-//#define SERVICE
+#define SERVICE
+
+#ifdef SERVICE
+  #define UNREAL 1
+  #define INSPIRCD 2
+  #define HYBRID 3
+
+  #define IRCD UNREAL
+#endif
 
 #endif
