@@ -754,12 +754,14 @@ FuncReturn CScriptFunctions::IrcUser__getterTemporary(v8::Local<v8::String> strP
 	return v8::Boolean::New(pUser->IsTemporary());
 }
 
+#ifdef SERVICE
 FuncReturn CScriptFunctions::IrcUser__getterUserModes(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
 	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
 	return v8::String::New(pUser->GetUserModes().c_str());
 }
+#endif
 
 FuncReturn CScriptFunctions::IrcChannel__GetName(const Arguments &args)
 {

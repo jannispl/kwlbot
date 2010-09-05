@@ -13,7 +13,7 @@
 #define AUTO_RECONNECT_TIMEOUT (10)
 #define BOT_RESTART_TIMEOUT (2)
 
-#define SERVICE
+//#define SERVICE
 
 #ifdef SERVICE
   #define UNREAL 1
