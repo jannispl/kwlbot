@@ -17,7 +17,11 @@ CIrcSocket::CIrcSocket(CBot *pParentBot)
 
 CIrcSocket::~CIrcSocket()
 {
+#ifndef SERVICE
 	SendRawFormat("QUIT :%s", m_pParentBot->GetSettings()->GetQuitMessage());
+#else
+	SendRawFormat("SQUIT %s :%s", m_pParentBot->GetSettings()->GetServiceHost(), m_pParentBot->GetSettings()->GetQuitMessage());
+#endif
 
 	m_tcpSocket.Close();
 }
@@ -41,8 +45,17 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort, const char *szPasswo
 	{
 		SendRawFormat("PASS %s", szPassword);
 	}
+
+#ifndef SERVICE
 	SendRawFormat("NICK %s", pSettings->GetNickname());
 	SendRawFormat("USER %s \"\" \"%s\" :%s", pSettings->GetIdent(), szHostname, pSettings->GetRealname());
+#else
+	SendRawStatic("PROTOCTL NICKv2");
+	SendRawFormat("SERVER %s 1 123 :kwlbot service", pSettings->GetServiceHost());
+	SendRawFormat("SERVICE %s 123 * 0 0 :kwlbot service", pSettings->GetServiceHost());
+	SendRawFormat("NICK %s 1 %u %s %s %s 0 0 %s * :kwlbot", pSettings->GetNickname(), (unsigned long)time(NULL), pSettings->GetIdent(), pSettings->GetServiceHost(), pSettings->GetServiceHost(), szHostname, pSettings->GetRealname());
+#endif
+
 	m_strCurrentNickname = pSettings->GetNickname();
 
 	return true;
@@ -151,6 +164,8 @@ void CIrcSocket::Pulse()
 
 void CIrcSocket::HandleData(const char *szData)
 {
+	printf("[in] %s\n", szData);
+
 	bool bPrefix = szData[0] == ':';
 
 	std::string strData(szData);

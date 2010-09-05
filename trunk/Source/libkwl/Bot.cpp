@@ -10,6 +10,7 @@ Purpose:	Class which represents an IRC bot
 #include "StdInc.h"
 #include "Bot.h"
 #include "WildcardMatch.h"
+#include "IrcMessages.h"
 #include <algorithm>
 
 // Shortcut to call an event
@@ -33,7 +34,23 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 	m_pParentCore = pParentCore;
 	m_ircSettings.LoadFromConfig(pConfig);
 
+	std::string strServer;
+	std::string strPassword;
+	int iPort = 6667;
+	if (pConfig->GetSingleValue("server", &strServer))
+	{
+		pConfig->GetSingleValue("password", &strPassword); // strPassword will remain empty if there is no such config entry
+
+		std::string::size_type iPortSep = strServer.find(':');
+		if (iPortSep != std::string::npos)
+		{
+			strServer = strServer.substr(0, iPortSep);
+			iPort = atoi(strServer.substr(iPortSep + 1).c_str());
+		}
+	}
+
 	m_pIrcSocket = new CIrcSocket(this);
+
 	m_pIrcChannelQueue = new CPool<CIrcChannel *>();
 
 	std::string strTemp;
@@ -106,24 +123,17 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 	}
 
 	m_bGotMotd = false;
+#ifndef SERVICE
 	m_supportSettings.bNamesX = false;
+#else
+	m_supportSettings.bNickV2 = false;
+#endif
 
 	CALL_EVENT_NOARG(OnBotCreated);
 
-	if (pConfig->GetSingleValue("server", &strTemp))
+	if (!strServer.empty())
 	{
-		std::string strPassword;
-		pConfig->GetSingleValue("password", &strPassword); // strPassword will remain empty if there is no such config entry
-
-		std::string::size_type iPortSep = strTemp.find(':');
-		if (iPortSep == std::string::npos)
-		{
-			m_pIrcSocket->Connect(strTemp.c_str(), 6667, strPassword.c_str());
-		}
-		else
-		{
-			m_pIrcSocket->Connect(strTemp.substr(0, iPortSep).c_str(), atoi(strTemp.substr(iPortSep + 1).c_str()), strPassword.c_str());
-		}
+		m_pIrcSocket->Connect(strServer.c_str(), iPort, strPassword.c_str());
 	}
 
 	m_botConfig = *pConfig;
@@ -293,6 +303,8 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 	int iParamCount = vecParams.size();
 	int iNumeric;
 
+	m_strCurrentOrigin = strOrigin;
+
 	if (strCommand.length() == 3)
 	{
 		iNumeric = 1;
@@ -352,22 +364,30 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 
 	if (!m_bGotMotd)
 	{
+#ifndef SERVICE
 		if (iNumeric == 376 || iNumeric == 422)
+#else
+		if (strCommand == "EOS" && strOrigin == m_strServerHost)
+#endif
 		{
 			m_bGotMotd = true;
 
+#ifndef SERVICE
 			if (!m_strAutoMode.empty())
 			{
 				SendRawFormat("MODE %s %s", m_pIrcSocket->GetCurrentNickname(), m_strAutoMode.c_str());
 			}
+#endif
 
 			CALL_EVENT_NOARG(OnBotConnected);
 
 			for (CPool<CIrcChannel *>::iterator i = m_pIrcChannelQueue->begin(); i != m_pIrcChannelQueue->end(); ++i)
 			{
-				SendRawFormat("JOIN %s", (*i)->GetName());
+				SendMessage(CJoinMessage((*i)->GetName()));
+
 				delete *i;
 			}
+
 			delete m_pIrcChannelQueue;
 			m_pIrcChannelQueue = NULL;
 
@@ -393,6 +413,29 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 		}
 	}
 
+#ifdef SERVICE
+	if (iParamCount == 10)
+	{
+		if (strCommand == "NICK")
+		{
+			HandleNICK(vecParams[0], atoi(vecParams[1].c_str()),
+#ifdef WIN32
+				_atoi64(vecParams[2].c_str()),
+#else
+				strtoll(vecParams[2].c_str(), NULL, 10),
+#endif
+				vecParams[3], vecParams[4], vecParams[5],
+#ifdef WIN32
+				_atoi64(vecParams[6].c_str()),
+#else
+				strtoll(vecParams[6].c_str(), NULL, 10),
+#endif
+				vecParams[7], vecParams[8], vecParams[9]);
+
+			return;
+		}
+	} else
+#endif
 	if (iParamCount == 8)
 	{
 		// WHO reply
@@ -425,6 +468,14 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 	}
 	else if (iParamCount == 3)
 	{
+#ifdef SERVICE
+		if (strCommand == "SERVER")
+		{
+			HandleSERVER(vecParams[0], atoi(vecParams[1].c_str()), vecParams[2]);
+			return;
+		}
+#endif
+
 		if (strCommand == "KICK")
 		{
 			HandleKICK(vecParams[0], vecParams[1], vecParams[2]);
@@ -504,6 +555,42 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 		}
 	}
 
+#ifdef SERVICE
+	if (strCommand == "PROTOCTL")
+	{
+		for (int i = 0; i < iParamCount; ++i)
+		{
+			std::string strSupport = vecParams[i];
+			if (strSupport == "NICKv2")
+			{
+				m_supportSettings.bNickV2 = true;
+
+				continue;
+			}
+
+			std::string::size_type iEqual = strSupport.find('=');
+			if (iEqual != std::string::npos)
+			{
+				std::string strValue = strSupport.substr(iEqual + 1);
+				if (strSupport.length() > 10 && strSupport.substr(0, 10) == "CHANMODES=")
+				{
+					std::string::size_type iLastPos = strValue.find_first_not_of(',', 0);
+					std::string::size_type iPos = strValue.find_first_of(',', iLastPos);
+					int i = 0;
+					while (i < 4 && (iPos != std::string::npos || iLastPos != std::string::npos))
+					{
+						m_supportSettings.strChanmodes[i] = strValue.substr(iLastPos, iPos - iLastPos);
+
+						iLastPos = strValue.find_first_not_of(',', iPos);
+						iPos = strValue.find_first_of(',', iLastPos);
+						++i;
+					}
+				}
+			}
+		}
+		return;
+	}
+#else
 	if (iNumeric == 005)
 	{
 		for (int i = 1; i < iParamCount; ++i)
@@ -514,6 +601,8 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 				// Tell the server we support NAMESX
 				SendRawStatic("PROTOCTL NAMESX");
 				m_supportSettings.bNamesX = true;
+
+				continue;
 			}
 
 			std::string::size_type iEqual = strSupport.find('=');
@@ -548,6 +637,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 		}
 		return;
 	}
+#endif
 
 	if (strCommand == "MODE")
 	{
@@ -575,6 +665,7 @@ void CBot::Handle352(const std::string &strNickname, const std::string &strChann
 
 void CBot::Handle353(const std::string &strChannel, const std::string &strNames)
 {
+#ifndef SERVICE
 	CIrcChannel *pChannel = FindChannel(strChannel.c_str());
 	if (pChannel == NULL)
 	{
@@ -638,6 +729,7 @@ void CBot::Handle353(const std::string &strChannel, const std::string &strNames)
 		iLastPos = strNames.find_first_not_of(' ', iPos);
 		iPos = strNames.find_first_of(' ', iLastPos);
 	}
+#endif
 }
 
 void CBot::Handle333(const std::string &strChannel, const std::string &strTopicSetBy, time_t ullSetDate)
@@ -662,6 +754,7 @@ void CBot::HandleKICK(const std::string &strChannel, const std::string &strVicti
 
 	if (strVictim == m_pIrcSocket->GetCurrentNickname())
 	{
+#ifndef SERVICE
 		for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
 		{
 			if ((*i)->m_plIrcChannels.size() == 1)
@@ -669,15 +762,22 @@ void CBot::HandleKICK(const std::string &strChannel, const std::string &strVicti
 				m_plGlobalUsers.remove(*i);
 				delete *i;
 			}
+
 			i = pChannel->m_plIrcUsers.erase(i);
 			if (i == pChannel->m_plIrcUsers.end())
 			{
 				break;
 			}
 		}
-
+#else
+		if (pChannel->m_plIrcUsers.size() == 0)
+		{
+#endif
 		m_plIrcChannels.remove(pChannel);
 		delete pChannel;
+#ifdef SERVICE
+		}
+#endif
 	}
 	else
 	{
@@ -699,11 +799,14 @@ void CBot::HandleKICK(const std::string &strChannel, const std::string &strVicti
 
 			pVictim->m_plIrcChannels.remove(pChannel);
 			pChannel->m_plIrcUsers.remove(pVictim);
+
+#ifndef SERVICE
 			if (pVictim->m_plIrcChannels.size() == 0)
 			{
 				m_plGlobalUsers.remove(pVictim);
 				delete pVictim;
 			}
+#endif
 		}
 		/*
 		else
@@ -712,6 +815,16 @@ void CBot::HandleKICK(const std::string &strChannel, const std::string &strVicti
 		}
 		*/
 	}
+
+#ifdef SERVICE
+	if (pChannel->m_plIrcUsers.size() == 0)
+	{
+		printf("GC3 CHANNEL %s\n", pChannel->GetName().c_str());
+
+		m_plIrcChannels.remove(pChannel);
+		delete pChannel;
+	}
+#endif
 }
 
 void CBot::Handle332(const std::string &strChannel, const std::string &strTopic)
@@ -756,6 +869,7 @@ void CBot::HandlePART(const std::string &strChannel, const std::string &strReaso
 
 	if (m_strCurrentNickname == m_pIrcSocket->GetCurrentNickname())
 	{
+#ifndef SERVICE
 		for (CPool<CIrcUser *>::iterator i = pChannel->m_plIrcUsers.begin(); i != pChannel->m_plIrcUsers.end(); ++i)
 		{
 			if ((*i)->m_plIrcChannels.size() == 1)
@@ -770,9 +884,15 @@ void CBot::HandlePART(const std::string &strChannel, const std::string &strReaso
 				break;
 			}
 		}
-
+#else
+		if (pChannel->m_plIrcUsers.size() == 0)
+		{
+#endif
 		m_plIrcChannels.remove(pChannel);
 		delete pChannel;
+#ifdef SERVICE
+		}
+#endif
 	}
 	else
 	{
@@ -782,11 +902,14 @@ void CBot::HandlePART(const std::string &strChannel, const std::string &strReaso
 
 			m_pCurrentUser->m_plIrcChannels.remove(pChannel);
 			pChannel->m_plIrcUsers.remove(m_pCurrentUser);
+
+#ifndef SERVICE
 			if (m_pCurrentUser->m_plIrcChannels.size() == 0)
 			{
 				m_plGlobalUsers.remove(m_pCurrentUser);
 				delete m_pCurrentUser;
 			}
+#endif
 		}
 		else
 		{
@@ -796,6 +919,16 @@ void CBot::HandlePART(const std::string &strChannel, const std::string &strReaso
 			CALL_EVENT(OnUserLeftChannel, &tempUser, pChannel, strReason.c_str());
 		}
 	}
+
+#ifdef SERVICE
+	if (pChannel->m_plIrcUsers.size() == 0)
+	{
+		printf("GC2 CHANNEL %s\n", pChannel->GetName().c_str());
+
+		m_plIrcChannels.remove(pChannel);
+		delete pChannel;
+	}
+#endif
 }
 
 void CBot::HandlePRIVMSG(const std::string &strTarget, const std::string &strMessage)
@@ -866,6 +999,23 @@ void CBot::HandleTOPIC(const std::string &strChannel, const std::string &strTopi
 
 void CBot::HandleJOIN(const std::string &strChannel)
 {
+	if (strChannel.find(',') != std::string::npos)
+	{
+		std::string::size_type iLastPos = strChannel.find_first_not_of(',', 0);
+		std::string::size_type iPos = strChannel.find_first_of(',', iLastPos);
+		while (iPos != std::string::npos || iLastPos != std::string::npos)
+		{
+			std::string strChannel_ = strChannel.substr(iLastPos, iPos - iLastPos);
+
+			HandleJOIN(strChannel_);
+
+			iLastPos = strChannel.find_first_not_of(',', iPos);
+			iPos = strChannel.find_first_of(',', iLastPos);
+		}
+
+		return;
+	}
+
 	CIrcChannel *pChannel = NULL;
 	bool bSelf = false;
 
@@ -874,7 +1024,7 @@ void CBot::HandleJOIN(const std::string &strChannel)
 		pChannel = new CIrcChannel(this, strChannel.c_str());
 		m_plIrcChannels.push_back(pChannel);
 
-		SendRawFormat("WHO %s", strChannel.c_str());
+		SendMessage(CWhoMessage(strChannel));
 
 		bSelf = true;
 	}
@@ -885,7 +1035,12 @@ void CBot::HandleJOIN(const std::string &strChannel)
 
 	if (pChannel == NULL)
 	{
+#ifndef SERVICE
 		return;
+#else
+		pChannel = new CIrcChannel(this, strChannel.c_str());
+		m_plIrcChannels.push_back(pChannel);
+#endif
 	}
 
 	if (m_pCurrentUser == NULL)
@@ -916,7 +1071,23 @@ void CBot::HandleQUIT(const std::string &strReason)
 
 		for (CPool<CIrcChannel *>::iterator i = m_plIrcChannels.begin(); i != m_plIrcChannels.end(); ++i)
 		{
+#ifdef SERVICE
+			if ((*i)->m_plIrcUsers.size() == 1)
+			{
+				delete *i;
+				i = m_plIrcChannels.erase(i);
+				if (i == m_plIrcChannels.end())
+				{
+					break;
+				}
+			}
+			else
+			{
+#endif
 			(*i)->m_plIrcUsers.remove(m_pCurrentUser);
+#ifdef SERVICE
+			}
+#endif
 		}
 
 		m_plGlobalUsers.remove(m_pCurrentUser);
@@ -1087,6 +1258,24 @@ void CBot::HandleMODE(const std::string &strChannel, const std::string &strModes
 	}
 }
 
+#ifdef SERVICE
+void CBot::HandleSERVER(const std::string &strHostname, int iHopCount, const std::string &strInformation)
+{
+	if (m_strServerHost.empty())
+	{
+		m_strServerHost = strHostname;
+	}
+}
+
+void CBot::HandleNICK(const std::string &strNickname, int iHopCount, time_t ullTimestamp, const std::string &strIdent, const std::string &strHostname, const std::string &strServer, time_t ullServiceStamp, const std::string &strUsermodes, const std::string &strVirtualHost, const std::string &strInformation)
+{
+	CIrcUser *pUser = new CIrcUser(this, strNickname);
+	pUser->UpdateIfNecessary(strIdent, strHostname);
+
+	m_plGlobalUsers.push_back(pUser);
+}
+#endif
+
 bool CBot::TestAccessLevel(CIrcUser *pUser, int iLevel)
 {
 	if (iLevel < 1 || iLevel > GetNumAccessLevels())
@@ -1150,13 +1339,22 @@ CPool<CScript *> *CBot::GetScripts()
 
 void CBot::JoinChannel(const char *szChannel)
 {
-	CIrcChannel *pChannel = new CIrcChannel(this, szChannel);
 	if (m_bGotMotd)
 	{
-		SendRawFormat("JOIN %s", szChannel);
+		SendMessage(CJoinMessage(szChannel));
+
+#ifdef SERVICE
+		CIrcChannel *pChannel = FindChannel(szChannel);
+		if (pChannel == NULL)
+		{
+			pChannel = new CIrcChannel(this, szChannel);
+			m_plIrcChannels.push_back(pChannel);
+		}
+#endif
 	}
 	else
 	{
+		CIrcChannel *pChannel = new CIrcChannel(this, szChannel);
 		m_pIrcChannelQueue->push_back(pChannel);
 	}
 }
@@ -1180,12 +1378,20 @@ bool CBot::LeaveChannel(CIrcChannel *pChannel, const char *szReason)
 
 	if (szReason != NULL)
 	{
-		SendRawFormat("PART %s :%s", pChannel->GetName(), szReason);
+		SendMessage(CPartMessage(pChannel->GetName(), szReason));
 	}
 	else
 	{
-		SendRawFormat("PART %s", pChannel->GetName());
+		SendMessage(CPartMessage(pChannel->GetName()));
 	}
+
+#ifdef SERVICE
+	if (pChannel->m_plIrcUsers.size() == 0)
+	{
+		delete pChannel;
+		m_plIrcChannels.remove(pChannel);
+	}
+#endif
 
 	return true;
 }
