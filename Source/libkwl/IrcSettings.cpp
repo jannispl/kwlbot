@@ -47,6 +47,14 @@ bool CIrcSettings::LoadFromConfig(CConfig *pConfig)
 		strTemp = GetNickname();
 	}
 	SetQuitMessage(strTemp.c_str());
+
+#ifdef SERVICE
+	if (!pConfig->GetSingleValue("servicehost", &strTemp))
+	{
+		return false;
+	}
+	SetServiceHost(strTemp.c_str());
+#endif
 	
 	return true;
 }
@@ -81,6 +89,14 @@ bool CIrcSettings::SetQuitMessage(const char *szMessage)
 	return true;
 }
 
+#ifdef SERVICE
+bool CIrcSettings::SetServiceHost(const char *szHostname)
+{
+	m_strServiceHost = szHostname;
+	return true;
+}
+#endif
+
 const char *CIrcSettings::GetNickname()
 {
 	return m_strNickname.c_str();
@@ -105,3 +121,10 @@ const char *CIrcSettings::GetQuitMessage()
 {
 	return m_strQuitMessage.c_str();
 }
+
+#ifdef SERVICE
+const char *CIrcSettings::GetServiceHost()
+{
+	return m_strServiceHost.c_str();
+}
+#endif

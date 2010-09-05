@@ -20,13 +20,26 @@ class CIrcMessage;
 class CIrcMessage
 {
 public:
-	CIrcMessage() {}
-	~CIrcMessage() {}
+	CIrcMessage()
+#ifdef SERVICE
+		: m_bServiceMessage(false)
+#endif
+	{
+	}
+
+	~CIrcMessage()
+	{
+	}
 
 	void Send(CBot *pBot) const;
 
 protected:
 	std::string m_strRaw;
+
+#ifdef SERVICE
+private:
+	bool m_bServiceMessage;
+#endif
 };
 
 #endif

@@ -269,6 +269,12 @@ private:
 	void HandleNICK(const std::string &strNewNickname);
 	void HandleMODE(const std::string &strChannel, const std::string &strModes, const std::vector<std::string> &vecParams);
 
+#ifdef SERVICE
+	void HandleSERVER(const std::string &strHostname, int iHopCount, const std::string &strInformation);
+	void HandleNICK(const std::string &strNickname, int iHopCount, time_t ullTimestamp, const std::string &strIdent, const std::string &strHostname, const std::string &strServer, time_t ullServiceStamp, const std::string &strUsermodes, const std::string &strVirtualHost, const std::string &strInformation);
+#endif
+
+	std::string m_strCurrentOrigin;
 	CIrcUser *m_pCurrentUser;
 	std::string m_strCurrentNickname;
 	std::string m_strCurrentIdent;
@@ -277,6 +283,10 @@ private:
 	bool m_bDead;
 	time_t m_tReconnectTimer;
 	eDeathReason m_deathReason;
+
+#ifdef SERVICE
+	std::string m_strServerHost;
+#endif
 
 	bool m_bGotMotd;
 	CCore *m_pParentCore;
@@ -301,7 +311,11 @@ private:
 	{
 		std::string strChanmodes[4];
 		std::string strPrefixes[2];
+#ifndef SERVICE
 		bool bNamesX;
+#else
+		bool bNickV2;
+#endif
 	} m_supportSettings;
 
 	std::string m_strAutoMode;

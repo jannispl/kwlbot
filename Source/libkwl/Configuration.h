@@ -1,7 +1,7 @@
 #ifndef _DEFINITIONS_H
 #define _DEFINITIONS_H
 
-#define VERSION_STRING "v0.4 (" __DATE__ " " __TIME__ ")"
+#define VERSION_STRING "v0.5 (" __DATE__ " " __TIME__ ")"
 
 #define SLEEP_MS (50)
 
@@ -12,5 +12,7 @@
 #define ENABLE_AUTO_RECONNECT
 #define AUTO_RECONNECT_TIMEOUT (10)
 #define BOT_RESTART_TIMEOUT (2)
+
+//#define SERVICE
 
 #endif

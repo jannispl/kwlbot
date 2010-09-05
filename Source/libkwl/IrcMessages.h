@@ -8,9 +8,12 @@ Purpose:	Various classes describing IRC messages
 */
 
 class CRawMessage;
+class CJoinMessage;
+class CPartMessage;
 class CPrivateMessage;
 class CNoticeMessage;
 class CTopicMessage;
+class CWhoMessage;
 
 #ifndef _IRCMESSAGES_H
 #define _IRCMESSAGES_H
@@ -38,6 +41,29 @@ public:
 	}
 };
 
+class CJoinMessage : public CIrcMessage
+{
+public:
+	CJoinMessage(const std::string &strChannel)
+	{
+		m_strRaw = "JOIN " + strChannel;
+	}
+};
+
+class CPartMessage : public CIrcMessage
+{
+public:
+	CPartMessage(const std::string &strChannel)
+	{
+		m_strRaw = "PART " + strChannel;
+	}
+
+	CPartMessage(const std::string &strChannel, const std::string &strReason)
+	{
+		m_strRaw = "PART " + strChannel + " :" + strReason;
+	}
+};
+
 class CPrivateMessage : public CIrcMessage
 {
 public:
@@ -62,6 +88,15 @@ public:
 	CTopicMessage(const std::string &strChannel, const std::string &strTopic)
 	{
 		m_strRaw = "TOPIC " + strChannel + " :" + strTopic;
+	}
+};
+
+class CWhoMessage : public CIrcMessage
+{
+public:
+	CWhoMessage(const std::string &strTarget)
+	{
+		m_strRaw = "WHO " + strTarget;
 	}
 };
 

@@ -63,6 +63,15 @@ public:
 	 */
 	bool SetQuitMessage(const char *szMessage);
 
+#ifdef SERVICE
+	/**
+	 * Changes the service hostname.
+	 * @param  szHostname  The new service hostname.
+	 * @return True if the service hostname was changed, false otherwise.
+	 */
+	bool SetServiceHost(const char *szHostname);
+#endif
+
 	/**
 	 * Gets the nickname.
 	 * @return The current nickname.
@@ -93,12 +102,24 @@ public:
 	 */
 	const char *GetQuitMessage();
 
+#ifdef SERVICE
+	/**
+	 * Gets the service hostname.
+	 * @return The current service hostname.
+	 */
+	const char *GetServiceHost();
+#endif
+
 private:
 	std::string m_strNickname;
 	std::string m_strIdent;
 	std::string m_strRealname;
 	std::string m_strAlternativeNickname;
 	std::string m_strQuitMessage;
+
+#ifdef SERVICE
+	std::string m_strServiceHost;
+#endif
 };
 
 #endif
