@@ -60,6 +60,9 @@ public:
 	static FuncReturn IrcUser__getterIdent(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 	static FuncReturn IrcUser__getterHostname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
 	static FuncReturn IrcUser__getterTemporary(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+#ifdef SERVICE
+	static FuncReturn IrcUser__getterUserModes(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo);
+#endif
 
 	static FuncReturn IrcChannel__GetName(const Arguments &args);
 	static FuncReturn IrcChannel__FindUser(const Arguments &args);

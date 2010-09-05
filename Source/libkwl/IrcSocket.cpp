@@ -50,10 +50,15 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort, const char *szPasswo
 	SendRawFormat("NICK %s", pSettings->GetNickname());
 	SendRawFormat("USER %s \"\" \"%s\" :%s", pSettings->GetIdent(), szHostname, pSettings->GetRealname());
 #else
+#if IRCD == UNREAL
 	SendRawStatic("PROTOCTL NICKv2");
 	SendRawFormat("SERVER %s 1 123 :kwlbot service", pSettings->GetServiceHost());
 	SendRawFormat("SERVICE %s 123 * 0 0 :kwlbot service", pSettings->GetServiceHost());
 	SendRawFormat("NICK %s 1 %u %s %s %s 0 0 %s * :kwlbot", pSettings->GetNickname(), (unsigned long)time(NULL), pSettings->GetIdent(), pSettings->GetServiceHost(), pSettings->GetServiceHost(), szHostname, pSettings->GetRealname());
+#elif IRCD == INSPIRCD
+	SendRawFormat("SERVER %s %s 0 123 :kwlbot service", pSettings->GetServiceHost(), szPassword);
+	SendRawFormat("BURST %u", time(NULL));
+#endif
 #endif
 
 	m_strCurrentNickname = pSettings->GetNickname();

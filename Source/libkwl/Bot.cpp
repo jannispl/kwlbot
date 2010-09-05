@@ -127,6 +127,15 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 	m_supportSettings.bNamesX = false;
 #else
 	m_supportSettings.bNickV2 = false;
+
+#if IRCD == UNREAL || IRCD == INSPIRCD
+	m_supportSettings.strPrefixes[0] = "vhoaq";
+	m_supportSettings.strPrefixes[1] = "+%@&~";
+#elif IRCD == HYBRID
+	m_supportSettings.strPrefixes[0] = "vho";
+	m_supportSettings.strPrefixes[1] = "+%@";
+#endif
+
 #endif
 
 	CALL_EVENT_NOARG(OnBotCreated);
@@ -367,7 +376,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 #ifndef SERVICE
 		if (iNumeric == 376 || iNumeric == 422)
 #else
-		if (strCommand == "EOS" && strOrigin == m_strServerHost)
+		if (strCommand == "NETINFO")
 #endif
 		{
 			m_bGotMotd = true;
@@ -395,6 +404,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 		}
 	}
 
+#ifndef SERVICE
 	/* When getting the sign that the bot joined a channel, the server should also
 	send a NAMES reply afterwards. We urgently need a channel's user list before
 	calling the onBotJoinedChannel event */
@@ -412,6 +422,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			}
 		}
 	}
+#endif
 
 #ifdef SERVICE
 	if (iParamCount == 10)
@@ -463,6 +474,18 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 				strtoll(vecParams[3].c_str(), NULL, 10)
 #endif
 				);
+			return;
+		}
+
+		if (strCommand == "TOPIC")
+		{
+			HandleTOPIC(vecParams[1],
+#ifdef WIN32
+				_atoi64(vecParams[2].c_str()),
+#else
+				strtoll(vecParams[2].c_str(), NULL, 10),
+#endif
+				vecParams[0], vecParams[3]);
 			return;
 		}
 	}
@@ -819,8 +842,6 @@ void CBot::HandleKICK(const std::string &strChannel, const std::string &strVicti
 #ifdef SERVICE
 	if (pChannel->m_plIrcUsers.size() == 0)
 	{
-		printf("GC3 CHANNEL %s\n", pChannel->GetName().c_str());
-
 		m_plIrcChannels.remove(pChannel);
 		delete pChannel;
 	}
@@ -923,8 +944,6 @@ void CBot::HandlePART(const std::string &strChannel, const std::string &strReaso
 #ifdef SERVICE
 	if (pChannel->m_plIrcUsers.size() == 0)
 	{
-		printf("GC2 CHANNEL %s\n", pChannel->GetName().c_str());
-
 		m_plIrcChannels.remove(pChannel);
 		delete pChannel;
 	}
@@ -966,6 +985,33 @@ void CBot::HandlePRIVMSG(const std::string &strTarget, const std::string &strMes
 				CALL_EVENT(OnUserChannelMessage, &tempUser, pChannel, strMessage.c_str());
 			}
 		}
+	}
+}
+
+void CBot::HandleTOPIC(const std::string &strSetter, time_t ullSetDate, const std::string &strChannel, const std::string &strTopic)
+{
+	CIrcChannel *pChannel = FindChannel(strChannel.c_str());
+	if (pChannel == NULL)
+	{
+		return;
+	}
+
+	std::string strOldTopic = pChannel->m_topicInfo.strTopic;
+
+	pChannel->m_topicInfo.ullTopicSetDate = ullSetDate;
+	pChannel->m_topicInfo.strTopicSetBy = strSetter;
+	pChannel->m_topicInfo.strTopic = strTopic;
+
+	CIrcUser *pUser = pChannel->FindUser(strSetter.c_str());
+	if (pUser != NULL)
+	{
+		CALL_EVENT(OnUserSetChannelTopic, pUser, pChannel, strOldTopic.c_str());
+	}
+	else
+	{
+		CIrcUser tempUser(this, strSetter, true);
+
+		CALL_EVENT(OnUserSetChannelTopic, &tempUser, pChannel, strOldTopic.c_str());
 	}
 }
 
@@ -1052,6 +1098,7 @@ void CBot::HandleJOIN(const std::string &strChannel)
 	m_pCurrentUser->m_plIrcChannels.push_back(pChannel);
 	pChannel->m_plIrcUsers.push_back(m_pCurrentUser);
 
+#ifndef SERVICE
 	if (bSelf)
 	{
 		// Add this channel to our list of channels with an incomplete list of users
@@ -1059,8 +1106,11 @@ void CBot::HandleJOIN(const std::string &strChannel)
 	}
 	else
 	{
+#endif
 		CALL_EVENT(OnUserJoinedChannel, m_pCurrentUser, pChannel);
+#ifndef SERVICE
 	}
+#endif
 }
 
 void CBot::HandleQUIT(const std::string &strReason)
@@ -1127,6 +1177,49 @@ void CBot::HandleNICK(const std::string &strNewNickname)
 
 void CBot::HandleMODE(const std::string &strChannel, const std::string &strModes, const std::vector<std::string> &vecParams)
 {
+#ifdef SERVICE
+	if (strChannel[0] != '#')
+	{
+		CIrcUser *pUser = FindUser(strChannel.c_str());
+		if (pUser ==  NULL)
+		{
+			return;
+		}
+
+		std::string strRemoveModes, strAddModes;
+		std::string *pWhich = NULL;
+		for (std::string::const_iterator i = strModes.begin(); i != strModes.end(); ++i)
+		{
+			if (*i == '+')
+			{
+				pWhich = &strAddModes;
+			}
+			else if (*i == '-')
+			{
+				pWhich = &strRemoveModes;
+			}
+			else if (pWhich != NULL)
+			{
+				*pWhich += *i;
+			}
+		}
+
+		std::string strNewModes;
+		for (std::string::iterator i = pUser->m_strUserModes.begin(); i != pUser->m_strUserModes.end(); ++i)
+		{
+			if (strRemoveModes.find(*i) == std::string::npos)
+			{
+				strNewModes += *i;
+			}
+		}
+		strNewModes += strAddModes;
+
+		pUser->m_strUserModes = strNewModes;
+
+		return;
+	}
+#endif
+
 	CIrcChannel *pChannel = FindChannel(strChannel.c_str());
 	if (pChannel == NULL)
 	{
@@ -1155,18 +1248,10 @@ void CBot::HandleMODE(const std::string &strChannel, const std::string &strModes
 		}
 
 		char cGroup = 0;
-		bool bPrefixMode = false;
+		bool bPrefixMode = IsPrefixMode(cMode);
 
 		// Modes in PREFIX are not listed but could be considered type B.
-		if (IsPrefixMode(cMode))
-		{
-			cGroup = 2;
-			bPrefixMode = true;
-		}
-		else
-		{
-			cGroup = GetModeGroup(cMode);
-		}
+		cGroup = bPrefixMode ? 2 : GetModeGroup(cMode);
 
 		switch (cGroup)
 		{
@@ -1267,10 +1352,12 @@ void CBot::HandleSERVER(const std::string &strHostname, int iHopCount, const std
 	}
 }
 
-void CBot::HandleNICK(const std::string &strNickname, int iHopCount, time_t ullTimestamp, const std::string &strIdent, const std::string &strHostname, const std::string &strServer, time_t ullServiceStamp, const std::string &strUsermodes, const std::string &strVirtualHost, const std::string &strInformation)
+void CBot::HandleNICK(const std::string &strNickname, int iHopCount, time_t ullTimestamp, const std::string &strIdent, const std::string &strHostname, const std::string &strServer, time_t ullServiceStamp, const std::string &strUserModes, const std::string &strVirtualHost, const std::string &strInformation)
 {
 	CIrcUser *pUser = new CIrcUser(this, strNickname);
 	pUser->UpdateIfNecessary(strIdent, strHostname);
+
+	pUser->m_strUserModes = strUserModes[0] == '+' ? strUserModes.substr(1) : strUserModes;
 
 	m_plGlobalUsers.push_back(pUser);
 }
@@ -1350,6 +1437,8 @@ void CBot::JoinChannel(const char *szChannel)
 			pChannel = new CIrcChannel(this, szChannel);
 			m_plIrcChannels.push_back(pChannel);
 		}
+
+		CALL_EVENT(OnBotJoinedChannel, pChannel);
 #endif
 	}
 	else
