@@ -114,6 +114,30 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 				{
 					rules.strRequireIdent = strValue;
 				}
+				else if (strKey == "require-realname")
+				{
+					rules.strRequireRealname = strValue;
+				}
+#ifndef SERVICE
+				else if (strKey == "require-vhost")
+				{
+					printf("[%s] Warning: Not compiled as service bot - using 'require-host' instead of 'require-vhost'.\n", m_pIrcSocket->GetCurrentNickname());
+					rules.strRequireHost = strValue;
+				}
+				else if (strKey == "require-umodes")
+				{
+					printf("[%s] Warning: Not compiled as service bot - ignoring 'require-umodes'.\n", m_pIrcSocket->GetCurrentNickname());
+				}
+#else
+				else if (strKey == "require-vhost")
+				{
+					rules.strRequireVhost = strValue;
+				}
+				else if (strKey == "require-umodes")
+				{
+					rules.strRequireUmodes = strValue;
+				}
+#endif
 			}
 		}
 
@@ -425,7 +449,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 #endif
 
 #ifdef SERVICE
-	if (iParamCount == 10)
+	if (iParamCount == 11)
 	{
 		if (strCommand == "NICK")
 		{
@@ -441,7 +465,7 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 #else
 				strtoll(vecParams[6].c_str(), NULL, 10),
 #endif
-				vecParams[7], vecParams[8], vecParams[9]);
+				vecParams[7], vecParams[8], vecParams[9], vecParams[10]);
 
 			return;
 		}
@@ -453,7 +477,15 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 		//:ircd 352 botname #channel ident host ircd nickname IDK :hopcount realname
 		if (iNumeric == 352)
 		{
-			Handle352(vecParams[5], vecParams[1], vecParams[2], vecParams[3]);
+			std::string strRealname = vecParams[7];
+			std::string::size_type iSeparator = strRealname.find(' ');
+			if (iSeparator == std::string::npos)
+			{
+				return;
+			}
+			strRealname = strRealname.substr(iSeparator + 1);
+
+			Handle352(vecParams[5], vecParams[1], vecParams[2], vecParams[3], strRealname);
 			return;
 		}
 	}
@@ -542,6 +574,26 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			HandleTOPIC(vecParams[0], vecParams[1]);
 			return;
 		}
+
+#ifdef SERVICE
+		if (strCommand == "CHGHOST")
+		{
+			HandleCHGHOST(vecParams[0], vecParams[1]);
+			return;
+		}
+
+		if (strCommand == "CHGIDENT")
+		{
+			HandleCHGIDENT(vecParams[0], vecParams[1]);
+			return;
+		}
+
+		if (strCommand == "CHGNAME")
+		{
+			HandleCHGNAME(vecParams[0], vecParams[1]);
+			return;
+		}
+#endif
 	}
 	else if (iParamCount == 1)
 	{
@@ -568,6 +620,26 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			HandleNICK(vecParams[0]);
 			return;
 		}
+
+#ifdef SERVICE
+		if (strCommand == "SETHOST")
+		{
+			HandleSETHOST(vecParams[0]);
+			return;
+		}
+
+		if (strCommand == "SETIDENT")
+		{
+			HandleSETIDENT(vecParams[0]);
+			return;
+		}
+
+		if (strCommand == "SETNAME")
+		{
+			HandleSETNAME(vecParams[0]);
+			return;
+		}
+#endif
 	}
 	else if (iParamCount == 0)
 	{
@@ -667,14 +739,22 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 		HandleMODE(vecParams[0], vecParams[1], vecParams);
 		return;
 	}
+#ifdef SERVICE
+	else if (strCommand == "SVSMODE")
+	{
+		HandleSVSMODE(vecParams[0], vecParams[1], vecParams);
+		return;
+	}
+#endif
 }
 
-void CBot::Handle352(const std::string &strNickname, const std::string &strChannel, const std::string &strIdent, const std::string &strHost)
+void CBot::Handle352(const std::string &strNickname, const std::string &strChannel, const std::string &strIdent, const std::string &strHost, const std::string &strRealname)
 {
 	CIrcUser *pUser = FindUser(strNickname.c_str());
 	if (pUser != NULL)
 	{
 		pUser->UpdateIfNecessary(m_strCurrentIdent, m_strCurrentHostname);
+		pUser->m_strRealname = strRealname;
 	}
 
 	CIrcChannel *pChannel = FindChannel(strChannel.c_str());
@@ -1201,6 +1281,14 @@ void CBot::HandleMODE(const std::string &strChannel, const std::string &strModes
 			else if (pWhich != NULL)
 			{
 				*pWhich += *i;
+
+#if IRCD == UNREAL
+			if (pWhich == &strRemoveModes && *i == 't')
+			{
+				// If mode 't' was removed, the user's vhost is being removed.
+				pUser->m_strVirtualHost = "*";
+			}
+#endif
 			}
 		}
 
@@ -1258,7 +1346,7 @@ void CBot::HandleMODE(const std::string &strChannel, const std::string &strModes
 			case 1:
 			case 2: // Always parameter
 			{
-				if ((int)vecParams.size() >= iParamOffset + 1)
+				if (static_cast<int>(vecParams.size()) >= iParamOffset + 1)
 				{
 					std::string strParam = vecParams[iParamOffset++];
 					if (strParams.empty())
@@ -1305,7 +1393,7 @@ void CBot::HandleMODE(const std::string &strChannel, const std::string &strModes
 
 			case 3: // Parameter if iSet == 1
 			{
-				if (iSet == 1 && (int)vecParams.size() >= iParamOffset + 1)
+				if (iSet == 1 && static_cast<int>(vecParams.size()) >= iParamOffset + 1)
 				{
 					std::string strParam = vecParams[iParamOffset++];
 					if (strParams.empty())
@@ -1346,20 +1434,139 @@ void CBot::HandleMODE(const std::string &strChannel, const std::string &strModes
 #ifdef SERVICE
 void CBot::HandleSERVER(const std::string &strHostname, int iHopCount, const std::string &strInformation)
 {
-	if (m_strServerHost.empty())
+	if (m_strCurrentOrigin.empty() && m_strServerHost.empty())
 	{
 		m_strServerHost = strHostname;
 	}
 }
 
-void CBot::HandleNICK(const std::string &strNickname, int iHopCount, time_t ullTimestamp, const std::string &strIdent, const std::string &strHostname, const std::string &strServer, time_t ullServiceStamp, const std::string &strUserModes, const std::string &strVirtualHost, const std::string &strInformation)
+void CBot::HandleNICK(const std::string &strNickname, int iHopCount, time_t ullTimestamp, const std::string &strIdent, const std::string &strHostname, const std::string &strServer, time_t ullServiceStamp, const std::string &strUserModes, const std::string &strVirtualHost, const std::string &strCloakedHost, const std::string &strRealname)
 {
 	CIrcUser *pUser = new CIrcUser(this, strNickname);
 	pUser->UpdateIfNecessary(strIdent, strHostname);
 
 	pUser->m_strUserModes = strUserModes[0] == '+' ? strUserModes.substr(1) : strUserModes;
+	pUser->m_strCloakedHost = strCloakedHost;
+	pUser->m_strVirtualHost = strVirtualHost;
+	pUser->m_strRealname = strRealname;
 
 	m_plGlobalUsers.push_back(pUser);
+}
+
+void CBot::HandleSVSMODE(const std::string &strTarget, const std::string &strModes, const std::vector<std::string> &vecParams)
+{
+	if (strTarget[0] == '#')
+	{
+		// No need for channel modes (yet)
+		return;
+	}
+
+	CIrcUser *pUser = FindUser(strTarget.c_str());
+	if (pUser ==  NULL)
+	{
+		return;
+	}
+
+	std::string strRemoveModes, strAddModes;
+	std::string *pWhich = NULL;
+	for (std::string::const_iterator i = strModes.begin(); i != strModes.end(); ++i)
+	{
+		if (*i == '+')
+		{
+			pWhich = &strAddModes;
+		}
+		else if (*i == '-')
+		{
+			pWhich = &strRemoveModes;
+		}
+		else if (pWhich != NULL)
+		{
+			*pWhich += *i;
+
+#if IRCD == UNREAL
+			if (pWhich == &strRemoveModes && *i == 't')
+			{
+				// If mode 't' was removed, the user's vhost is being removed.
+				pUser->m_strVirtualHost = "*";
+			}
+#endif
+		}
+	}
+
+	std::string strNewModes;
+	for (std::string::iterator i = pUser->m_strUserModes.begin(); i != pUser->m_strUserModes.end(); ++i)
+	{
+		if (strRemoveModes.find(*i) == std::string::npos)
+		{
+			strNewModes += *i;
+		}
+	}
+	strNewModes += strAddModes;
+
+	pUser->m_strUserModes = strNewModes;
+}
+
+void CBot::HandleSETHOST(const std::string &strNewHost)
+{
+	if (m_pCurrentUser == NULL)
+	{
+		return;
+	}
+
+	m_pCurrentUser->m_strVirtualHost = strNewHost;
+}
+
+void CBot::HandleSETIDENT(const std::string &strNewIdent)
+{
+	if (m_pCurrentUser == NULL)
+	{
+		return;
+	}
+
+	m_pCurrentUser->m_strIdent = strNewIdent;
+}
+
+void CBot::HandleSETNAME(const std::string &strNewName)
+{
+	if (m_pCurrentUser == NULL)
+	{
+		return;
+	}
+
+	m_pCurrentUser->m_strRealname = strNewName;
+}
+
+void CBot::HandleCHGHOST(const std::string &strTarget, const std::string &strNewHost)
+{
+	CIrcUser *pUser = FindUser(strTarget.c_str());
+	if (pUser == NULL)
+	{
+		return;
+	}
+
+	pUser->m_strVirtualHost = strNewHost;
+}
+
+void CBot::HandleCHGIDENT(const std::string &strTarget, const std::string &strNewIdent)
+{
+	CIrcUser *pUser = FindUser(strTarget.c_str());
+	if (pUser == NULL)
+	{
+		return;
+	}
+
+	pUser->m_strIdent = strNewIdent;
+}
+
+void CBot::HandleCHGNAME(const std::string &strTarget, const std::string &strNewName)
+{
+	CIrcUser *pUser = FindUser(strTarget.c_str());
+	if (pUser == NULL)
+	{
+		return;
+	}
+
+	pUser->m_strRealname = strNewName;
 }
 #endif
 
@@ -1371,6 +1578,53 @@ bool CBot::TestAccessLevel(CIrcUser *pUser, int iLevel)
 	}
 
 	AccessRules accessRules = m_vecAccessRules[iLevel - 1];
+
+#ifdef SERVICE
+	if (!accessRules.strRequireUmodes.empty())
+	{
+		std::string strMustModes, strMustNotModes;
+		int iMode = 1;
+
+		for (std::string::iterator i = accessRules.strRequireUmodes.begin(); i != accessRules.strRequireUmodes.end(); ++i)
+		{
+			if (*i == '+')
+			{
+				iMode = 1;
+			}
+			else if (*i == '-')
+			{
+				iMode = 2;
+			}
+			else
+			{
+				if (iMode == 1)
+				{
+					if (pUser->GetUserModes().find(*i) == std::string::npos)
+					{
+						return false;
+					}
+				}
+				else
+				{
+					if (pUser->GetUserModes().find(*i) != std::string::npos)
+					{
+						return false;
+					}
+				}
+			}
+		}
+	}
+
+	if (!accessRules.strRequireVhost.empty() && !wildcmp(accessRules.strRequireVhost.c_str(), pUser->GetVirtualHost().c_str()))
+	{
+		return false;
+	}
+#endif
+
+	if (!accessRules.strRequireRealname.empty() && !wildcmp(accessRules.strRequireRealname.c_str(), pUser->GetRealname().c_str()))
+	{
+		return false;
+	}
 
 	if (!accessRules.strRequireHost.empty() && !wildcmp(accessRules.strRequireHost.c_str(), pUser->GetHostname().c_str()))
 	{
@@ -1392,7 +1646,7 @@ bool CBot::TestAccessLevel(CIrcUser *pUser, int iLevel)
 
 int CBot::GetNumAccessLevels()
 {
-	return (int)m_vecAccessRules.size();
+	return static_cast<int>(m_vecAccessRules.size());
 }
 
 CScript *CBot::CreateScript(const char *szFilename)

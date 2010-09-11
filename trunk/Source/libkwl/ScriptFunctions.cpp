@@ -528,7 +528,7 @@ FuncReturn CScriptFunctions::Bot__getterModeFlags(v8::Local<v8::String> strPrope
 
 	v8::Local<v8::Object> objFlags = v8::Object::New();
 
-	char *szModePrefixes = (char *)pBot->GetModePrefixes();
+	char *szModePrefixes = const_cast<char *>(pBot->GetModePrefixes());
 	int iModeFlag = 1;
 	while (*szModePrefixes)
 	{
@@ -605,7 +605,7 @@ FuncReturn CScriptFunctions::IrcUser__TestAccessLevel(const Arguments &args)
 
 	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
 
-	int iLevel = (int)args[0]->ToInt32()->NumberValue();
+	int iLevel = args[0]->ToInt32()->Int32Value();
 
 	return v8::Boolean::New(pUser->GetParentBot()->TestAccessLevel(pUser, iLevel));
 }
@@ -635,7 +635,7 @@ FuncReturn CScriptFunctions::IrcUser__GetModeOnChannel(const Arguments &args)
 		return v8::False();
 	}
 
-	return v8::Integer::New((int)pUser->GetModeOnChannel((CIrcChannel *)pChannel));
+	return v8::Integer::New(static_cast<int>(pUser->GetModeOnChannel((CIrcChannel *)pChannel)));
 }
 
 FuncReturn CScriptFunctions::IrcUser__TestLeastModeOnChannel(const Arguments &args)
@@ -672,7 +672,7 @@ FuncReturn CScriptFunctions::IrcUser__TestLeastModeOnChannel(const Arguments &ar
 			v8::String::Utf8Value strPrefix(args[1]);
 			char cPrefix = (*strPrefix)[0];
 
-			char *szModePrefixes = (char *)pUser->GetParentBot()->GetModePrefixes();
+			char *szModePrefixes = const_cast<char *>(pUser->GetParentBot()->GetModePrefixes());
 			iFlag = 1;
 			while (*szModePrefixes)
 			{
@@ -705,7 +705,7 @@ FuncReturn CScriptFunctions::IrcUser__TestLeastModeOnChannel(const Arguments &ar
 		iFlag = args[1]->ToInt32()->Value();
 	}
 
-	return v8::Boolean::New((pUser->GetModeOnChannel((CIrcChannel *)pChannel) >> (int)sqrt((float)iFlag)) ? true : false);
+	return v8::Boolean::New((pUser->GetModeOnChannel((CIrcChannel *)pChannel) >> static_cast<int>(sqrt(static_cast<float>(iFlag)))) ? true : false);
 }
 
 FuncReturn CScriptFunctions::IrcUser__ToString(const Arguments &args)
@@ -747,6 +747,13 @@ FuncReturn CScriptFunctions::IrcUser__getterHostname(v8::Local<v8::String> strPr
 	return v8::String::New(pUser->GetHostname().c_str());
 }
 
+FuncReturn CScriptFunctions::IrcUser__getterRealname(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
+{	
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+
+	return v8::String::New(pUser->GetRealname().c_str());
+}
+
 FuncReturn CScriptFunctions::IrcUser__getterTemporary(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
 	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
@@ -760,6 +767,20 @@ FuncReturn CScriptFunctions::IrcUser__getterUserModes(v8::Local<v8::String> strP
 	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
 
 	return v8::String::New(pUser->GetUserModes().c_str());
+}
+
+FuncReturn CScriptFunctions::IrcUser__getterCloakedHost(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
+{
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+
+	return v8::String::New(pUser->GetCloakedHost().c_str());
+}
+
+FuncReturn CScriptFunctions::IrcUser__getterVirtualHost(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
+{
+	CIrcUser *pUser = (CIrcUser *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+
+	return v8::String::New(pUser->GetVirtualHost().c_str());
 }
 #endif
 
@@ -969,7 +990,7 @@ FuncReturn CScriptFunctions::Topic__getterSetBy(v8::Local<v8::String> strPropert
 FuncReturn CScriptFunctions::Topic__getterSetOn(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
 {
 	CIrcChannel *pChannel = (CIrcChannel *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
-	return v8::Date::New((double)pChannel->m_topicInfo.ullTopicSetDate * 1000);
+	return v8::Date::New(static_cast<double>(pChannel->m_topicInfo.ullTopicSetDate) * 1000);
 }
 
 void CScriptFunctions::WeakCallbackUsingDelete(v8::Persistent<v8::Value> pv, void *nobj)
@@ -1091,7 +1112,7 @@ FuncReturn CScriptFunctions::ScriptModuleProcedure__Call(const v8::Arguments &ar
 		}
 		else if (args[i]->IsNumber())
 		{
-			list.Add((float)args[i]->ToNumber()->Value());
+			list.Add(static_cast<float>(args[i]->ToNumber()->Value()));
 		}
 		else if (args[i]->IsBoolean())
 		{
@@ -1103,7 +1124,7 @@ FuncReturn CScriptFunctions::ScriptModuleProcedure__Call(const v8::Arguments &ar
 		}
 		else
 		{
-			list.Add((void *)NULL);
+			list.Add(reinterpret_cast<void *>(NULL));
 		}
 	}
 

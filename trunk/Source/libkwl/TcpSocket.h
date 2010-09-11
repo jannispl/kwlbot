@@ -140,7 +140,7 @@ public:
 
 	size_t Read(void *buf, size_t len, int flags = 0)
 	{
-		return recv(m_Socket, (char *)buf, len, flags);
+		return recv(m_Socket, reinterpret_cast<char *>(buf), len, flags);
 	}
 
 	bool Close()

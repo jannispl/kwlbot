@@ -22,7 +22,7 @@ void CSendQueue::Add(char *pPtr, size_t iSize, bool bRealloc, bool bNeedFree)
 	if (bRealloc)
 	{
 		buf.ucMode = 1;
-		char *pMemory = (char *)malloc(iSize);
+		char *pMemory = reinterpret_cast<char *>(malloc(iSize));
 		memcpy(pMemory, pPtr, iSize);
 		buf.pPtr = pMemory;
 	}
@@ -40,9 +40,9 @@ void CSendQueue::AddFile(FILE *pFile, size_t iBufferSize, bool bNeedClose)
 	SendBuffer buf;
 
 	buf.iLastBufferSize = 0;
-	buf.pPtr = (char *)pFile;
+	buf.pPtr = reinterpret_cast<char *>(pFile);
 	buf.iSize = iBufferSize;
-	buf.pFileBuffer = (char *)malloc(iBufferSize);
+	buf.pFileBuffer = reinterpret_cast<char *>(malloc(iBufferSize));
 	buf.ucMode = bNeedClose ? 2 : 3;
 
 	m_bufferQueue.push(buf);

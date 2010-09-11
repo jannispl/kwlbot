@@ -51,9 +51,9 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort, const char *szPasswo
 	SendRawFormat("USER %s \"\" \"%s\" :%s", pSettings->GetIdent(), szHostname, pSettings->GetRealname());
 #else
 #if IRCD == UNREAL
-	SendRawStatic("PROTOCTL NICKv2");
+	// This is not what the RFC says at all
+	SendRawStatic("PROTOCTL NICKv2 CLK");
 	SendRawFormat("SERVER %s 1 123 :kwlbot service", pSettings->GetServiceHost());
-	SendRawFormat("SERVICE %s 123 * 0 0 :kwlbot service", pSettings->GetServiceHost());
 	SendRawFormat("NICK %s 1 %u %s %s %s 0 0 %s * :kwlbot", pSettings->GetNickname(), (unsigned long)time(NULL), pSettings->GetIdent(), pSettings->GetServiceHost(), pSettings->GetServiceHost(), szHostname, pSettings->GetRealname());
 #elif IRCD == INSPIRCD
 	SendRawFormat("SERVER %s %s 0 123 :kwlbot service", pSettings->GetServiceHost(), szPassword);
@@ -69,7 +69,7 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort, const char *szPasswo
 int CIrcSocket::SendRaw(const char *szData)
 {
 	size_t iLength = strlen(szData);
-	char *pData = (char *)malloc(iLength + sizeof(IRC_EOL));
+	char *pData = reinterpret_cast<char *>(malloc(iLength + sizeof(IRC_EOL)));
 	strcpy(pData, szData);
 	strcat(pData, IRC_EOL);
 	m_sendQueue.Add(pData, iLength + sizeof(IRC_EOL) - 1, false, true);
@@ -79,8 +79,8 @@ int CIrcSocket::SendRaw(const char *szData)
 
 int CIrcSocket::SendRawStatic(const char *szData)
 {
-	m_sendQueue.Add((char *)szData, strlen(szData), false);
-	m_sendQueue.Add((char *)IRC_EOL, sizeof(IRC_EOL) - 1, false);
+	m_sendQueue.Add(const_cast<char *>(szData), strlen(szData), false);
+	m_sendQueue.Add(const_cast<char *>(IRC_EOL), sizeof(IRC_EOL) - 1, false);
 
 	return m_sendQueue.Process(m_tcpSocket.GetSocket()) ? 0 : -1;
 }

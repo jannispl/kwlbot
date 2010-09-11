@@ -33,6 +33,11 @@ const std::string &CIrcUser::GetIdent()
 	return m_strIdent;
 }
 
+const std::string &CIrcUser::GetRealname()
+{
+	return m_strRealname;
+}
+
 bool CIrcUser::IsTemporary()
 {
 	return m_bTemporary;
@@ -64,6 +69,16 @@ char CIrcUser::GetModeOnChannel(CIrcChannel *pChannel)
 const std::string &CIrcUser::GetUserModes()
 {
 	return m_strUserModes;
+}
+
+const std::string &CIrcUser::GetCloakedHost()
+{
+	return m_strCloakedHost;
+}
+
+const std::string &CIrcUser::GetVirtualHost()
+{
+	return m_strVirtualHost;
 }
 #endif
 
