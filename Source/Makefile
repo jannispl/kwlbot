@@ -3,6 +3,12 @@ all:
 	cp libkwl/libkwl.so ./kwlbot/
 	make -C kwlbot
 
+clean:
+	make -C libkwl clean
+	make -C kwlbot clean
+	rm -f libkwl/libkwl.so
+	rm -f kwlbot/kwlbot
+
 install:
 	cp libkwl/libkwl.so /usr/local/lib/
 	chmod 644 /usr/local/lib/libkwl.so
