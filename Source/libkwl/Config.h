@@ -42,7 +42,7 @@ public:
 		while (!ConfigFile.eof())
 		{
 			ConfigFile.getline(buf, 320);
-			if (buf[0] != '#')
+			if (buf[0] != '#' && buf[0] != ';' && !(buf[0] == '/' && buf[1] == '/'))
 			{
 				strLine = buf;
 				if (strLine.length() > 0)

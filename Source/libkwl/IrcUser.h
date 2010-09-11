@@ -48,6 +48,12 @@ public:
 	const std::string &GetIdent();
 
 	/**
+	 * Gets the user's realname.
+	 * @return The user's realname.
+	 */
+	const std::string &GetRealname();
+
+	/**
 	 * Checks if this is a temporary instance.
 	 * @return True if this is a temporary instance, false otherwise.
 	 */
@@ -73,6 +79,18 @@ public:
 	 * @return The user's modes.
 	 */
 	const std::string &GetUserModes();
+
+	/**
+	 * Gets the user's cloaked hostname.
+	 * @return The user's cloaked hostname.
+	 */
+	const std::string &GetCloakedHost();
+
+	/**
+	 * Gets the user's virtual hostname (V-Host).
+	 * @return The user's virtual hostname.
+	 */
+	const std::string &GetVirtualHost();
 #endif
 
 	/**
@@ -100,11 +118,15 @@ private:
 	std::string m_strNickname;
 	std::string m_strHostname;
 	std::string m_strIdent;
+	std::string m_strRealname;
 	std::map<CIrcChannel *, char> m_mapChannelModes;
 	bool m_bTemporary;
 
 #ifdef SERVICE
 	std::string m_strUserModes;
+
+	std::string m_strCloakedHost;
+	std::string m_strVirtualHost;
 #endif
 };
 

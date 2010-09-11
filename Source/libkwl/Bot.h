@@ -254,7 +254,7 @@ public:
 	CScriptObject::eScriptType GetType();
 
 private:
-	void Handle352(const std::string &strNickname, const std::string &strChannel, const std::string &strIdent, const std::string &strHost);
+	void Handle352(const std::string &strNickname, const std::string &strChannel, const std::string &strIdent, const std::string &strHost, const std::string &strRealname);
 	void Handle353(const std::string &strChannel, const std::string &strNames);
 	void Handle333(const std::string &strChannel, const std::string &strTopicSetBy, time_t ullSetDate);
 
@@ -272,7 +272,17 @@ private:
 
 #ifdef SERVICE
 	void HandleSERVER(const std::string &strHostname, int iHopCount, const std::string &strInformation);
-	void HandleNICK(const std::string &strNickname, int iHopCount, time_t ullTimestamp, const std::string &strIdent, const std::string &strHostname, const std::string &strServer, time_t ullServiceStamp, const std::string &strUserModes, const std::string &strVirtualHost, const std::string &strInformation);
+	void HandleNICK(const std::string &strNickname, int iHopCount, time_t ullTimestamp, const std::string &strIdent, const std::string &strHostname, const std::string &strServer, time_t ullServiceStamp, const std::string &strUserModes, const std::string &strVirtualHost, const std::string &strCloakedHost, const std::string &strRealname);
+
+	void HandleSVSMODE(const std::string &strTarget, const std::string &strModes, const std::vector<std::string> &vecParams);
+
+	void HandleSETHOST(const std::string &strNewHost);
+	void HandleSETIDENT(const std::string &strNewIdent);
+	void HandleSETNAME(const std::string &strNewName);
+
+	void HandleCHGHOST(const std::string &strTarget, const std::string &strNewHost);
+	void HandleCHGIDENT(const std::string &strTarget, const std::string &strNewIdent);
+	void HandleCHGNAME(const std::string &strTarget, const std::string &strNewName);
 #endif
 
 	std::string m_strCurrentOrigin;
@@ -326,6 +336,11 @@ private:
 		std::string strRequireHost;
 		std::string strRequireNickname;
 		std::string strRequireIdent;
+		std::string strRequireRealname;
+#ifdef SERVICE
+		std::string strRequireVhost;
+		std::string strRequireUmodes;
+#endif
 	} AccessRules;
 	std::vector<AccessRules> m_vecAccessRules;
 };

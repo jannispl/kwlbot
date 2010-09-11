@@ -79,9 +79,12 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		userProto->SetAccessor(v8::String::New("nickname"), CScriptFunctions::IrcUser__getterNickname);
 		userProto->SetAccessor(v8::String::New("ident"), CScriptFunctions::IrcUser__getterIdent);
 		userProto->SetAccessor(v8::String::New("hostname"), CScriptFunctions::IrcUser__getterHostname);
+		userProto->SetAccessor(v8::String::New("realname"), CScriptFunctions::IrcUser__getterRealname);
 		userProto->SetAccessor(v8::String::New("temporary"), CScriptFunctions::IrcUser__getterTemporary);
 #ifdef SERVICE
 		userProto->SetAccessor(v8::String::New("userModes"), CScriptFunctions::IrcUser__getterUserModes);
+		userProto->SetAccessor(v8::String::New("cloakedHost"), CScriptFunctions::IrcUser__getterCloakedHost);
+		userProto->SetAccessor(v8::String::New("virtualHost"), CScriptFunctions::IrcUser__getterVirtualHost);
 #endif
 
 		// CIrcChannel
