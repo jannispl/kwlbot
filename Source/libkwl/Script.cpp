@@ -149,6 +149,14 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		m_globalTemplate->Set(v8::String::New("ScriptModule"), m_classTemplates.ScriptModule);
 		m_globalTemplate->Set(v8::String::New("Timer"), m_classTemplates.Timer);
 
+		m_globalTemplate->Set(v8::String::New("_service_"), 
+#ifdef SERVICE
+			v8::True(),
+#else
+			v8::False(),
+#endif
+			static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+
 		// Ask the global modules if they have anything
 		for (CPool<CGlobalModule *>::iterator i = pCore->GetGlobalModules()->begin(); i != pCore->GetGlobalModules()->end(); ++i)
 		{
