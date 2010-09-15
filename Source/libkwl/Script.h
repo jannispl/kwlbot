@@ -52,6 +52,15 @@ public:
 	} ClassTemplates_t;
 	static ClassTemplates_t m_classTemplates;
 
+	typedef struct
+	{
+		std::string strCommand;
+		std::string strFormat;
+		int iNumArguments;
+		v8::Persistent<v8::Function> handlerFunction;
+	} CommandSubscription;
+	CPool<CommandSubscription *> m_plCommandSubscriptions;
+
 private:
 	typedef struct
 	{
@@ -72,6 +81,7 @@ private:
 
 	v8::Persistent<v8::Context> m_scriptContext;
 	static v8::Persistent<v8::ObjectTemplate> m_globalTemplate;
+
 	CPool<EventHandler *> m_plEventHandlers;
 
 	CTimerManager *m_pTimerManager;

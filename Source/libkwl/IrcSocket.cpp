@@ -11,6 +11,7 @@ Purpose:	Class which manages a connection to an IRC server
 #include "IrcSocket.h"
 
 CIrcSocket::CIrcSocket(CBot *pParentBot)
+	: m_bBlockQueue(false)
 {
 	m_pParentBot = pParentBot;
 }
@@ -74,6 +75,11 @@ int CIrcSocket::SendRaw(const char *szData)
 	strcat(pData, IRC_EOL);
 	m_sendQueue.Add(pData, iLength + sizeof(IRC_EOL) - 1, false, true);
 
+	if (m_bBlockQueue)
+	{
+		return -1;
+	}
+
 	return m_sendQueue.Process(m_tcpSocket.GetSocket()) ? 0 : -1;
 }
 
@@ -81,6 +87,11 @@ int CIrcSocket::SendRawStatic(const char *szData)
 {
 	m_sendQueue.Add(const_cast<char *>(szData), strlen(szData), false);
 	m_sendQueue.Add(const_cast<char *>(IRC_EOL), sizeof(IRC_EOL) - 1, false);
+
+	if (m_bBlockQueue)
+	{
+		return -1;
+	}
 
 	return m_sendQueue.Process(m_tcpSocket.GetSocket()) ? 0 : -1;
 }
@@ -104,7 +115,10 @@ int CIrcSocket::ReadRaw(char *pDest, size_t iSize)
 
 void CIrcSocket::Pulse()
 {
-	m_sendQueue.Process(m_tcpSocket.GetSocket());
+	if (!m_bBlockQueue)
+	{
+		m_sendQueue.Process(m_tcpSocket.GetSocket());
+	}
 
 	char szBuffer[256];
 

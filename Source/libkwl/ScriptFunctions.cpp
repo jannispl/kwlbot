@@ -469,6 +469,122 @@ FuncReturn CScriptFunctions::Bot__Restart(const Arguments &args)
 	return v8::True();
 }
 
+/*
+ s: string
+ i: integer
+ f: float
+
+ c: channel/string
+ u: user/string
+
+ C: channel/user/string
+ U: user/channel/string
+*/
+
+// bot.subscribeCommand( "PRIVMSG", "ucs", function (user, channel, message) { } );
+// bot.subscribeCommand( "PRIVMSG", 2, function (origin, target, message) { } );
+// bot.subscribeCommand( "PRIVMSG", function (origin, target, message) { } );
+FuncReturn CScriptFunctions::Bot__SubscribeCommand(const Arguments &args)
+{
+	if (args.Length() < 2 || (!args[1]->IsFunction() && args.Length() < 3) || m_pCallingScript == NULL)
+	{
+		return v8::False();
+	}
+
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+
+	if (!args[1]->IsFunction() && !args[2]->IsFunction())
+	{
+		return v8::False();
+	}
+
+	v8::String::Utf8Value strCommand(args[0]);
+	if (*strCommand == NULL)
+	{
+		return v8::False();
+	}
+
+	std::string strFormat;
+	v8::Handle<v8::Function> handlerFunction;
+	int iNumArguments = -1;
+
+	if (!args[1]->IsFunction())
+	{
+		if (args[1]->IsInt32())
+		{
+			iNumArguments = args[1]->ToInt32()->Value();
+		}
+		else
+		{
+			v8::String::Utf8Value strFormat_(args[1]);
+			strFormat = *strFormat_ != NULL ? *strFormat_ : "";
+			iNumArguments = args[1]->ToString()->Length() - 1;
+		}
+
+		handlerFunction = v8::Handle<v8::Function>::Cast(args[2]);
+	}
+	else
+	{
+		handlerFunction = v8::Handle<v8::Function>::Cast(args[1]);
+	}
+
+	CScript::CommandSubscription *pSubscription = new CScript::CommandSubscription;
+	pSubscription->strCommand = *strCommand;
+	pSubscription->strFormat = strFormat;
+	pSubscription->iNumArguments = iNumArguments;
+	pSubscription->handlerFunction = v8::Persistent<v8::Function>::New(handlerFunction);
+	m_pCallingScript->m_plCommandSubscriptions.push_front(pSubscription);
+
+	return v8::True();
+}
+
+FuncReturn CScriptFunctions::Bot__UnsubscribeCommand(const Arguments &args)
+{
+	if (args.Length() < 1 || m_pCallingScript == NULL)
+	{
+		return v8::False();
+	}
+
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
+
+	v8::String::Utf8Value strCommand(args[0]);
+
+	if (*strCommand == NULL)
+	{
+		return v8::False();
+	}
+
+	for (CPool<CScript::CommandSubscription *>::iterator i = m_pCallingScript->m_plCommandSubscriptions.begin(); i != m_pCallingScript->m_plCommandSubscriptions.end(); ++i)
+	{
+		if (stricmp((*i)->strCommand.c_str(), *strCommand) == 0)
+		{
+			if (args.Length() >= 2 && args[1]->IsFunction())
+			{
+				if ((*i)->handlerFunction->Equals(v8::Handle<v8::Function>::Cast(args[1])))
+				{
+					delete *i;
+					i = m_pCallingScript->m_plCommandSubscriptions.erase(i);
+					if (i == m_pCallingScript->m_plCommandSubscriptions.end())
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				delete *i;
+				i = m_pCallingScript->m_plCommandSubscriptions.erase(i);
+				if (i == m_pCallingScript->m_plCommandSubscriptions.end())
+				{
+					break;
+				}
+			}
+		}
+	}
+
+	return v8::True();
+}
+
 FuncReturn CScriptFunctions::Bot__ToString(const Arguments &args)
 {
 	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(args.Holder()->GetInternalField(0))->Value();
@@ -541,6 +657,20 @@ FuncReturn CScriptFunctions::Bot__getterModeFlags(v8::Local<v8::String> strPrope
 	}
 
 	return objFlags;
+}
+
+FuncReturn CScriptFunctions::Bot__getterQueueBlocked(v8::Local<v8::String> strProperty, const v8::AccessorInfo &accessorInfo)
+{
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+
+	return v8::Boolean::New(pBot->IsQueueBlocked());
+}
+
+void CScriptFunctions::Bot__setterQueueBlocked(v8::Local<v8::String> strProperty, v8::Local<v8::Value> newValue, const v8::AccessorInfo &accessorInfo)
+{
+	CBot *pBot = (CBot *)v8::Local<v8::External>::Cast(accessorInfo.This()->GetInternalField(0))->Value();
+
+	pBot->SetQueueBlocked(newValue->ToBoolean()->Value());
 }
 
 FuncReturn CScriptFunctions::IrcUser__HasChannel(const Arguments &args)

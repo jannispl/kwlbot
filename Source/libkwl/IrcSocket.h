@@ -94,6 +94,7 @@ private:
 
 	std::string m_strBuffer;
 	std::string m_strCurrentNickname;
+	bool m_bBlockQueue;
 };
 
 #endif
