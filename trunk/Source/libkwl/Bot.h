@@ -248,6 +248,17 @@ public:
 	time_t GetReconnectTimer();
 
 	/**
+	 * Blocks/unblocks the send queue.
+	 */
+	void SetQueueBlocked(bool bBlocked);
+
+	/**
+	 * Tests whether the send queue is blocked.
+	 * @return True if the send queue is blocked, false otherwise.
+	 */
+	bool IsQueueBlocked();
+
+	/**
 	 * Gets the script type of this class.
 	 * @return The script type of this class.
 	 */

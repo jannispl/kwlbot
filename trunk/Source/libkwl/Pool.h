@@ -97,16 +97,19 @@ public:
 		if (m_iNumElements == 0)
 		{
 			m_pLast = new _elem;
-			m_pLast->pPrevious = pElem;
 			m_pLast->pNext = NULL;
+
+			pElem->pPrevious = NULL;
+			pElem->pNext = m_pLast;
+			m_pLast->pPrevious = pElem;
 		}
 		else
 		{
 			m_pFirst->pPrevious = pElem;
+			pElem->pNext = m_pFirst;
 		}
 
 		pElem->pPrevious = NULL;
-		pElem->pNext = m_pFirst != NULL ? m_pFirst : m_pLast;
 		m_pFirst = pElem;
 
 		++m_iNumElements;
@@ -177,12 +180,13 @@ public:
 		--m_iNumElements;
 		_elem *pToDelete = (_elem *)it.ptr();
 		_elem *pPrevious = (_elem *)pToDelete->pPrevious;
+		_elem *pNext = (_elem *)pToDelete->pNext;
 
+		pNext->pPrevious = pPrevious;
 		if (pPrevious != NULL)
 		{
 			pPrevious->pNext = pToDelete->pNext;
 		}
-		((_elem *)pToDelete->pNext)->pPrevious = pPrevious;
 
 		if (pToDelete == m_pFirst)
 		{
@@ -191,12 +195,11 @@ public:
 
 		delete pToDelete;
 
-		if (m_iNumElements == 0 || pPrevious == NULL)
+		if (m_iNumElements == 0 || pNext == m_pLast)
 		{
-			//m_pFirst = NULL;
 			return end();
 		}
-		return iterator(pPrevious);
+		return iterator(pToDelete);
 	}
 
 	bool remove(T elem)

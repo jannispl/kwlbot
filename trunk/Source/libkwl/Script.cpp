@@ -55,12 +55,15 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		botProto->Set(v8::String::New("leaveChannel"), v8::FunctionTemplate::New(CScriptFunctions::Bot__LeaveChannel));
 		botProto->Set(v8::String::New("die"), v8::FunctionTemplate::New(CScriptFunctions::Bot__Die));
 		botProto->Set(v8::String::New("restart"), v8::FunctionTemplate::New(CScriptFunctions::Bot__Restart));
+		botProto->Set(v8::String::New("subscribeCommand"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SubscribeCommand));
+		botProto->Set(v8::String::New("unsubscribeCommand"), v8::FunctionTemplate::New(CScriptFunctions::Bot__UnsubscribeCommand));
 		botProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::Bot__ToString));
 
 		botProto->SetAccessor(v8::String::New("nickname"), CScriptFunctions::Bot__getterNickname);
 		botProto->SetAccessor(v8::String::New("channels"), CScriptFunctions::Bot__getterChannels);
 		botProto->SetAccessor(v8::String::New("numAccessLevels"), CScriptFunctions::Bot__getterNumAccessLevels);
 		botProto->SetAccessor(v8::String::New("modeFlags"), CScriptFunctions::Bot__getterModeFlags);
+		botProto->SetAccessor(v8::String::New("queueBlocked"), CScriptFunctions::Bot__getterQueueBlocked, CScriptFunctions::Bot__setterQueueBlocked);
 
 		// CIrcUser
 		m_classTemplates.IrcUser = v8::Persistent<v8::FunctionTemplate>::New(v8::FunctionTemplate::New(CScriptFunctions::InternalConstructor));

@@ -395,6 +395,219 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 		}
 	}
 
+	static v8::Persistent<v8::Value> arguments[16];
+
+	for (CPool<CScript *>::iterator i = m_plScripts.begin(); i != m_plScripts.end(); ++i)
+	{
+		CScript *pScript = *i;
+		bool bEntered = false;
+
+		for (CPool<CScript::CommandSubscription *>::iterator i = pScript->m_plCommandSubscriptions.begin(); i != pScript->m_plCommandSubscriptions.end(); ++i)
+		{
+			printf("do sub 0x%p\n", *i);
+			if (*i == NULL)
+			{
+				continue;
+			}
+			printf("do sub2 0x%p\n", *i);
+
+			if (stricmp((*i)->strCommand.c_str(), strCommand.c_str()) == 0)
+			{
+				v8::HandleScope handleScope;
+				v8::Local<v8::Function> ctorIrcUser;
+				v8::Local<v8::Function> ctorIrcChannel;
+
+				if (!bEntered)
+				{
+					pScript->EnterContext();
+
+					ctorIrcUser = CScript::m_classTemplates.IrcUser->GetFunction();
+					ctorIrcChannel = CScript::m_classTemplates.IrcChannel->GetFunction();
+
+					bEntered = true;
+				}
+
+				if ((*i)->iNumArguments == -1 || (*i)->iNumArguments == iParamCount)
+				{
+					if ((*i)->strFormat.empty())
+					{
+						arguments[0] = v8::Persistent<v8::Value>::New(v8::String::New(strOrigin.c_str(), strOrigin.length()));
+
+						int iNum = 1;
+						for (std::vector<std::string>::const_iterator j = vecParams.begin(); j != vecParams.end(); ++j)
+						{
+							arguments[iNum++] = v8::Persistent<v8::Value>::New(v8::String::New(j->c_str(), j->length()));
+						}
+
+						(*i)->handlerFunction->Call((*i)->handlerFunction, iParamCount + 1, arguments);
+
+						for (int i = 0; i < iParamCount + 1; ++i)
+						{
+							arguments[i].Dispose();
+						}
+					}
+					else
+					{
+						const std::string &strFormat = (*i)->strFormat;
+
+						switch (strFormat[0])
+						{
+						case 's':
+							arguments[0] = v8::Persistent<v8::Value>::New(v8::String::New(strOrigin.c_str(), strOrigin.length()));
+							break;
+						case 'u':
+							if (m_pCurrentUser == NULL)
+							{
+								arguments[0] = v8::Persistent<v8::Value>::New(v8::String::New(m_strCurrentNickname.c_str(), m_strCurrentNickname.length()));
+							}
+							else
+							{
+								CScriptFunctions::m_bAllowInternalConstructions = true;
+
+								arguments[0] = v8::Persistent<v8::Value>::New(ctorIrcUser->NewInstance());
+								arguments[0]->ToObject()->SetInternalField(0, v8::External::New(m_pCurrentUser));
+
+								CScriptFunctions::m_bAllowInternalConstructions = false;
+							}
+							break;
+						}
+
+						for (std::string::size_type j = 1; j < strFormat.length() && j <= vecParams.size(); ++j)
+						{
+							const std::string &strParam = vecParams[j - 1];
+							v8::HandleScope handleScope;
+
+							switch (strFormat[j])
+							{
+							case 's':
+								arguments[j] = v8::Persistent<v8::Value>::New(v8::String::New(strParam.c_str(), strParam.length()));
+								break;
+							case 'i':
+								arguments[j] = v8::Persistent<v8::Value>::New(v8::Int32::New(atoi(strParam.c_str())));
+								break;
+							case 'f':
+								arguments[j] = v8::Persistent<v8::Value>::New(v8::Number::New(atof(strParam.c_str())));
+								break;
+							case 'c':
+								{
+									CIrcChannel *pChannel = NULL;
+									if (strParam[0] != '#' || (pChannel = FindChannel(strParam.c_str())) == NULL)
+									{
+										arguments[j] = v8::Persistent<v8::Value>::New(v8::String::New(strParam.c_str(), strParam.length()));
+									}
+									else
+									{
+										CScriptFunctions::m_bAllowInternalConstructions = true;
+
+										arguments[j] = v8::Persistent<v8::Value>::New(ctorIrcChannel->NewInstance());
+										arguments[j]->ToObject()->SetInternalField(0, v8::External::New(pChannel));
+
+										CScriptFunctions::m_bAllowInternalConstructions = false;
+									}
+								}
+								break;
+							case 'u':
+								{
+									CIrcUser *pUser = FindUser(strParam.c_str());
+									if (pUser == NULL)
+									{
+										arguments[j] = v8::Persistent<v8::Value>::New(v8::String::New(strParam.c_str(), strParam.length()));
+									}
+									else
+									{
+										CScriptFunctions::m_bAllowInternalConstructions = true;
+
+										arguments[j] = v8::Persistent<v8::Value>::New(ctorIrcUser->NewInstance());
+										arguments[j]->ToObject()->SetInternalField(0, v8::External::New(pUser));
+
+										CScriptFunctions::m_bAllowInternalConstructions = false;
+									}
+								}
+								break;
+							case 'C':
+								{
+									CIrcChannel *pChannel = NULL;
+									if (strParam[0] != '#' || (pChannel = FindChannel(strParam.c_str())) == NULL)
+									{
+										CIrcUser *pUser = FindUser(strParam.c_str());
+										if (pUser == NULL)
+										{
+											arguments[j] = v8::Persistent<v8::Value>::New(v8::String::New(strParam.c_str(), strParam.length()));
+										}
+										else
+										{
+											CScriptFunctions::m_bAllowInternalConstructions = true;
+
+											arguments[j] = v8::Persistent<v8::Value>::New(ctorIrcUser->NewInstance());
+											arguments[j]->ToObject()->SetInternalField(0, v8::External::New(pUser));
+
+											CScriptFunctions::m_bAllowInternalConstructions = false;
+										}
+									}
+									else
+									{
+										CScriptFunctions::m_bAllowInternalConstructions = true;
+
+										arguments[j] = v8::Persistent<v8::Value>::New(ctorIrcChannel->NewInstance());
+										arguments[j]->ToObject()->SetInternalField(0, v8::External::New(pChannel));
+
+										CScriptFunctions::m_bAllowInternalConstructions = false;
+									}
+								}
+								break;
+							case 'U':
+								{
+									CIrcUser *pUser = FindUser(strParam.c_str());
+									if (pUser == NULL)
+									{
+										CIrcChannel *pChannel = NULL;
+										if (strParam[0] != '#' || (pChannel = FindChannel(strParam.c_str())) == NULL)
+										{
+											arguments[j] = v8::Persistent<v8::Value>::New(v8::String::New(strParam.c_str(), strParam.length()));
+										}
+										else
+										{
+											CScriptFunctions::m_bAllowInternalConstructions = true;
+
+											arguments[j] = v8::Persistent<v8::Value>::New(ctorIrcChannel->NewInstance());
+											arguments[j]->ToObject()->SetInternalField(0, v8::External::New(pChannel));
+
+											CScriptFunctions::m_bAllowInternalConstructions = false;
+										}
+									}
+									else
+									{
+										CScriptFunctions::m_bAllowInternalConstructions = true;
+
+										arguments[j] = v8::Persistent<v8::Value>::New(ctorIrcUser->NewInstance());
+										arguments[j]->ToObject()->SetInternalField(0, v8::External::New(pUser));
+
+										CScriptFunctions::m_bAllowInternalConstructions = false;
+									}
+								}
+								break;
+							}
+						}
+
+						printf("call A 1\n");
+						(*i)->handlerFunction->Call((*i)->handlerFunction, iParamCount + 1, arguments);
+						printf("call A 2\n");
+
+						for (int j = 0; j < iParamCount + 1; ++j)
+						{
+							arguments[j].Dispose();
+						}
+					}
+				}
+			}
+		}
+
+		if (bEntered)
+		{
+			pScript->ExitContext();
+		}
+	}
+
 	if (!m_bGotMotd)
 	{
 #ifndef SERVICE
@@ -1773,6 +1986,16 @@ void CBot::StartReconnectTimer(unsigned int uiSeconds)
 time_t CBot::GetReconnectTimer()
 {
 	return m_tReconnectTimer;
+}
+
+void CBot::SetQueueBlocked(bool bBlocked)
+{
+	m_pIrcSocket->m_bBlockQueue = bBlocked;
+}
+
+bool CBot::IsQueueBlocked()
+{
+	return m_pIrcSocket->m_bBlockQueue;
 }
 
 CScriptObject::eScriptType CBot::GetType()
