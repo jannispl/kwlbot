@@ -404,13 +404,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 
 		for (CPool<CScript::CommandSubscription *>::iterator i = pScript->m_plCommandSubscriptions.begin(); i != pScript->m_plCommandSubscriptions.end(); ++i)
 		{
-			printf("do sub 0x%p\n", *i);
-			if (*i == NULL)
-			{
-				continue;
-			}
-			printf("do sub2 0x%p\n", *i);
-
 			if (stricmp((*i)->strCommand.c_str(), strCommand.c_str()) == 0)
 			{
 				v8::HandleScope handleScope;
