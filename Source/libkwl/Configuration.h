@@ -26,7 +26,7 @@
   #define VIAGRA 6           // ViagraIRCd
   #define IRC 7              // ircd
 
-  #define IRCD INSPIRCD
+  #define IRCD UNREAL
 #endif
 
 #endif
