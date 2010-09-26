@@ -78,16 +78,19 @@ public:
 	TopicInfo m_topicInfo;
 	
 private:
-	void UpdateName(const std::string &strName);
-
 	CBot *m_pParentBot;
 	std::string m_strName;
 
-#ifdef WIN32
+/*#ifdef WIN32
 	template class DLLEXPORT CPool<CIrcUser *>;
-#endif
+#endif*/
+
 	CPool<CIrcUser *> m_plIrcUsers;
 	bool m_bHasDetailedUsers;
+
+#if defined(SERVICE) && IRCD == HYBRID
+	time_t m_ullChannelStamp;
+#endif
 };
 
 #endif

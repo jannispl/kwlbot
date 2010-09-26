@@ -9,8 +9,8 @@ Purpose:	Class which manages IRC-related settings
 
 class CIrcSettings;
 
-#ifndef _CIRCSETTINGS_H
-#define _CIRCSETTINGS_H
+#ifndef _IRCSETTINGS_H
+#define _IRCSETTINGS_H
 
 #include <string>
 #include "Config.h"

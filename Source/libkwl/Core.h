@@ -113,12 +113,12 @@ private:
 
 	CEventManager *m_pScriptEventManager;
 
-#ifdef WIN32
+/*#ifdef WIN32
 	template class DLLEXPORT CPool<CEventManager *>;
 	template class DLLEXPORT CPool<CBot *>;
 	template class DLLEXPORT CPool<CScript *>;
 	template class DLLEXPORT CPool<CGlobalModule *>;
-#endif
+#endif*/
 
 	CPool<CEventManager *> m_plEventManagers;
 	CPool<CBot *> m_plBots;

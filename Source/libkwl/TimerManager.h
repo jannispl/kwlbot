@@ -42,9 +42,9 @@ public:
 	void Pulse();
 
 private:
-#ifdef WIN32
+/*#ifdef WIN32
 	template class DLLEXPORT CPool<Timer *>;
-#endif
+#endif*/
 
 	CScript *m_pParentScript;
 	CPool<Timer *> m_plTimers;

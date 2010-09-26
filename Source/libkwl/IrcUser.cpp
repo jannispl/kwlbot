@@ -16,7 +16,7 @@ CIrcUser::CIrcUser(CBot *pParentBot, const std::string &strNickname, bool bTempo
 	m_pParentBot = pParentBot;
 	m_bTemporary = bTemporary;
 
-	UpdateNickname(strNickname);
+	m_strNickname = strNickname;
 }
 
 CIrcUser::~CIrcUser()
@@ -90,11 +90,6 @@ CBot *CIrcUser::GetParentBot()
 CScriptObject::eScriptType CIrcUser::GetType()
 {
 	return IrcUser;
-}
-
-void CIrcUser::UpdateNickname(const std::string &strNickname)
-{
-	m_strNickname = strNickname;
 }
 
 void CIrcUser::UpdateIfNecessary(const std::string &strIdent, const std::string &strHostname)
