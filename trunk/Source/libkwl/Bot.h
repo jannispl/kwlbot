@@ -282,6 +282,7 @@ private:
 	void HandleMODE(const std::string &strChannel, const std::string &strModes, const std::vector<std::string> &vecParams);
 
 #ifdef SERVICE
+#if IRCD == UNREAL
 	void HandleSERVER(const std::string &strHostname, int iHopCount, const std::string &strInformation);
 	void HandleNICK(const std::string &strNickname, int iHopCount, time_t ullTimestamp, const std::string &strIdent, const std::string &strHostname, const std::string &strServer, time_t ullServiceStamp, const std::string &strUserModes, const std::string &strVirtualHost, const std::string &strCloakedHost, const std::string &strRealname);
 
@@ -294,6 +295,15 @@ private:
 	void HandleCHGHOST(const std::string &strTarget, const std::string &strNewHost);
 	void HandleCHGIDENT(const std::string &strTarget, const std::string &strNewIdent);
 	void HandleCHGNAME(const std::string &strTarget, const std::string &strNewName);
+#elif IRCD == INSPIRCD
+	CIrcUser *FindUserByUid(const std::string &strUid);
+
+	void HandleSERVER(const std::string &strRemoteHost, const std::string &strPassword, int iHopCount, const std::string &strServerId, const std::string &strInformation);
+	void HandleUID(const std::string &strUid, time_t ullTimestamp, const std::string &strNickname, const std::string &strHostname1, const std::string &strHostname2, const std::string &strIdent, const std::string &strIp, time_t ullSignonTime, const std::string &strUsermodes, const std::string &strRealname);
+	void HandleFJOIN(const std::string &strChannel, time_t ullTimestamp, const std::string &strUsers);
+	void HandleFTOPIC(const std::string &strChannel, time_t ullTimestamp, const std::string &strSetter, const std::string &strTopic);
+	void HandleFHOST(const std::string &strNewHost);
+#endif
 #endif
 
 	std::string m_strCurrentOrigin;
@@ -310,17 +320,17 @@ private:
 	std::string m_strServerHost;
 #endif
 
-	bool m_bGotMotd;
+	bool m_bSynced;
 	CCore *m_pParentCore;
 	CIrcSocket *m_pIrcSocket;
 	CConfig m_botConfig;
 	CIrcSettings m_ircSettings;
 
-#ifdef WIN32
+/*#ifdef WIN32
 	template class DLLEXPORT CPool<CIrcChannel *>;
 	template class DLLEXPORT CPool<CIrcUser *>;
 	template class DLLEXPORT CPool<CScript *>;
-#endif
+#endif*/
 
 	CPool<CIrcChannel *> m_plIrcChannels;
 	CPool<CIrcChannel *> *m_pIrcChannelQueue;
@@ -354,6 +364,10 @@ private:
 #endif
 	} AccessRules;
 	std::vector<AccessRules> m_vecAccessRules;
+
+#if defined(SERVICE) && IRCD == INSPIRCD
+	char m_szServerId[3];
+#endif
 };
 
 #endif

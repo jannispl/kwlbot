@@ -106,12 +106,12 @@ public:
 	CScriptObject::eScriptType GetType();
 
 private:
-	void UpdateNickname(const std::string &strNickname);
 	void UpdateIfNecessary(const std::string &strIdent, const std::string &strHostname);
 
-#ifdef WIN32
+/*#ifdef WIN32
 	template class DLLEXPORT CPool<CIrcChannel *>;
-#endif
+#endif*/
+
 	CPool<CIrcChannel *> m_plIrcChannels;
 
 	CBot *m_pParentBot;
@@ -127,6 +127,11 @@ private:
 
 	std::string m_strCloakedHost;
 	std::string m_strVirtualHost;
+
+#if IRCD == INSPIRCD
+	char m_szUserId[9];
+#endif
+
 #endif
 };
 

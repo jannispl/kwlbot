@@ -44,7 +44,11 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort, const char *szPasswo
 
 	if (szPassword != NULL && szPassword[0] != '\0')
 	{
+#if defined(SERVICE) && IRCD == HYBRID
+		SendRawFormat("PASS %s :TS", szPassword);
+#else
 		SendRawFormat("PASS %s", szPassword);
+#endif
 	}
 
 #ifndef SERVICE
@@ -58,7 +62,12 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort, const char *szPasswo
 	SendRawFormat("NICK %s 1 %u %s %s %s 0 0 %s * :kwlbot", pSettings->GetNickname(), (unsigned long)time(NULL), pSettings->GetIdent(), pSettings->GetServiceHost(), pSettings->GetServiceHost(), szHostname, pSettings->GetRealname());
 #elif IRCD == INSPIRCD
 	SendRawFormat("SERVER %s %s 0 123 :kwlbot service", pSettings->GetServiceHost(), szPassword);
-	SendRawFormat("BURST %u", time(NULL));
+	SendRawFormat("BURST %u", (unsigned long)time(NULL));
+	SendRawStatic("VERSION :kwlbot " VERSION_STRING);
+	SendRawFormat("UID 123" INSPIRCD_SID " %u %s %s %s %s 0.0.0.0 %u +i :%s", (unsigned long)time(NULL), pSettings->GetNickname(), pSettings->GetServiceHost(), pSettings->GetServiceHost(), pSettings->GetIdent(), (unsigned long)time(NULL), pSettings->GetRealname());
+#elif IRCD == HYBRID
+	SendRawFormat("SERVER %s 1 :kwlbot service", pSettings->GetServiceHost());
+	SendRawFormat("SVINFO 5 5 0 :%u", (unsigned long)time(NULL));
 #endif
 #endif
 
@@ -69,6 +78,10 @@ bool CIrcSocket::Connect(const char *szHostname, int iPort, const char *szPasswo
 
 int CIrcSocket::SendRaw(const char *szData)
 {
+#ifdef _DEBUG
+	printf("[out] %s\n", szData);
+#endif
+
 	size_t iLength = strlen(szData);
 	char *pData = reinterpret_cast<char *>(malloc(iLength + sizeof(IRC_EOL)));
 	strcpy(pData, szData);
@@ -85,6 +98,10 @@ int CIrcSocket::SendRaw(const char *szData)
 
 int CIrcSocket::SendRawStatic(const char *szData)
 {
+#ifdef _DEBUG
+	printf("[out] %s\n", szData);
+#endif
+
 	m_sendQueue.Add(const_cast<char *>(szData), strlen(szData), false);
 	m_sendQueue.Add(const_cast<char *>(IRC_EOL), sizeof(IRC_EOL) - 1, false);
 
@@ -261,7 +278,14 @@ void CIrcSocket::HandleData(const char *szData)
 
 	if (strCommand == "PING" && vecParams.size() >= 1)
 	{
-		SendRawFormat("PONG %s", vecParams[0].c_str());
+		if (vecParams.size() == 2)
+		{
+			SendRawFormat("PONG %s %s", vecParams[1].c_str(), vecParams[0].c_str());
+		}
+		else
+		{
+			SendRawFormat("PONG %s", vecParams[0].c_str());
+		}
 		return;
 	}
 	else if (strCommand == "433" && vecParams.size() >= 1 && vecParams[0] == m_pParentBot->GetSettings()->GetNickname())

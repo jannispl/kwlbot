@@ -73,11 +73,11 @@ private:
 	bool m_bCallingEvent;
 	bool m_bCurrentEventCancelled;
 
-#ifdef WIN32
+/*#ifdef WIN32
 	template class DLLEXPORT v8::Persistent<v8::Context>;
 	template class DLLEXPORT v8::Persistent<v8::ObjectTemplate>;
 	template class DLLEXPORT CPool<EventHandler *>;
-#endif
+#endif*/
 
 	v8::Persistent<v8::Context> m_scriptContext;
 	static v8::Persistent<v8::ObjectTemplate> m_globalTemplate;

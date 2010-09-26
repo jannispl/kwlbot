@@ -16,7 +16,7 @@ CIrcChannel::CIrcChannel(CBot *pParentBot, const std::string &strName)
 {
 	m_pParentBot = pParentBot;
 
-	UpdateName(strName);
+	m_strName = strName;
 }
 
 CIrcChannel::~CIrcChannel()
@@ -69,9 +69,4 @@ CBot *CIrcChannel::GetParentBot()
 CScriptObject::eScriptType CIrcChannel::GetType()
 {
 	return IrcChannel;
-}
-
-void CIrcChannel::UpdateName(const std::string &strName)
-{
-	m_strName = strName;
 }

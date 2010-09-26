@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libkwl", "libkwl\libkwl.vcxproj", "{8926EDC0-AE19-46E6-897E-8FDBC2C07A45}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kwlbot", "kwlbot\kwlbot.vcxproj", "{F8602419-D435-4F6E-A6DA-413772ADE1B6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8926EDC0-AE19-46E6-897E-8FDBC2C07A45}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8926EDC0-AE19-46E6-897E-8FDBC2C07A45}.Debug|Win32.Build.0 = Debug|Win32
+		{8926EDC0-AE19-46E6-897E-8FDBC2C07A45}.Release|Win32.ActiveCfg = Release|Win32
+		{8926EDC0-AE19-46E6-897E-8FDBC2C07A45}.Release|Win32.Build.0 = Release|Win32
+		{F8602419-D435-4F6E-A6DA-413772ADE1B6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F8602419-D435-4F6E-A6DA-413772ADE1B6}.Debug|Win32.Build.0 = Debug|Win32
+		{F8602419-D435-4F6E-A6DA-413772ADE1B6}.Release|Win32.ActiveCfg = Release|Win32
+		{F8602419-D435-4F6E-A6DA-413772ADE1B6}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

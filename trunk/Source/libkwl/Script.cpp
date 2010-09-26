@@ -86,8 +86,12 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		userProto->SetAccessor(v8::String::New("temporary"), CScriptFunctions::IrcUser__getterTemporary);
 #ifdef SERVICE
 		userProto->SetAccessor(v8::String::New("userModes"), CScriptFunctions::IrcUser__getterUserModes);
+#if IRCD == UNREAL
 		userProto->SetAccessor(v8::String::New("cloakedHost"), CScriptFunctions::IrcUser__getterCloakedHost);
 		userProto->SetAccessor(v8::String::New("virtualHost"), CScriptFunctions::IrcUser__getterVirtualHost);
+#elif IRCD == INSPIRCD
+		userProto->SetAccessor(v8::String::New("shownHost"), CScriptFunctions::IrcUser__getterCloakedHost);
+#endif
 #endif
 
 		// CIrcChannel
@@ -159,6 +163,10 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 			v8::False(),
 #endif
 			static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+
+#ifdef SERVICE
+		m_globalTemplate->Set(v8::String::New("_ircd_"), v8::Int32::New(IRCD), static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+#endif
 
 		// Ask the global modules if they have anything
 		for (CPool<CGlobalModule *>::iterator i = pCore->GetGlobalModules()->begin(); i != pCore->GetGlobalModules()->end(); ++i)

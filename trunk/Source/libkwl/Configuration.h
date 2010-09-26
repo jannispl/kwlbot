@@ -16,11 +16,17 @@
 //#define SERVICE
 
 #ifdef SERVICE
-  #define UNREAL 1
-  #define INSPIRCD 2
-  #define HYBRID 3
+  #define INSPIRCD_SID "AAAAAA"
 
-  #define IRCD UNREAL
+  #define UNREAL 1           // UnrealIRCd
+  #define INSPIRCD 2         // InspIRCd
+  #define HYBRID 3           // IRCD-Hybrid
+  #define BAHAMUT 4          // Bahamut IRCd
+  #define ULTIMATE 5         // UltimateIRCd
+  #define VIAGRA 6           // ViagraIRCd
+  #define IRC 7              // ircd
+
+  #define IRCD INSPIRCD
 #endif
 
 #endif

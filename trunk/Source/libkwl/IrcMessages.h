@@ -44,10 +44,20 @@ public:
 class CJoinMessage : public CIrcMessage
 {
 public:
+#if !defined(SERVICE) || IRCD != HYBRID
 	CJoinMessage(const std::string &strChannel)
 	{
 		m_strRaw = "JOIN " + strChannel;
 	}
+#else
+	CJoinMessage(time_t ullChannelStamp, const std::string &strNickname, const std::string &strChannel)
+	{
+		m_bServiceMessage = true;
+		char szTemp[32];
+		sprintf(szTemp, "%ld", (long)ullChannelStamp);
+		m_strRaw = "SJOIN " + std::string(szTemp) + " " + strChannel + " " + strNickname;
+	}
+#endif
 };
 
 class CPartMessage : public CIrcMessage

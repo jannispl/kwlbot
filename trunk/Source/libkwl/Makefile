@@ -1,6 +1,6 @@
 GCC = g++
 CFLAGS = -m32 -shared
-LDFLAGS = libv8.so -lpthread -ldl
+LDFLAGS = libv8.so -lpthread -ldl -lrt
 
 OUTFILE = libkwl.so
 OBJ = Bot.o GlobalModule.o IrcSocket.o ScriptEventManager.o Core.o IrcChannel.o IrcUser.o ScriptFunctions.o IrcSettings.o Script.o ScriptModule.o SendQueue.o TimerManager.o IrcMessage.o

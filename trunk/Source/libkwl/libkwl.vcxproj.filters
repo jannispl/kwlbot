@@ -1,0 +1,153 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="General">
+      <UniqueIdentifier>{5eabd8a5-8d53-4ae6-9141-ae2ca4c3a95d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="General\Specific">
+      <UniqueIdentifier>{abc4e229-9a0e-49ce-af82-cbe63d539a3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="IRC">
+      <UniqueIdentifier>{0faf8809-2ef3-46ba-98b5-88ca2516864d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility">
+      <UniqueIdentifier>{372bf71b-d720-4cb0-92a6-93c7c1bfc9bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripting">
+      <UniqueIdentifier>{d6fabd15-91c2-4464-b44a-63cbb0cc7397}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules">
+      <UniqueIdentifier>{acd95e9c-f709-4c8a-b14f-f24626e3f1d5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Bot.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="Core.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="IrcSettings.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="IrcSocket.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="Bot_Client.cpp">
+      <Filter>General\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Bot_Hybrid.cpp">
+      <Filter>General\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Bot_InspIRC.cpp">
+      <Filter>General\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Bot_Unreal.cpp">
+      <Filter>General\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="IrcChannel.cpp">
+      <Filter>IRC</Filter>
+    </ClCompile>
+    <ClCompile Include="IrcMessage.cpp">
+      <Filter>IRC</Filter>
+    </ClCompile>
+    <ClCompile Include="IrcUser.cpp">
+      <Filter>IRC</Filter>
+    </ClCompile>
+    <ClCompile Include="SendQueue.cpp">
+      <Filter>Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="Script.cpp">
+      <Filter>Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEventManager.cpp">
+      <Filter>Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptFunctions.cpp">
+      <Filter>Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="TimerManager.cpp">
+      <Filter>Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="StdInc.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Bot.h">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="Core.h">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="IrcSettings.h">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="IrcSocket.h">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="IrcChannel.h">
+      <Filter>IRC</Filter>
+    </ClInclude>
+    <ClInclude Include="IrcMessage.h">
+      <Filter>IRC</Filter>
+    </ClInclude>
+    <ClInclude Include="IrcMessages.h">
+      <Filter>IRC</Filter>
+    </ClInclude>
+    <ClInclude Include="IrcUser.h">
+      <Filter>IRC</Filter>
+    </ClInclude>
+    <ClInclude Include="ArgumentList.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="File.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="Pool.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="SendQueue.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpSocket.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="WildcardMatch.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="EventManager.h">
+      <Filter>Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="Script.h">
+      <Filter>Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEventManager.h">
+      <Filter>Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptFunctions.h">
+      <Filter>Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptObject.h">
+      <Filter>Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="TimerManager.h">
+      <Filter>Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Configuration.h" />
+    <ClInclude Include="StdInc.h" />
+  </ItemGroup>
+</Project>

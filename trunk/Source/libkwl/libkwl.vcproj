@@ -205,6 +205,26 @@
 				RelativePath=".\IrcSocket.h"
 				>
 			</File>
+			<Filter
+				Name="Specific"
+				>
+				<File
+					RelativePath=".\Bot_Client.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Bot_Hybrid.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Bot_InspIRC.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Bot_Unreal.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="IRC"
