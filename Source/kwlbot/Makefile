@@ -1,6 +1,6 @@
 GCC = g++
 CFLAGS = -m32
-LDFLAGS = libkwl.so ../../../v8/libv8.so
+LDFLAGS = -L../libkwl/v8 -lv8 -L../libkwl -lkwl
 
 OBJ = Main.o
 
