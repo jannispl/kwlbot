@@ -17,4 +17,4 @@ install:
 
 nonroot:
 	cp libkwl/libkwl.so ./kwlbot/
-	cp ../../v8/libv8.so ./kwlbot/
+	cp libkwl/v8/libv8.so ./kwlbot/
