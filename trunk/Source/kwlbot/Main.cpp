@@ -65,6 +65,18 @@ int main(int iArgCount, char *szArgs[])
 #else
 	signal(SIGINT, CtrlHandler);
 	signal(SIGKILL, CtrlHandler);
+
+	switch (fork())
+	{
+	case -1:
+		printf("Failed to fork process into background\n");
+		return 1;
+	case 0:
+		break;
+	default:
+		printf("Forked into background.\n");
+		return 0;
+	}
 #endif
 
 	while (true)
