@@ -178,6 +178,35 @@ FuncReturn CScriptFunctions::CancelEvent(const Arguments &args)
 	return v8::True();
 }
 
+FuncReturn CScriptFunctions::FindBot(const Arguments &args)
+{
+	if (args.Length() < 1)
+	{
+		return v8::False();
+	}
+
+	v8::String::Utf8Value strBotName(args[0]);
+	if (*strBotName == NULL)
+	{
+		return v8::False();
+	}
+
+	bool bCaseSensitive = args.Length() >= 2 && args[1]->IsBoolean() ? args[1]->ToBoolean()->BooleanValue() : true;
+
+	CBot *pBot = m_pCallingScript->m_pParentBot->GetParentCore()->FindBot(*strBotName, bCaseSensitive);
+	if (pBot == NULL)
+	{
+		return v8::False();
+	}
+
+	m_bAllowInternalConstructions = true;
+	v8::Local<v8::Object> obj = CScript::m_classTemplates.Bot->GetFunction()->NewInstance();
+	m_bAllowInternalConstructions = false;
+
+	obj->SetInternalField(0, v8::External::New(pBot));
+	return obj;
+}
+
 FuncReturn CScriptFunctions::Bot__SendRaw(const Arguments &args)
 {
 	if (args.Length() < 1)

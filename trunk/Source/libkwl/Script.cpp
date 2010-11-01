@@ -59,6 +59,14 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		botProto->Set(v8::String::New("unsubscribeCommand"), v8::FunctionTemplate::New(CScriptFunctions::Bot__UnsubscribeCommand));
 		botProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::Bot__ToString));
 
+#ifdef ENABLE_SHORTCUT_FUNCTIONS
+		botProto->Set(v8::String::New("raw"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendRaw));
+		botProto->Set(v8::String::New("say"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendMessage));
+		botProto->Set(v8::String::New("notice"), v8::FunctionTemplate::New(CScriptFunctions::Bot__SendNotice));
+		botProto->Set(v8::String::New("join"), v8::FunctionTemplate::New(CScriptFunctions::Bot__JoinChannel));
+		botProto->Set(v8::String::New("leave"), v8::FunctionTemplate::New(CScriptFunctions::Bot__LeaveChannel));
+#endif
+
 		botProto->SetAccessor(v8::String::New("nickname"), CScriptFunctions::Bot__getterNickname);
 		botProto->SetAccessor(v8::String::New("channels"), CScriptFunctions::Bot__getterChannels);
 		botProto->SetAccessor(v8::String::New("numAccessLevels"), CScriptFunctions::Bot__getterNumAccessLevels);
@@ -76,8 +84,10 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		userProto->Set(v8::String::New("getModeOnChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__GetModeOnChannel));
 		userProto->Set(v8::String::New("testLeastModeOnChannel"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__TestLeastModeOnChannel));
 		userProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__ToString));
-
+		
+#ifdef ENABLE_SHORTCUT_FUNCTIONS
 		userProto->Set(v8::String::New("say"), v8::FunctionTemplate::New(CScriptFunctions::IrcUser__SendMessage)); // alias for sendMessage
+#endif
 
 		userProto->SetAccessor(v8::String::New("nickname"), CScriptFunctions::IrcUser__getterNickname);
 		userProto->SetAccessor(v8::String::New("ident"), CScriptFunctions::IrcUser__getterIdent);
@@ -103,8 +113,10 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		channelProto->Set(v8::String::New("hasUser"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__HasUser));
 		channelProto->Set(v8::String::New("sendMessage"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SendMessage));
 		channelProto->Set(v8::String::New("toString"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__ToString));
-
+		
+#ifdef ENABLE_SHORTCUT_FUNCTIONS
 		channelProto->Set(v8::String::New("say"), v8::FunctionTemplate::New(CScriptFunctions::IrcChannel__SendMessage)); // alias for sendMessage
+#endif
 
 		channelProto->SetAccessor(v8::String::New("name"), CScriptFunctions::IrcChannel__getterName);
 		channelProto->SetAccessor(v8::String::New("users"), CScriptFunctions::IrcChannel__getterUsers);
@@ -148,6 +160,7 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		m_globalTemplate->Set(v8::String::New("removeEventHandler"), v8::FunctionTemplate::New(CScriptFunctions::RemoveEventHandler));
 		m_globalTemplate->Set(v8::String::New("getEventHandlers"), v8::FunctionTemplate::New(CScriptFunctions::GetEventHandlers));
 		m_globalTemplate->Set(v8::String::New("cancelEvent"), v8::FunctionTemplate::New(CScriptFunctions::CancelEvent));
+		m_globalTemplate->Set(v8::String::New("findBot"), v8::FunctionTemplate::New(CScriptFunctions::FindBot));
 
 		m_globalTemplate->Set(v8::String::New("Bot"), m_classTemplates.Bot);
 		m_globalTemplate->Set(v8::String::New("IrcUser"), m_classTemplates.IrcUser);
@@ -168,6 +181,8 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 		m_globalTemplate->Set(v8::String::New("_ircd_"), v8::Int32::New(IRCD), static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
 #endif
 
+		m_globalTemplate->Set(v8::String::New("_version_"), v8::String::New(VERSION_STRING));
+
 		// Ask the global modules if they have anything
 		for (CPool<CGlobalModule *>::iterator i = pCore->GetGlobalModules()->begin(); i != pCore->GetGlobalModules()->end(); ++i)
 		{
@@ -187,6 +202,11 @@ bool CScript::Load(CCore *pCore, const char *szFilename)
 	CScriptFunctions::m_bAllowInternalConstructions = false;
 	bot->SetInternalField(0, v8::External::New(m_pParentBot));
 	m_scriptContext->Global()->Set(v8::String::New("bot"), bot);
+
+	for (CPool<CGlobalModule *>::iterator i = pCore->GetGlobalModules()->begin(); i != pCore->GetGlobalModules()->end(); ++i)
+	{
+		(*i)->ScriptLoad(m_scriptContext);
+	}
 
 	v8::Handle<v8::String> strFilename = v8::String::New(szFilename);
 

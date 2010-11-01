@@ -32,6 +32,7 @@ public:
 	static FuncReturn RemoveEventHandler(const Arguments &args);
 	static FuncReturn GetEventHandlers(const Arguments &args);
 	static FuncReturn CancelEvent(const Arguments &args);
+	static FuncReturn FindBot(const Arguments &args);
 
 	static FuncReturn Bot__SendRaw(const Arguments &args);
 	static FuncReturn Bot__SendMessage(const Arguments &args);

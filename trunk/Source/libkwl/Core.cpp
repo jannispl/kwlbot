@@ -132,6 +132,22 @@ CPool<CBot *> *CCore::GetBots()
 	return &m_plBots;
 }
 
+CBot *CCore::FindBot(const char *szNickname, bool bCaseSensitive)
+{
+	typedef int (* Compare_t)(const char *, const char *);
+	Compare_t pfnCompare = bCaseSensitive ? strcmp : stricmp;
+
+	for (CPool<CBot *>::iterator i = m_plBots.begin(); i != m_plBots.end(); ++i)
+	{
+		if (pfnCompare((*i)->GetSocket()->GetCurrentNickname(), szNickname) == 0)
+		{
+			return *i;
+		}
+	}
+
+	return NULL;
+}
+
 CPool<CGlobalModule *> *CCore::GetGlobalModules()
 {
 	return &m_plGlobalModules;

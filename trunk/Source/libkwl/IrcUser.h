@@ -16,6 +16,7 @@ class CIrcUser;
 #include "Bot.h"
 #include "IrcChannel.h"
 #include "Script.h"
+#include "v8/v8.h"
 #include <map>
 
 /**
@@ -99,6 +100,10 @@ public:
 	 */
 	CBot *GetParentBot();
 
+	void NewScript(CScript *pScript);
+	void DeleteScript(CScript *pScript);
+	v8::Object *GetScriptObject(CScript *pScript);
+
 	/**
 	 * Gets the script type of this class.
 	 * @return The script type of this class.
@@ -121,6 +126,8 @@ private:
 	std::string m_strRealname;
 	std::map<CIrcChannel *, char> m_mapChannelModes;
 	bool m_bTemporary;
+
+	std::map<CScript *, v8::Persistent<v8::Object> > m_mapScriptObjects;
 
 #ifdef SERVICE
 	std::string m_strUserModes;

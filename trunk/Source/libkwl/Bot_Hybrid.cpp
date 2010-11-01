@@ -33,4 +33,18 @@ Purpose:	Class which represents an IRC bot
 
 // TODO: IRCD-Hybrid implementation
 
+/*
+	ircd-hybrid protocol notes
+
+	use SJOIN instead of JOIN: (DONE)
+	  send_cmd(NULL, "SJOIN %ld %s + :%s", (long int) chantime, channel, user);
+	  SJOIN 1284766570 #home + :LOLBOT
+
+	nick introduction:
+	  NICK MaVe 1 1284766547 +i ~MaVe xdsl-89-0-34-142.netcologne.de hades.arpa :...
+
+	channel introduction:
+	  :hades.arpa SJOIN 1284766548 #home +nt :@MaVe
+*/
+
 #endif

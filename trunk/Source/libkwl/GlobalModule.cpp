@@ -35,6 +35,7 @@ CGlobalModule::CGlobalModule(CCore *pCore, const char *szPath)
 	m_Functions.pfnInitModule = (InitModule_t)GetLibraryProc(m_pLibrary, "InitModule");
 	m_Functions.pfnExitModule = (ExitModule_t)GetLibraryProc(m_pLibrary, "ExitModule");
 	m_Functions.pfnTemplateRequest = (TemplateRequest_t)GetLibraryProc(m_pLibrary, "TemplateRequest");
+	m_Functions.pfnScriptLoad = (ScriptLoad_t)GetLibraryProc(m_pLibrary, "ScriptLoad");
 	m_Functions.pfnPulse = (Pulse_t)GetLibraryProc(m_pLibrary, "Pulse");
 
 	if (m_Functions.pfnInitModule != NULL)
@@ -81,6 +82,14 @@ void CGlobalModule::TemplateRequest(v8::Handle<v8::ObjectTemplate> &objectTempla
 	if (m_Functions.pfnTemplateRequest != NULL)
 	{
 		m_Functions.pfnTemplateRequest(objectTemplate);
+	}
+}
+
+void CGlobalModule::ScriptLoad(v8::Handle<v8::Context> &scriptContext)
+{
+	if (m_Functions.pfnScriptLoad != NULL)
+	{
+		m_Functions.pfnScriptLoad(scriptContext);
 	}
 }
 
