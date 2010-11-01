@@ -21,6 +21,7 @@ class CBot;
 #include "Script.h"
 #include "EventManager.h"
 #include "IrcMessage.h"
+#include "v8/v8.h"
 #include <vector>
 #include <string>
 
@@ -321,6 +322,8 @@ private:
 #endif
 
 	bool m_bSynced;
+	bool m_bGotScripts;
+
 	CCore *m_pParentCore;
 	CIrcSocket *m_pIrcSocket;
 	CConfig m_botConfig;

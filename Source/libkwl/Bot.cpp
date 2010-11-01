@@ -29,7 +29,7 @@ Purpose:	Class which represents an IRC bot
 	m_pParentCore->GetScriptEventManager()->what(this, __VA_ARGS__)
 
 CBot::CBot(CCore *pParentCore, CConfig *pConfig)
-	: m_bDead(false), m_tReconnectTimer((time_t)-1), m_bSynced(false), m_pCurrentUser(NULL)
+	: m_bDead(false), m_tReconnectTimer((time_t)-1), m_bSynced(false), m_pCurrentUser(NULL), m_bGotScripts(false)
 {
 	m_pParentCore = pParentCore;
 	m_ircSettings.LoadFromConfig(pConfig);
@@ -69,6 +69,7 @@ CBot::CBot(CCore *pParentCore, CConfig *pConfig)
 			CScript *pScript = CreateScript(("scripts/" + strTemp).c_str());
 		}
 	}
+	m_bGotScripts = true;
 	
 	if (!pConfig->GetSingleValue("automode", &m_strAutoMode))
 	{
@@ -373,28 +374,28 @@ bool CBot::TestAccessLevel(CIrcUser *pUser, int iLevel)
 		}
 	}
 
-	if (!accessRules.strRequireVhost.empty() && !wildcmp(accessRules.strRequireVhost.c_str(), pUser->GetVirtualHost().c_str()))
+	if (!accessRules.strRequireVhost.empty() && !std::wildcmp(accessRules.strRequireVhost, pUser->GetVirtualHost()))
 	{
 		return false;
 	}
 #endif
 
-	if (!accessRules.strRequireRealname.empty() && !wildcmp(accessRules.strRequireRealname.c_str(), pUser->GetRealname().c_str()))
+	if (!accessRules.strRequireRealname.empty() && !std::wildcmp(accessRules.strRequireRealname, pUser->GetRealname()))
 	{
 		return false;
 	}
 
-	if (!accessRules.strRequireHost.empty() && !wildcmp(accessRules.strRequireHost.c_str(), pUser->GetHostname().c_str()))
+	if (!accessRules.strRequireHost.empty() && !std::wildcmp(accessRules.strRequireHost, pUser->GetHostname()))
 	{
 		return false;
 	}
 
-	if (!accessRules.strRequireIdent.empty() && !wildcmp(accessRules.strRequireIdent.c_str(), pUser->GetIdent().c_str()))
+	if (!accessRules.strRequireIdent.empty() && !std::wildcmp(accessRules.strRequireIdent, pUser->GetIdent()))
 	{
 		return false;
 	}
 
-	if (!accessRules.strRequireNickname.empty() && !wildcmp(accessRules.strRequireNickname.c_str(), pUser->GetNickname().c_str()))
+	if (!accessRules.strRequireNickname.empty() && !std::wildcmp(accessRules.strRequireNickname, pUser->GetNickname()))
 	{
 		return false;
 	}
@@ -413,6 +414,14 @@ CScript *CBot::CreateScript(const char *szFilename)
 	if (!pScript->Load(m_pParentCore, szFilename))
 	{
 		return NULL;
+	}
+
+	if (m_bGotScripts)
+	{
+		for (CPool<CIrcUser *>::iterator i = m_plGlobalUsers.begin(); i != m_plGlobalUsers.end(); ++i)
+		{
+			(*i)->NewScript(pScript);
+		}
 	}
 
 	m_plScripts.push_back(pScript);

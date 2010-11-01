@@ -132,11 +132,14 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 							arguments[iNum++] = v8::Persistent<v8::Value>::New(v8::String::New(j->c_str(), j->length()));
 						}
 
+						CScriptFunctions::m_pCallingScript = pScript;
 						(*i)->handlerFunction->Call((*i)->handlerFunction, iParamCount + 1, arguments);
+						CScriptFunctions::m_pCallingScript = NULL;
 
 						for (int i = 0; i < iParamCount + 1; ++i)
 						{
 							arguments[i].Dispose();
+							arguments[i].Clear();
 						}
 					}
 					else
@@ -281,12 +284,15 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 								break;
 							}
 						}
-
+						
+						CScriptFunctions::m_pCallingScript = pScript;
 						(*i)->handlerFunction->Call((*i)->handlerFunction, iParamCount + 1, arguments);
+						CScriptFunctions::m_pCallingScript = NULL;
 
 						for (int j = 0; j < iParamCount + 1; ++j)
 						{
 							arguments[j].Dispose();
+							arguments[j].Clear();
 						}
 					}
 				}
@@ -316,6 +322,8 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 
 			delete m_pIrcChannelQueue;
 			m_pIrcChannelQueue = NULL;
+
+			printf("[%s] Initial synchronization finished\n", m_pIrcSocket->GetCurrentNickname());
 
 			return;
 		}

@@ -60,20 +60,37 @@ public:
 							{
 								std::string::size_type off_begin = 0, off_end = 0;
 								while (after[off_begin] == ' ')
+								{
 									++off_begin;
-								after = after.substr(off_begin);
+								}
+
+								if (off_begin != 0)
+								{
+									after = after.substr(off_begin);
+									afterlen = after.length();
+								}
 
 								while (before[beforelen - off_end - 1] == ' ')
+								{
 									++off_end;
+								}
 								before[beforelen - off_end] = '\0';
 
 								if (after[afterlen - 1] == '\n')
+								{
 									if (after[afterlen - 2] == '\r')
+									{
 										after[afterlen - 2] = '\0';
+									}
 									else
+									{
 										after[afterlen - 1] = '\0';
+									}
+								}
 								else if (after[afterlen - 1] == '\r')
+								{
 									after[afterlen - 1] = '\0';
+								}
 
 								m_mapSettings[before.c_str()] = after;
 							}

@@ -72,6 +72,14 @@ public:
 	 * @return A pointer to a CPool<CBot *>.
 	 */
 	CPool<CBot *> *GetBots();
+
+	/**
+	 * Searches the bot pool for a certain bot.
+	 * @param  szNickname      The bot's nickname.
+	 * @param  bCaseSensitive  Search case-sensitively or not (optional)
+	 * @return A pointer to a CBot, or NULL incase the bot was not found.
+	 */
+	CBot *FindBot(const char *szNickname, bool bCaseSensitive = true);
 	
 	/**
 	 * Gets a pointer to the global module pool.

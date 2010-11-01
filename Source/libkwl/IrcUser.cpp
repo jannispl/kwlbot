@@ -17,10 +17,19 @@ CIrcUser::CIrcUser(CBot *pParentBot, const std::string &strNickname, bool bTempo
 	m_bTemporary = bTemporary;
 
 	m_strNickname = strNickname;
+
+	for (CPool<CScript *>::iterator i = pParentBot->GetScripts()->begin(); i != pParentBot->GetScripts()->end(); ++i)
+	{
+		NewScript(*i);
+	}
 }
 
 CIrcUser::~CIrcUser()
 {
+	for (std::map<CScript *, v8::Persistent<v8::Object> >::iterator i = m_mapScriptObjects.begin(); i != m_mapScriptObjects.end(); ++i)
+	{
+		DeleteScript(i->first);
+	}
 }
 
 const std::string &CIrcUser::GetNickname()
@@ -85,6 +94,47 @@ const std::string &CIrcUser::GetVirtualHost()
 CBot *CIrcUser::GetParentBot()
 {
 	return m_pParentBot;
+}
+
+void CIrcUser::NewScript(CScript *pScript)
+{
+	v8::HandleScope handleScope;
+
+	CScriptFunctions::m_bAllowInternalConstructions = true;
+
+	pScript->EnterContext();
+		
+	v8::Local<v8::Function> ctor = CScript::m_classTemplates.IrcUser->GetFunction();
+
+	v8::Local<v8::Object> user = ctor->NewInstance();
+	user->SetInternalField(0, v8::External::New(this));
+
+	m_mapScriptObjects[pScript] = v8::Persistent<v8::Object>::New(user);
+
+	pScript->ExitContext();
+
+	CScriptFunctions::m_bAllowInternalConstructions = false;
+}
+
+void CIrcUser::DeleteScript(CScript *pScript)
+{
+	v8::HandleScope handleScope;
+
+	std::map<CScript *, v8::Persistent<v8::Object> >::iterator it = m_mapScriptObjects.find(pScript);
+	if (it == m_mapScriptObjects.end())
+	{
+		return;
+	}
+
+	it->second.Dispose();
+	it->second.Clear();
+
+	m_mapScriptObjects.erase(it);
+}
+
+v8::Object *CIrcUser::GetScriptObject(CScript *pScript)
+{
+	return *(m_mapScriptObjects[pScript]);
 }
 
 CScriptObject::eScriptType CIrcUser::GetType()

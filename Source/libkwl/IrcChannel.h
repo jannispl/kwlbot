@@ -18,6 +18,7 @@ class CIrcChannel;
 #include "Pool.h"
 #include "Script.h"
 #include <time.h>
+#include <map>
 
 /**
  * @brief Class which represents a remote IRC channel.
@@ -63,6 +64,10 @@ public:
 	 */
 	CBot *GetParentBot();
 
+	void NewScript(CScript *pScript);
+	void DeleteScript(CScript *pScript);
+	v8::Object *GetScriptObject(CScript *pScript);
+
 	/**
 	 * Gets the script type of this class.
 	 * @return The script type of this class.
@@ -87,6 +92,8 @@ private:
 
 	CPool<CIrcUser *> m_plIrcUsers;
 	bool m_bHasDetailedUsers;
+
+	std::map<CScript *, v8::Persistent<v8::Object> > m_mapScriptObjects;
 
 #if defined(SERVICE) && IRCD == HYBRID
 	time_t m_ullChannelStamp;

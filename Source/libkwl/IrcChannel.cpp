@@ -17,10 +17,19 @@ CIrcChannel::CIrcChannel(CBot *pParentBot, const std::string &strName)
 	m_pParentBot = pParentBot;
 
 	m_strName = strName;
+
+	for (CPool<CScript *>::iterator i = pParentBot->GetScripts()->begin(); i != pParentBot->GetScripts()->end(); ++i)
+	{
+		NewScript(*i);
+	}
 }
 
 CIrcChannel::~CIrcChannel()
 {
+	for (std::map<CScript *, v8::Persistent<v8::Object> >::iterator i = m_mapScriptObjects.begin(); i != m_mapScriptObjects.end(); ++i)
+	{
+		DeleteScript(i->first);
+	}
 }
 
 const std::string &CIrcChannel::GetName()
@@ -64,6 +73,47 @@ CPool<CIrcUser *> *CIrcChannel::GetUsers()
 CBot *CIrcChannel::GetParentBot()
 {
 	return m_pParentBot;
+}
+
+void CIrcChannel::NewScript(CScript *pScript)
+{
+	v8::HandleScope handleScope;
+
+	CScriptFunctions::m_bAllowInternalConstructions = true;
+
+	pScript->EnterContext();
+		
+	v8::Local<v8::Function> ctor = CScript::m_classTemplates.IrcChannel->GetFunction();
+
+	v8::Local<v8::Object> channel = ctor->NewInstance();
+	channel->SetInternalField(0, v8::External::New(this));
+
+	m_mapScriptObjects[pScript] = v8::Persistent<v8::Object>::New(channel);
+
+	pScript->ExitContext();
+
+	CScriptFunctions::m_bAllowInternalConstructions = false;
+}
+
+void CIrcChannel::DeleteScript(CScript *pScript)
+{
+	v8::HandleScope handleScope;
+
+	std::map<CScript *, v8::Persistent<v8::Object> >::iterator it = m_mapScriptObjects.find(pScript);
+	if (it == m_mapScriptObjects.end())
+	{
+		return;
+	}
+
+	it->second.Dispose();
+	it->second.Clear();
+
+	m_mapScriptObjects.erase(it);
+}
+
+v8::Object *CIrcChannel::GetScriptObject(CScript *pScript)
+{
+	return *(m_mapScriptObjects[pScript]);
 }
 
 CScriptObject::eScriptType CIrcChannel::GetType()

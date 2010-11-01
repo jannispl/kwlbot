@@ -56,4 +56,13 @@ static bool wildcmp(const char *wild, const char *string)
 	return !*wild;
 }
 
+#include <string>
+namespace std
+{
+	static bool wildcmp(const string &strWild, const string &strString)
+	{
+		return ::wildcmp(strWild.c_str(), strString.c_str());
+	}
+}
+
 #endif
