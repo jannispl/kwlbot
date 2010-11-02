@@ -28,7 +28,14 @@ CIrcChannel::~CIrcChannel()
 {
 	for (std::map<CScript *, v8::Persistent<v8::Object> >::iterator i = m_mapScriptObjects.begin(); i != m_mapScriptObjects.end(); ++i)
 	{
-		DeleteScript(i->first);
+		i->second.Dispose();
+		i->second.Clear();
+
+		i = m_mapScriptObjects.erase(i);
+		if (i == m_mapScriptObjects.end())
+		{
+			break;
+		}
 	}
 }
 

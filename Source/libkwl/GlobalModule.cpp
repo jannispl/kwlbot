@@ -28,7 +28,60 @@ CGlobalModule::CGlobalModule(CCore *pCore, const char *szPath)
 
 	if (m_pLibrary == NULL)
 	{
-		memset(&m_Functions, 0, sizeof(m_Functions));
+		return;
+	}
+
+	memset(&m_Functions, 0, sizeof(m_Functions));
+	m_Functions.pfnPulse = (Pulse_t)&CGlobalModule::DefaultPulse;
+
+	int *pVersion = (int *)GetLibraryProc(m_pLibrary, "KWLSDK_VERSION");
+	if (pVersion == NULL || *pVersion != KWLSDK_VERSION)
+	{
+		printf("Failed to load global module '%s': SDK Version mismatch (got %d, need %d)\n", szPath, pVersion != NULL ? *pVersion : 0, KWLSDK_VERSION);
+		FreeLibrary(m_pLibrary);
+		m_pLibrary = NULL;
+		return;
+	}
+
+	int *pService = (int *)GetLibraryProc(m_pLibrary, "KWLSDK_SERVICE");
+	if (pService == NULL || *pService !=
+#ifdef SERVICE
+		1
+#else
+		0
+#endif
+		)
+	{
+		printf("Failed to load global module '%s': "
+#ifdef SERVICE
+			"Module is not compiled as service"
+#else
+			"Module is compiled as service"
+#endif
+			"\n", szPath);
+		FreeLibrary(m_pLibrary);
+		m_pLibrary = NULL;
+		return;
+	}
+
+	int *pRawEvent = (int *)GetLibraryProc(m_pLibrary, "KWLSDK_RAWEVENT");
+	if (pRawEvent == NULL || *pRawEvent !=
+#ifdef ENABLE_RAW_EVENT
+		1
+#else
+		0
+#endif
+		)
+	{
+		printf("Failed to load global module '%s': "
+#ifdef ENABLE_RAW_EVENT
+			"Module does not use ENABLE_RAW_EVENT"
+#else
+			"Module uses ENABLE_RAW_EVENT"
+#endif
+			"\n", szPath);
+		FreeLibrary(m_pLibrary);
+		m_pLibrary = NULL;
 		return;
 	}
 
@@ -37,6 +90,11 @@ CGlobalModule::CGlobalModule(CCore *pCore, const char *szPath)
 	m_Functions.pfnTemplateRequest = (TemplateRequest_t)GetLibraryProc(m_pLibrary, "TemplateRequest");
 	m_Functions.pfnScriptLoad = (ScriptLoad_t)GetLibraryProc(m_pLibrary, "ScriptLoad");
 	m_Functions.pfnPulse = (Pulse_t)GetLibraryProc(m_pLibrary, "Pulse");
+
+	if (m_Functions.pfnPulse == NULL)
+	{
+		m_Functions.pfnPulse = (Pulse_t)&CGlobalModule::DefaultPulse;
+	}
 
 	if (m_Functions.pfnInitModule != NULL)
 	{
@@ -56,11 +114,6 @@ CGlobalModule::CGlobalModule(CCore *pCore, const char *szPath)
 	else
 	{
 		printf("Warning: Global module '%s' does not have a \"InitModule\" export!\n", szPath);
-	}
-
-	if (m_Functions.pfnPulse == NULL)
-	{
-		m_Functions.pfnPulse = (Pulse_t)&CGlobalModule::DefaultPulse;
 	}
 }
 
