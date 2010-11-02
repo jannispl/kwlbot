@@ -26,9 +26,7 @@ BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
 	}
 
 	g_pCore->Shutdown();
-	delete g_pCore;
 
-	ExitProcess(0);
 	while (true)
 	{
 		Sleep(SLEEP_MS);
@@ -45,13 +43,11 @@ void CtrlHandler(int)
 	}
 
 	g_pCore->Shutdown();
-	delete g_pCore;
 
 	puts("\n");
-	_exit(0);
 	while (true)
 	{
-		Sleep(20);
+		Sleep(SLEEP_MS);
 	}
 }
 #endif
@@ -79,7 +75,7 @@ int main(int iArgCount, char *szArgs[])
 	}
 #endif
 
-	while (true)
+	while (g_pCore->IsRunning())
 	{
 		g_pCore->Pulse();
 

@@ -286,13 +286,15 @@ void CIrcSocket::HandleData(const char *szData)
 		{
 			SendRawFormat("PONG %s", vecParams[0].c_str());
 		}
-		return;
 	}
 	else if (strCommand == "433" && vecParams.size() >= 1 && vecParams[0] == m_pParentBot->GetSettings()->GetNickname())
 	{
 		m_strCurrentNickname = m_pParentBot->GetSettings()->GetAlternativeNickname();
 		SendRawFormat("NICK %s", m_strCurrentNickname.c_str());
-		return;
+	}
+	else if (strCommand == "ERROR" && vecParams.size() >= 1)
+	{
+		printf("[%s] Error: %s\n", GetCurrentNickname(), vecParams[0].c_str());
 	}
 }
 

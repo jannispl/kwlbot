@@ -2,6 +2,7 @@
 #define _DEFINITIONS_H
 
 #define VERSION_STRING "v0.5 (" __DATE__ " " __TIME__ ")"
+#define KWLSDK_VERSION 1
 
 #define SLEEP_MS (50)
 
