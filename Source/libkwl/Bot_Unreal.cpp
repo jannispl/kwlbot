@@ -595,6 +595,12 @@ void CBot::HandleKICK(const std::string &strChannel, const std::string &strVicti
 			}
 
 			pVictim->m_plIrcChannels.remove(pChannel);
+			std::map<CIrcChannel *, char >::iterator i = pVictim->m_mapChannelModes.find(pChannel);
+			if (i != pVictim->m_mapChannelModes.end())
+			{
+				pVictim->m_mapChannelModes.erase(i);
+			}
+
 			pChannel->m_plIrcUsers.remove(pVictim);
 		}
 		/*
@@ -651,6 +657,12 @@ void CBot::HandlePART(const std::string &strChannel, const std::string &strReaso
 			CALL_EVENT(OnUserLeftChannel, m_pCurrentUser, pChannel, strReason.c_str());
 
 			m_pCurrentUser->m_plIrcChannels.remove(pChannel);
+			std::map<CIrcChannel *, char >::iterator i = m_pCurrentUser->m_mapChannelModes.find(pChannel);
+			if (i != m_pCurrentUser->m_mapChannelModes.end())
+			{
+				m_pCurrentUser->m_mapChannelModes.erase(i);
+			}
+
 			pChannel->m_plIrcUsers.remove(m_pCurrentUser);
 		}
 		else
