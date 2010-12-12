@@ -421,6 +421,13 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 			HandleTOPIC(vecParams[0], vecParams[1]);
 			return;
 		}
+		
+		if (strCommand == "NICK")
+		{
+			// vecParams[1] is just some timestamp
+			HandleNICK(vecParams[0]);
+			return;
+		}
 
 		if (strCommand == "CHGHOST")
 		{
@@ -457,12 +464,6 @@ void CBot::HandleData(const std::string &strOrigin, const std::string &strComman
 		if (strCommand == "QUIT")
 		{
 			HandleQUIT(vecParams[0]);
-			return;
-		}
-
-		if (strCommand == "NICK")
-		{
-			HandleNICK(vecParams[0]);
 			return;
 		}
 
